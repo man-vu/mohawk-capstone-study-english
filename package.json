@@ -1,0 +1,81 @@
+{
+  "name": "capstone",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "start": "npm run prod",
+    "test": "export NODE_ENV=test && mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
+    "test-coverage": "export NODE_ENV=test && nyc mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
+    "dev": "export NODE_ENV=development && nodemon --inspect=9300 'server/server.js'",
+    "prod": "export NODE_ENV=production && node 'server/server.js'"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.35",
+    "@fortawesome/free-brands-svg-icons": "^5.15.3",
+    "@fortawesome/free-regular-svg-icons": "^5.15.2",
+    "@fortawesome/free-solid-svg-icons": "^5.15.3",
+    "@fortawesome/vue-fontawesome": "^3.0.0-3",
+    "apexcharts": "^3.23.1",
+    "aws-sdk": "^2.920.0",
+    "axios": "^0.21.1",
+    "bcrypt": "^5.0.0",
+    "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "connect-history-api-fallback": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "generate-password": "^1.6.0",
+    "googleapis": "^39.2.0",
+    "js-convert-case": "^4.1.2",
+    "jsonwebtoken": "^8.5.1",
+    "mocha": "^8.4.0",
+    "moment": "^2.29.1",
+    "multer": "^1.4.2",
+    "mysql": "^2.18.1",
+    "node-cron": "^3.0.0",
+    "nodemailer": "^6.6.0",
+    "resize-img": "^2.0.0",
+    "uniqid": "^5.2.0",
+    "vue": "^3.0.5",
+    "vue-loader": "^15.9.6",
+    "vue-router": "^4.0.3",
+    "vue3-apexcharts": "^1.1.1",
+    "vuex": "^4.0.0-rc.2"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^4.5.9",
+    "@vue/cli-plugin-eslint": "^4.5.9",
+    "@vue/cli-service": "^4.5.9",
+    "@vue/compiler-sfc": "^3.0.5",
+    "babel-eslint": "^10.1.0",
+    "chromedriver": "^90.0.1",
+    "eslint": "^6.8.0",
+    "eslint-plugin-vue": "^7.4.0",
+    "moment-duration-format": "^2.3.2",
+    "nightwatch": "^1.6.4",
+    "nyc": "^15.1.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
