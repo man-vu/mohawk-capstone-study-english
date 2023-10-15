@@ -1,5 +1,11 @@
 const path = require("path");
-const dotenv = require("dotenv").config({
+const dotenv = require("dotenv")
+
+if (!process.env.NODE_ENV) {
+  throw new Error("NODE_ENV is not defined.");
+}
+
+dotenv.config({
   path: path.resolve(__dirname, "../..", `.env.${process.env.NODE_ENV}`)
 });
 
