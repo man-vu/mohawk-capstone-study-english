@@ -11,7 +11,7 @@
     "lint": "vue-cli-service lint",
     "heroku-prebuild": "npm install",
     "heroku-postbuild": "vue-cli-service build",
-    "start": "concurrently \"npm run prod\" \"npm run serve\"",
+    "start": "npm run prod",
     "test": "cross-env NODE_ENV=test mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
     "test-coverage": "cross-env NODE_ENV=test nyc mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
     "dev": "cross-env NODE_ENV=development nodemon --inspect=9300 'server/server.js'",
