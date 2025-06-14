@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div id="sort-and-filter" class="details-wrapper">
     <div class="form-inline">

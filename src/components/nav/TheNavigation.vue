@@ -86,8 +86,7 @@
 </template>
 
 <script>
-import path from "path";
-import {avatar} from "../common/helper"
+import { avatar } from "../common/helper";
 
 export default {
   data() {

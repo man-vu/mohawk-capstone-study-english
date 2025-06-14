@@ -6,8 +6,8 @@
     "node": "16.5.0"
   },
   "scripts": {
-  "serve": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
-  "build": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service build",
+  "serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service serve",
+  "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build",
     "lint": "vue-cli-service lint",
     "heroku-prebuild": "npm install",
     "heroku-postbuild": "vue-cli-service build",
@@ -61,7 +61,7 @@
   "@vue/cli-plugin-babel": "5.0.8",
   "@vue/cli-plugin-eslint": "5.0.8",
   "@vue/compiler-sfc": "3.5.16",
-  "babel-eslint": "^10.1.0",
+  "@babel/eslint-parser": "^7.22.15",
   "chromedriver": "^90.0.1",
   "eslint": "8.56.0",
   "eslint-plugin-vue": "9.19.2",
@@ -79,7 +79,8 @@
       "plugin:vue/vue3-essential"
     ],
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser",
+      "requireConfigFile": false
     },
     "rules": {}
   },
