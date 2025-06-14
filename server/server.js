@@ -6,6 +6,9 @@ const { server_port } = require("./config/index");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
+const sequelize = require("./config/orm");
+sequelize.authenticate().catch(err => console.error("Sequelize connection error:", err));
+
 const scheduler = require("./services/scheduler/checkAttempts");
 const history = require("connect-history-api-fallback");
 

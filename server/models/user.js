@@ -1,83 +1,188 @@
-const database = new (require("../config/database"))();
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/orm');
+
+const User = sequelize.define('user', {
+  user_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  email: DataTypes.STRING,
+  password_hash: DataTypes.STRING,
+  password_salt: DataTypes.STRING,
+  gender: DataTypes.STRING,
+  role_id: DataTypes.INTEGER,
+  profile_picture_id: DataTypes.INTEGER,
+  first_name: DataTypes.STRING,
+  last_name: DataTypes.STRING,
+  password_reset_hash: DataTypes.STRING,
+  password_reset_salt: DataTypes.STRING,
+  password_reset_expiry: DataTypes.DATE,
+}, {
+  tableName: 'user',
+  timestamps: false
+});
 
 class UserModel {
   constructor() {
-    this.db = database;
+    this.User = User;
   }
 
   async findAll() {
-    return await this.db.executeQuery("SELECT user_id, first_name, last_name, CONCAT(first_name, ' ', last_name) as full_name FROM user");
+    try {
+      const users = await this.User.findAll({
+        attributes: [
+          'user_id',
+          'first_name',
+          'last_name',
+          [sequelize.fn('CONCAT', sequelize.col('first_name'), ' ', sequelize.col('last_name')), 'full_name']
+        ]
+      });
+      return { error: null, response: users.map(u => u.toJSON()) };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async findAllTeachers() {
-    return await this.db.executeQuery("SELECT * FROM user WHERE role_id = 1");
+    try {
+      const res = await this.User.findAll({ where: { role_id: 1 } });
+      return { error: null, response: res.map(r => r.toJSON()) };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async findAllStudents() {
-    return await this.db.executeQuery("SELECT * FROM user WHERE role_id = 2");
+    try {
+      const res = await this.User.findAll({ where: { role_id: 2 } });
+      return { error: null, response: res.map(r => r.toJSON()) };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async findOneById(id) {
-    return await this.db.executeQuery(
-      `SELECT user.email, user.first_name, user.last_name, user.gender 
-      FROM user WHERE user_id = ${id}`
-    );
+    try {
+      const user = await this.User.findByPk(id, {
+        attributes: ['email', 'first_name', 'last_name', 'gender']
+      });
+      return { error: null, response: user ? [user.toJSON()] : [] };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async findOneByEmail(email) {
-    return await this.db.executeQuery(
-      `SELECT user_id, role_id, password_hash, first_name, last_name, profile_picture_id, password_reset_hash, password_reset_salt, password_reset_expiry
-       FROM user WHERE email='${email}'`
-    );
+    try {
+      const user = await this.User.findOne({
+        where: { email },
+        attributes: ['user_id', 'role_id', 'password_hash', 'first_name', 'last_name', 'profile_picture_id', 'password_reset_hash', 'password_reset_salt', 'password_reset_expiry']
+      });
+      return { error: null, response: user ? [user.toJSON()] : [] };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async addOne(email, passwordHash, passwordSalt, gender, roleId, profilePictureId, firstName, lastName) {
-    return await this.db
-      .executeQuery(`INSERT INTO user(email, password_hash, password_salt, gender, role_id, profile_picture_id, first_name, last_name)  
-    VALUES('${email}', '${passwordHash}', '${passwordSalt}', '${gender}', '${roleId}', '${profilePictureId}', '${firstName}', '${lastName}')`);
+    try {
+      const res = await this.User.create({
+        email,
+        password_hash: passwordHash,
+        password_salt: passwordSalt,
+        gender,
+        role_id: roleId,
+        profile_picture_id: profilePictureId,
+        first_name: firstName,
+        last_name: lastName
+      });
+      return { error: null, response: { affectedRows: res ? 1 : 0 } };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async saveOne(userId, email, firstName, lastName, gender) {
-    return this.db.executeQuery(`UPDATE user
-    SET email = '${email}', first_name = '${firstName}', last_name = '${lastName}', gender = '${gender}'
-    WHERE user_id = ${userId}`);
+    try {
+      const [rows] = await this.User.update({
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        gender
+      }, {
+        where: { user_id: userId }
+      });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async deleteOne(userId) {
-    return this.db.executeQuery(`
-    DELETE FROM user WHERE user_id = ${userId};
-    DELETE FROM user_attempt WHERE user_id = ${userId};
-    DELETE FROM user_answer_question WHERE user_id = ${userId};
-    DELETE FROM user_favorite WHERE user_id = ${userId};
-    DELETE FROM user_rating WHERE user_id = ${userId};`)
+    try {
+      const rows = await this.User.destroy({ where: { user_id: userId } });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 
-  async savePassword({userId, passwordHash, passwordSalt}) {
-    return this.db.executeQuery(`UPDATE user
-    SET password_salt = '${passwordSalt}', password_hash = '${passwordHash}'
-    WHERE user_id = ${userId}`);
+  async savePassword({ userId, passwordHash, passwordSalt }) {
+    try {
+      const [rows] = await this.User.update({
+        password_salt: passwordSalt,
+        password_hash: passwordHash
+      }, {
+        where: { user_id: userId }
+      });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 
-  async saveResetPassword({ userId, passwordHash, passwordSalt, passwordExpiry}) {
-    return this.db.executeQuery(`UPDATE user
-    SET password_reset_salt = '${passwordSalt}', 
-    password_reset_hash = '${passwordHash}',
-    password_reset_expiry = '${passwordExpiry}'
-    WHERE user_id = ${userId}`);
+  async saveResetPassword({ userId, passwordHash, passwordSalt, passwordExpiry }) {
+    try {
+      const [rows] = await this.User.update({
+        password_reset_salt: passwordSalt,
+        password_reset_hash: passwordHash,
+        password_reset_expiry: passwordExpiry
+      }, {
+        where: { user_id: userId }
+      });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 
-  async saveProfilePicture({ userId, mimeId}) {
-    return this.db.executeQuery(`UPDATE user
-    SET profile_picture_id = '${mimeId}'
-    WHERE user_id = ${userId}`);
+  async saveProfilePicture({ userId, mimeId }) {
+    try {
+      const [rows] = await this.User.update({
+        profile_picture_id: mimeId
+      }, {
+        where: { user_id: userId }
+      });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 
-  async deleteResetPassword({userId}) {
-    return this.db.executeQuery(`UPDATE user
-    SET password_reset_salt = NULL,
-    password_reset_hash = NULL,
-    password_reset_expiry = NULL
-    WHERE user_id = ${userId}`);
+  async deleteResetPassword({ userId }) {
+    try {
+      const [rows] = await this.User.update({
+        password_reset_salt: null,
+        password_reset_hash: null,
+        password_reset_expiry: null
+      }, {
+        where: { user_id: userId }
+      });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 }
 
