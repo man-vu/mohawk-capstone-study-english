@@ -20,5 +20,10 @@ npm run build
 npm run lint
 ```
 
+### Type checking
+```
+npx vue-tsc --noEmit
+```
+
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).

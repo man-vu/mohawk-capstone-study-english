@@ -22,14 +22,17 @@
   </transition>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+/* eslint-disable */
+import { defineComponent } from 'vue';
+
+export default defineComponent({
   data() {
     return {
-      showModal: false,
+      showModal: false as boolean,
     };
   },
-};
+});
 </script>
 
 <style scoped>

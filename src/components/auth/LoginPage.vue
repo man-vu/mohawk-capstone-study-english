@@ -37,20 +37,20 @@
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+/* eslint-disable */
+import { defineComponent } from 'vue';
+
+export default defineComponent({
   data() {
     return {
-      email: "",
-      password: "",
-      error: "",
+      email: "" as string,
+      password: "" as string,
+      error: "" as string,
     };
   },
-  setup() {
-    return {};
-  },
   methods: {
-    validateEmail(email) {
+    validateEmail(email: string) {
       const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
       return re.test(String(email).toLowerCase());
     },
@@ -81,7 +81,7 @@ export default {
         });
     },
   },
-};
+});
 </script>
 
 <style scoped>
