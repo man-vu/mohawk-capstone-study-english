@@ -15,7 +15,8 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { useAuthStore } from '../../stores/authStore';
 export default {
   data() {
     return {
@@ -33,7 +34,8 @@ export default {
     forgotPassword() {
       const validated = this.validateEmail(this.email)
       if (validated === true) {
-        this.$store.dispatch("authStore/forgotPassword", { email: this.email}).then(response => {
+        const auth = useAuthStore();
+        auth.forgotPassword({ email: this.email}).then(response => {
 
         })
       }

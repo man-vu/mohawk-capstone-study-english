@@ -40,6 +40,7 @@
 <script lang="ts">
 /* eslint-disable */
 import { defineComponent } from 'vue';
+import { useAuthStore } from '../../stores/authStore';
 
 export default defineComponent({
   data() {
@@ -67,8 +68,9 @@ export default defineComponent({
         return;
       }
 
-      this.$store
-        .dispatch("authStore/login", {
+      const auth = useAuthStore();
+      auth
+        .login({
           email: this.email,
           password: this.password,
         })

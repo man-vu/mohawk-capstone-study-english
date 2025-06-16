@@ -19,7 +19,8 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { useAuthStore } from '../../stores/authStore';
 export default {
   data() {
     return {
@@ -40,8 +41,9 @@ export default {
         return
       }
 
-      this.$store
-        .dispatch("authStore/register", {
+      const auth = useAuthStore();
+      auth
+        .register({
           email: this.email,
           firstName: this.firstName,
           lastName: this.lastName,

@@ -4,13 +4,15 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { useAuthStore } from '../../stores/authStore';
 export default {
   setup() {
     return {};
   },
   mounted() {
-    this.$store.dispatch("authStore/signOut");
+    const auth = useAuthStore();
+    auth.signOut();
     this.$router.push({ name: "home" });
   },
 };
