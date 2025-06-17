@@ -14,32 +14,7 @@ GO
 USE QuizVerse;
 GO
 
-
--- DROP TABLES in correct order for reset (add more as needed)
-IF OBJECT_ID('dbo.MimeType', 'U') IS NOT NULL DROP TABLE dbo.MimeType;
-IF OBJECT_ID('dbo.UserEssayAnswer', 'U') IS NOT NULL DROP TABLE dbo.UserEssayAnswer;
-IF OBJECT_ID('dbo.UserAnswer', 'U') IS NOT NULL DROP TABLE dbo.UserAnswer;
-IF OBJECT_ID('dbo.UserAttempt', 'U') IS NOT NULL DROP TABLE dbo.UserAttempt;
-IF OBJECT_ID('dbo.UserFavorite', 'U') IS NOT NULL DROP TABLE dbo.UserFavorite;
-IF OBJECT_ID('dbo.UserRating', 'U') IS NOT NULL DROP TABLE dbo.UserRating;
-IF OBJECT_ID('dbo.QuizQuestion', 'U') IS NOT NULL DROP TABLE dbo.QuizQuestion;
-IF OBJECT_ID('dbo.QuestionMultipleChoice', 'U') IS NOT NULL DROP TABLE dbo.QuestionMultipleChoice;
-IF OBJECT_ID('dbo.QuestionGapFilling', 'U') IS NOT NULL DROP TABLE dbo.QuestionGapFilling;
-IF OBJECT_ID('dbo.QuestionMatchingPair', 'U') IS NOT NULL DROP TABLE dbo.QuestionMatchingPair;
-IF OBJECT_ID('dbo.QuestionEssay', 'U') IS NOT NULL DROP TABLE dbo.QuestionEssay;
-IF OBJECT_ID('dbo.Question', 'U') IS NOT NULL DROP TABLE dbo.Question;
-IF OBJECT_ID('dbo.QuestionType', 'U') IS NOT NULL DROP TABLE dbo.QuestionType;
-IF OBJECT_ID('dbo.QuestionInstruction', 'U') IS NOT NULL DROP TABLE dbo.QuestionInstruction;
-IF OBJECT_ID('dbo.Quiz', 'U') IS NOT NULL DROP TABLE dbo.Quiz;
-IF OBJECT_ID('dbo.QuizSkill', 'U') IS NOT NULL DROP TABLE dbo.QuizSkill;
-IF OBJECT_ID('dbo.AuditTrail', 'U') IS NOT NULL DROP TABLE dbo.AuditTrail;
-IF OBJECT_ID('dbo.AppLog', 'U') IS NOT NULL DROP TABLE dbo.AppLog;
-IF OBJECT_ID('dbo.UserActivity', 'U') IS NOT NULL DROP TABLE dbo.UserActivity;
-IF OBJECT_ID('dbo.AppUser', 'U') IS NOT NULL DROP TABLE dbo.AppUser;
-IF OBJECT_ID('dbo.RolePermission', 'U') IS NOT NULL DROP TABLE dbo.RolePermission;
-IF OBJECT_ID('dbo.Role', 'U') IS NOT NULL DROP TABLE dbo.Role;
-IF OBJECT_ID('dbo.Permission', 'U') IS NOT NULL DROP TABLE dbo.Permission;
-IF OBJECT_ID('dbo.MimeType', 'U') IS NOT NULL DROP TABLE dbo.MimeType;
+-- ========== START OF TABLE DEFINITIONS ==========
 
 -- Roles and Permissions
 CREATE TABLE dbo.Role (
@@ -128,6 +103,55 @@ CREATE TABLE dbo.Question (
     CONSTRAINT FK_Question_Instruction FOREIGN KEY (InstructionId) REFERENCES dbo.QuestionInstruction(InstructionId)
 );
 
+-- Prompts (left-side for matching questions)
+CREATE TABLE dbo.MatchingPrompt (
+    PromptId INT IDENTITY PRIMARY KEY,
+    QuestionId INT NOT NULL,
+    LeftText NVARCHAR(255) NOT NULL,
+    PromptOrder INT NOT NULL,
+    CONSTRAINT FK_MatchingPrompt_Question FOREIGN KEY (QuestionId)
+        REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
+);
+
+-- Choices (right-side for matching questions)
+CREATE TABLE dbo.MatchingChoice (
+    ChoiceId INT IDENTITY PRIMARY KEY,
+    QuestionId INT NOT NULL,
+    RightText NVARCHAR(255) NOT NULL,
+    ChoiceOrder INT NOT NULL,
+    CONSTRAINT FK_MatchingChoice_Question FOREIGN KEY (QuestionId)
+        REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
+);
+
+-- Correct answers: which prompt can match which choice (many-to-many)
+CREATE TABLE dbo.MatchingAnswer (
+    PromptId INT NOT NULL,
+    ChoiceId INT NOT NULL,
+    PRIMARY KEY (PromptId, ChoiceId),
+    CONSTRAINT FK_MatchingAnswer_Prompt FOREIGN KEY (PromptId)
+        REFERENCES dbo.MatchingPrompt(PromptId) ON DELETE CASCADE,
+    CONSTRAINT FK_MatchingAnswer_Choice FOREIGN KEY (ChoiceId)
+        REFERENCES dbo.MatchingChoice(ChoiceId) -- NO ACTION
+);
+
+-- (Optional) User-submitted matching answers
+CREATE TABLE dbo.MatchingUserAnswer (
+    UserAnswerId INT IDENTITY PRIMARY KEY,
+    UserId INT NOT NULL,
+    QuestionId INT NOT NULL,
+    PromptId INT NOT NULL,
+    SelectedChoiceId INT NOT NULL,
+    AnsweredAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT FK_MatchingUserAnswer_Question FOREIGN KEY (QuestionId)
+        REFERENCES dbo.Question(QuestionId), -- No ON DELETE CASCADE
+    CONSTRAINT FK_MatchingUserAnswer_Prompt FOREIGN KEY (PromptId)
+        REFERENCES dbo.MatchingPrompt(PromptId) ON DELETE CASCADE, -- Only cascade here (or to choice if you prefer)
+    CONSTRAINT FK_MatchingUserAnswer_Choice FOREIGN KEY (SelectedChoiceId)
+        REFERENCES dbo.MatchingChoice(ChoiceId) -- No ON DELETE CASCADE
+    -- You may want to add a FK for UserId if you have a user/attempts table
+);
+
+
 -- Many-to-many: Quiz/Questions
 CREATE TABLE dbo.QuizQuestion (
     QuizId INT NOT NULL,
@@ -154,15 +178,6 @@ CREATE TABLE dbo.QuestionGapFilling (
     SequenceId INT NOT NULL,
     CorrectAnswer NVARCHAR(255) NOT NULL,
     CONSTRAINT FK_QGF_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
-);
-
-CREATE TABLE dbo.QuestionMatchingPair (
-    QMPairId INT IDENTITY PRIMARY KEY,
-    QuestionId INT NOT NULL,
-    LeftText NVARCHAR(255) NOT NULL,
-    RightText NVARCHAR(255) NOT NULL,
-    PairOrder INT NOT NULL,
-    CONSTRAINT FK_QMPair_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
 );
 
 CREATE TABLE dbo.QuestionEssay (
