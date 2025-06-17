@@ -71,7 +71,8 @@
     "moment-duration-format": "^2.3.2",
     "nightwatch": "^1.6.4",
     "nyc": "^15.1.0",
-    "prisma": "^6.9.0"
+    "prisma": "^6.9.0",
+    "ts-node": "^10.9.2"
   },
   "eslintConfig": {
     "root": true,

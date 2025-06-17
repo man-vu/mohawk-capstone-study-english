@@ -11,8 +11,9 @@ const {
   validateRoleId,
   validateName,
 } = require("../validators/validator");
-const AppUserModel = require("../../new_models/AppUserModel");
-const MimeTypeModel = require("../../new_models/MimeTypeModel");
+require('ts-node/register/transpile-only');
+const AppUserModel = require("../../new_models/AppUserModel.ts");
+const MimeTypeModel = require("../../new_models/MimeTypeModel.ts");
 const {
   sendPasswordReset,
 } = require("../../services/email_notification/passwordReset");
@@ -62,16 +63,16 @@ module.exports = {
     const { passwordHash, passwordSalt } = await hashPasswordAsync(password);
 
     try {
-      const user = await AppUserModel.addOne(
-        email,
-        passwordHash,
-        passwordSalt,
-        gender,
-        roleId,
-        profilePictureId,
-        firstName,
-        lastName
-      );
+      const user = await AppUserModel.create({
+        Email: email,
+        PasswordHash: passwordHash,
+        PasswordSalt: passwordSalt,
+        Gender: gender,
+        RoleId: roleId,
+        ProfilePictureId: profilePictureId,
+        FirstName: firstName,
+        LastName: lastName,
+      });
 
       const userId = user.UserId;
       const isTeacher = roleId === 1 ? true : false;
@@ -200,12 +201,11 @@ module.exports = {
           .add(password_reset_expiry_time, "seconds")
           .toDate();
 
-        await AppUserModel.updatePasswordReset(
-          userId,
-          passwordHash,
-          passwordSalt,
-          expiredTime
-        );
+        await AppUserModel.update(userId, {
+          PasswordResetHash: passwordHash,
+          PasswordResetSalt: passwordSalt,
+          PasswordResetExpiry: expiredTime,
+        });
 
         const sendResult = await sendPasswordReset(email, password);
 
