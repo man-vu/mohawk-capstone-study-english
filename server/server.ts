@@ -10,7 +10,7 @@ const sequelize = require("./config/orm");
 sequelize.authenticate().catch(err => console.error("Sequelize connection error:", err));
 
 const scheduler = require("./services/scheduler/checkAttempts");
-const history = require("connect-history-api-fallback");
+const connectHistory = require("connect-history-api-fallback");
 
 /* 
   Import all routes in the application
@@ -40,7 +40,7 @@ app.use(bodyParser.json());
 
 if (process.env.NODE_ENV === "production") {
   // Allowing refreshing current page without errors in production
-  app.use(history());
+  app.use(connectHistory());
   app.use(express.static(path.join(__dirname, "../dist")));
 
   // Redirecting to https protocol when user is landing on http protocol

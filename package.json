@@ -14,8 +14,8 @@
     "start": "npm run prod",
     "test": "cross-env NODE_ENV=test mocha -r ts-node/register/transpile-only 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
     "test-coverage": "cross-env NODE_ENV=test nyc mocha -r ts-node/register/transpile-only 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
-    "dev": "cross-env NODE_ENV=development nodemon --require ts-node/register --inspect=9300 server/server.ts",
-    "prod": "cross-env NODE_ENV=production node --require ts-node/register server/server.ts",
+    "dev": "cross-env NODE_ENV=development NODE_OPTIONS=\"--require ts-node/register/transpile-only --inspect=9300\" nodemon --exec node server/server.ts",
+    "prod": "cross-env NODE_ENV=production NODE_OPTIONS=\"--require ts-node/register/transpile-only\" node server/server.ts",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
