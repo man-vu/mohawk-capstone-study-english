@@ -5,7 +5,8 @@ const QuizQuestionModel = require("../../new_models/QuizQuestionModel.ts").defau
 const QuestionModel = require("../../new_models/QuestionModel.ts").default;
 const MCModel = require("../../new_models/QuestionMultipleChoiceModel.ts").default;
 const GModel = require("../../new_models/QuestionGapFillingModel.ts").default;
-const MModel = require("../../new_models/QuestionMatchingPairModel.ts").default;
+const PromptModel = require("../../new_models/MatchingPromptModel.ts").default;
+const ChoiceModel = require("../../new_models/MatchingChoiceModel.ts").default;
 const AttemptModel = require("../../new_models/UserAttemptModel.ts").default;
 const InstructionModel = require("../../new_models/QuestionInstructionModel.ts").default;
 const validator = require("../validators/validator");
@@ -44,20 +45,20 @@ async function createQuestionContent(
       await GModel.createMany(data);
       return sendSuccess(201);
     } else if (typeId === 3) {
-      const pairs = [];
       const left = items.leftItems || [];
       const right = items.rightItems || [];
-      for (let i = 0; i < Math.max(left.length, right.length); i++) {
-        pairs.push({
-          QuestionId: questionId,
-          LeftText: left[i] ? left[i].item : '',
-          RightText: right[i] ? right[i].item : '',
-          PairOrder: i + 1,
-        });
-      }
-      if (pairs.length > 0) {
-        await MModel.createMany(pairs);
-      }
+      const prompts = left.map((l, idx) => ({
+        QuestionId: questionId,
+        LeftText: l.item,
+        PromptOrder: idx + 1,
+      }));
+      const choices = right.map((r, idx) => ({
+        QuestionId: questionId,
+        RightText: r.item,
+        ChoiceOrder: idx + 1,
+      }));
+      if (prompts.length > 0) await PromptModel.createMany(prompts);
+      if (choices.length > 0) await ChoiceModel.createMany(choices);
       return sendSuccess(201);
     }
   } catch (error) {

@@ -76,7 +76,8 @@ export class QuestionModel {
       include: {
         QuestionMultipleChoice: true,
         QuestionGapFilling: true,
-        QuestionMatchingPair: true,
+        MatchingPrompt: true,
+        MatchingChoice: true,
       },
       orderBy: { QuestionId: 'asc' },
     });
@@ -98,12 +99,18 @@ export class QuestionModel {
           correct_answer: g.CorrectAnswer,
         })
       );
-      q.QuestionMatchingPair.forEach((p) =>
+      q.MatchingPrompt.forEach((p) =>
         result.push({
           question_id: q.QuestionId,
-          pair_order: p.PairOrder,
+          prompt_order: p.PromptOrder,
           left_text: p.LeftText,
-          right_text: p.RightText,
+        })
+      );
+      q.MatchingChoice.forEach((c2) =>
+        result.push({
+          question_id: q.QuestionId,
+          choice_order: c2.ChoiceOrder,
+          right_text: c2.RightText,
         })
       );
     }
