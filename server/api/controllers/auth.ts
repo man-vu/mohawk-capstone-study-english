@@ -67,7 +67,7 @@ module.exports = {
         PasswordHash: passwordHash,
         PasswordSalt: passwordSalt,
         Gender: gender,
-        RoleId: roleId,
+        RoleId: parseInt(roleId, 10),
         ProfilePictureId: profilePictureId,
         FirstName: firstName,
         LastName: lastName,
