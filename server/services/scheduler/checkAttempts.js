@@ -1,12 +1,12 @@
 const cron = require("node-cron");
 const moment = require("moment");
-const AttemptModel = new (require("../../models/attempt"))();
+require('ts-node/register/transpile-only');
+const UserAttemptModel = require("../../new_models/UserAttemptModel.ts").default;
 const quizzesController = require("../../api/controllers/quizzes");
 
 cron.schedule("*/15 * * * * *", async () => {
-  const attemptsResponse = await AttemptModel.findAllIncompleteAttempts();
-  if (!attemptsResponse.error && attemptsResponse.response.length > 0) {
-    const attempts = attemptsResponse.response;
+  try {
+    const attempts = await UserAttemptModel.findAllIncompleteAttempts();
     const currentMoment = moment();
 
     for (const { start_time, time_allowed, quiz_id, attempt_id, user_id, } of attempts) {
@@ -26,5 +26,7 @@ cron.schedule("*/15 * * * * *", async () => {
         const mark = await quizzesController.submitAndMark(data);
       }
     }
+  } catch (error) {
+    console.log(error);
   }
 });

@@ -12,8 +12,8 @@ const {
   validateName,
 } = require("../validators/validator");
 require('ts-node/register/transpile-only');
-const AppUserModel = require("../../new_models/AppUserModel.ts");
-const MimeTypeModel = require("../../new_models/MimeTypeModel.ts");
+const AppUserModel = require("../../new_models/AppUserModel.ts").default;
+const MimeTypeModel = require("../../new_models/MimeTypeModel.ts").default;
 const {
   sendPasswordReset,
 } = require("../../services/email_notification/passwordReset");

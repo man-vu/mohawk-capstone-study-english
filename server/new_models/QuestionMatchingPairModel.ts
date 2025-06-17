@@ -13,6 +13,10 @@ export class QuestionMatchingPairModel {
     return prisma.questionMatchingPair.create({ data });
   }
 
+  static createMany(data: Prisma.QuestionMatchingPairCreateManyInput[]) {
+    return prisma.questionMatchingPair.createMany({ data });
+  }
+
   static findById(QMPairId: number) {
     return prisma.questionMatchingPair.findUnique({ where: { QMPairId } });
   }
@@ -27,6 +31,26 @@ export class QuestionMatchingPairModel {
 
   static findAll() {
     return prisma.questionMatchingPair.findMany();
+  }
+
+  static findManyByQuestion(QuestionId: number) {
+    return prisma.questionMatchingPair.findMany({
+      where: { QuestionId },
+      orderBy: { PairOrder: 'asc' },
+    });
+  }
+
+  static async updateMany(
+    QuestionId: number,
+    items: { pair_order: number; left_text: string; right_text: string }[]
+  ) {
+    const queries = items.map((i) =>
+      prisma.questionMatchingPair.updateMany({
+        where: { QuestionId, PairOrder: i.pair_order },
+        data: { LeftText: i.left_text, RightText: i.right_text },
+      })
+    );
+    return prisma.$transaction(queries);
   }
 }
 export default QuestionMatchingPairModel;

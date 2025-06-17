@@ -12,6 +12,10 @@ export class QuestionGapFillingModel {
     return prisma.questionGapFilling.create({ data });
   }
 
+  static createMany(data: Prisma.QuestionGapFillingCreateManyInput[]) {
+    return prisma.questionGapFilling.createMany({ data });
+  }
+
   static findById(QGFId: number) {
     return prisma.questionGapFilling.findUnique({ where: { QGFId } });
   }
@@ -26,6 +30,26 @@ export class QuestionGapFillingModel {
 
   static findAll() {
     return prisma.questionGapFilling.findMany();
+  }
+
+  static findManyByQuestion(QuestionId: number) {
+    return prisma.questionGapFilling.findMany({
+      where: { QuestionId },
+      orderBy: { SequenceId: 'asc' },
+    });
+  }
+
+  static async updateMany(
+    QuestionId: number,
+    items: { sequence_id: number; correct_answer: string }[]
+  ) {
+    const queries = items.map((i) =>
+      prisma.questionGapFilling.updateMany({
+        where: { QuestionId, SequenceId: i.sequence_id },
+        data: { CorrectAnswer: i.correct_answer },
+      })
+    );
+    return prisma.$transaction(queries);
   }
 }
 export default QuestionGapFillingModel;

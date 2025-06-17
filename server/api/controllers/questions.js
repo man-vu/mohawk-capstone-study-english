@@ -1,13 +1,14 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const UserAnswerModel = new (require("../../models/user_answer"))();
-const QuizQuestionModel = new (require("../../models/quiz_question"))();
-const QuestionModel = new (require("../../models/question"))();
-const MCModel = new (require("../../models/multiple_choice_option"))();
-const GModel = new (require("../../models/gap_filling_option"))();
-const MModel = new (require("../../models/matching_option"))();
-const AttemptModel = new (require("../../models/attempt"))();
-const InstructionModel = new (require("../../models/instruction"))();
+require('ts-node/register/transpile-only');
+const UserAnswerModel = require("../../new_models/UserAnswerModel.ts").default;
+const QuizQuestionModel = require("../../new_models/QuizQuestionModel.ts").default;
+const QuestionModel = require("../../new_models/QuestionModel.ts").default;
+const MCModel = require("../../new_models/QuestionMultipleChoiceModel.ts").default;
+const GModel = require("../../new_models/QuestionGapFillingModel.ts").default;
+const MModel = require("../../new_models/QuestionMatchingPairModel.ts").default;
+const AttemptModel = require("../../new_models/UserAttemptModel.ts").default;
+const InstructionModel = require("../../new_models/QuestionInstructionModel.ts").default;
 const validator = require("../validators/validator");
 
 /**
@@ -25,45 +26,44 @@ async function createQuestionContent(
   correctAnswers,
   shuffleAnswers
 ) {
-  if (typeId === 1) {
-    let content = await MCModel.addMany(items, questionId);
-
-    if (!content.error) {
+  try {
+    if (typeId === 1) {
+      const data = items.map((i) => ({
+        QuestionId: questionId,
+        ChoiceText: i.choice_text,
+        ChoiceOrder: i.choice_id,
+        IsCorrect: !!i.is_correct_choice,
+      }));
+      await MCModel.createMany(data);
       return sendSuccess(201);
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.CANNOT_CREATE_QUESTION_CONTENT);
-    }
-  } else if (typeId === 2) {
-    let content = await GModel.addMany(items, questionId);
-
-    if (!content.error) {
+    } else if (typeId === 2) {
+      const data = items.map((i) => ({
+        QuestionId: questionId,
+        SequenceId: i.sequence_id,
+        CorrectAnswer: i.correct_answer,
+      }));
+      await GModel.createMany(data);
       return sendSuccess(201);
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.CANNOT_CREATE_QUESTION_CONTENT);
-    }
-  } else if (typeId === 3) {
-    let content = await MModel.addQuestion(
-      correctAnswers,
-      questionId,
-      shuffleAnswers
-    );
-
-    if (!content.error) {
-      let insertItems = await MModel.addMany(
-        items.leftItems,
-        items.rightItems,
-        questionId
-      );
-
-      if (!insertItems.error) {
-        return sendSuccess(201);
-      } else {
-        console.log(content.error)
-        return sendFailure(STRINGS.CANNOT_CREATE_QUESTION_CONTENT);
+    } else if (typeId === 3) {
+      const pairs = [];
+      const left = items.leftItems || [];
+      const right = items.rightItems || [];
+      for (let i = 0; i < Math.max(left.length, right.length); i++) {
+        pairs.push({
+          QuestionId: questionId,
+          LeftText: left[i] ? left[i].item : '',
+          RightText: right[i] ? right[i].item : '',
+          PairOrder: i + 1,
+        });
       }
+      if (pairs.length > 0) {
+        await MModel.createMany(pairs);
+      }
+      return sendSuccess(201);
     }
+  } catch (error) {
+    console.log(error);
+    return sendFailure(STRINGS.CANNOT_CREATE_QUESTION_CONTENT);
   }
 }
 
@@ -73,12 +73,11 @@ async function createQuestionContent(
  * @param {*} questionId 
  */
 async function createBridgingQuizAndQuestion(quizId, questionId) {
-  const bridge = await QuizQuestionModel.addOne(quizId, questionId);
-
-  if (!bridge.error) {
-    return sendSuccess(201, bridge.response);
-  } else {
-    console.log(bridge.error)
+  try {
+    await QuizQuestionModel.create({ QuizId: quizId, QuestionId: questionId });
+    return sendSuccess(201);
+  } catch (error) {
+    console.log(error);
     return sendFailure(STRINGS.CANNOT_CREATE_LINKING_BETWEEN_QUIZ_AND_QUESTION);
   }
 }
@@ -88,12 +87,15 @@ async function createBridgingQuizAndQuestion(quizId, questionId) {
  * @param {*} instruction 
  */
 async function createInstruction(instruction) {
-  let createInstruction = await InstructionModel.addOne(instruction);
-
-  if (!createInstruction.error) {
-    return sendSuccess(201, createInstruction.response);
-  } else {
-    console.log(createInstruction.error)
+  try {
+    const exist = await InstructionModel.findByInstruction(instruction);
+    if (exist) {
+      return sendSuccess(201, { InstructionId: exist.InstructionId });
+    }
+    const newInst = await InstructionModel.create({ Instruction: instruction });
+    return sendSuccess(201, { InstructionId: newInst.InstructionId });
+  } catch (error) {
+    console.log(error);
     return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
   }
 }
@@ -103,12 +105,14 @@ async function createInstruction(instruction) {
  * @param {*} instruction 
  */
 async function getInstruction(instruction) {
-  const findInstruction = await InstructionModel.findOne(instruction);
-
-  if (!findInstruction.error && findInstruction.response.length === 1) {
-    return sendSuccess(findInstruction.response[0]);
-  } else {
-    console.log(findInstruction.error)
+  try {
+    const result = await InstructionModel.findByInstruction(instruction);
+    if (result) {
+      return sendSuccess(result);
+    }
+    return sendFailure(STRINGS.CANNOT_LOAD_INSTRUCTION);
+  } catch (error) {
+    console.log(error);
     return sendFailure(STRINGS.CANNOT_LOAD_INSTRUCTION);
   }
 }
@@ -119,18 +123,19 @@ async function getInstruction(instruction) {
  * @param {*} questionId 
  */
 async function updateIncompleteAttempts(quizId, questionId) {
-  const incomplete = await AttemptModel.findIncompleteAttempts(quizId);
-
-  if (!incomplete.error && incomplete.response.length > 0) {
-    const attempts = incomplete.response
-
+  try {
+    const attempts = await AttemptModel.findIncompleteAttemptsByQuizId(quizId);
     for (const attempt of attempts) {
-      const data = { questionId, quizId, userId: attempt.user_id, attemptId: attempt.attempt_id, numberOfQuestions: 1 } 
-      const update = await AttemptModel.addOnePlaceholder(data)
+      await UserAnswerModel.create({
+        AttemptId: attempt.AttemptId,
+        QuestionId: questionId,
+        AnswerText: '',
+      });
     }
-    return true
-  } else {
-    return false
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
   }
 }
 
@@ -166,79 +171,59 @@ module.exports = {
     let correctAnswers = data.correctAnswers;
     let shuffleAnswers = data.shuffleAnswers ? data.shuffleAnswers : 1;
 
-    // First, check if instruction already exists in the database
+    // Create or reuse instruction
     const create = await createInstruction(instruction);
 
     if (!create.error) {
-      let instructionId = create.response.insertId;
+      const instructionId = create.response.InstructionId;
 
-      if (instructionId === 0) {
-        const findInstruction = await getInstruction(instruction);
+      try {
+        const q = await QuestionModel.create({
+          TypeId: typeId,
+          InstructionId: instructionId,
+          IsActive: !!isActive,
+          ParagraphTitle: paragraphTitle,
+          QuestionText: question,
+        });
 
-        if (!findInstruction.error) {
-          instructionId = findInstruction.response.instruction_id;
-        } else {
-          console.log(findInstruction.error)
-          return sendFailure(STRINGS.CANNOT_LOAD_INSTRUCTION)
+        const questionId = q.QuestionId;
+
+        const bridge = await createBridgingQuizAndQuestion(quizId, questionId);
+        const content = await createQuestionContent(
+          questionId,
+          typeId,
+          items,
+          correctAnswers,
+          shuffleAnswers
+        );
+
+        await updateIncompleteAttempts(quizId, questionId);
+
+        if (!bridge.error && !content.error) {
+          return sendSuccess(201, { question_id: questionId });
         }
-      }
-
-      if (instructionId > 0) {
-        // Create Question
-        const d = { typeId, instructionId, isActive, paragraphTitle, question };
-
-        let createQuestion = await QuestionModel.addOne(d);
-        if (!createQuestion.error) {
-          // Add items for different types of question
-          const questionId = createQuestion.response.insertId;
-
-          const bridge = await createBridgingQuizAndQuestion(
-            quizId,
-            questionId
-          );
-          const content = await createQuestionContent(
-            questionId,
-            typeId,
-            items,
-            correctAnswers,
-            shuffleAnswers
-          );
-
-          const addPlaceholderToIncompleteAttempts = await updateIncompleteAttempts(quizId, questionId)
-
-          if (!bridge.error && !content.error) {
-            return sendSuccess(201, {question_id: questionId});
-          } else {
-            console.log(bridge.error)
-            console.log(content.error)
-            return sendFailure(STRINGS.CANNOT_CREATE_QUESTION);
-          }
-        } else {
-          console.log(createQuestion.error)
-          return sendFailure(STRINGS.CANNOT_CREATE_QUESTION);
-        }
-      } else {
-        console.log(create.error)
-        return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
+        console.log(bridge.error);
+        console.log(content.error);
+        return sendFailure(STRINGS.CANNOT_CREATE_QUESTION);
+      } catch (err) {
+        console.log(err);
+        return sendFailure(STRINGS.CANNOT_CREATE_QUESTION);
       }
     } else {
-      console.log(create.error)
-      return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION)
+      console.log(create.error);
+      return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
     }
   },
   /**
    * Function that updates a user answer
    */
   updateAnswer: async (data) => {
-    const { questionId, quizId, attemptId, answerText, userId } = data;
-    const answer = await UserAnswerModel.saveOne(data);
-
-    if (!answer.error) {
-      if (answer.response.affectedRows === 1) {
-        return sendSuccess(200, null);
-      }
-    } else {
-      console.log(answer.error)
+    const { questionId, attemptId, answerText } = data;
+    try {
+      await UserAnswerModel.updateByAttemptAndQuestion(attemptId, questionId, { AnswerText: answerText });
+      return sendSuccess(200, null);
+    } catch (error) {
+      console.log(error);
       return sendFailure(200, STRINGS.CANNOT_UPDATE_ANSWER);
     }
   },
