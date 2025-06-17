@@ -39,6 +39,7 @@ IF OBJECT_ID('dbo.AppUser', 'U') IS NOT NULL DROP TABLE dbo.AppUser;
 IF OBJECT_ID('dbo.RolePermission', 'U') IS NOT NULL DROP TABLE dbo.RolePermission;
 IF OBJECT_ID('dbo.Role', 'U') IS NOT NULL DROP TABLE dbo.Role;
 IF OBJECT_ID('dbo.Permission', 'U') IS NOT NULL DROP TABLE dbo.Permission;
+IF OBJECT_ID('dbo.MimeType', 'U') IS NOT NULL DROP TABLE dbo.MimeType;
 
 -- Roles and Permissions
 CREATE TABLE dbo.Role (
@@ -134,7 +135,7 @@ CREATE TABLE dbo.QuizQuestion (
     SortOrder INT NULL,
     PRIMARY KEY (QuizId, QuestionId),
     CONSTRAINT FK_QuizQuestion_Quiz FOREIGN KEY (QuizId) REFERENCES dbo.Quiz(QuizId) ON DELETE CASCADE,
-    CONSTRAINT FK_QuizQuestion_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
+    CONSTRAINT FK_QuizQuestion_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) -- NO ACTION
 );
 
 -- Subtype tables for questions
@@ -192,7 +193,8 @@ CREATE TABLE dbo.UserAnswer (
     QuestionId INT NOT NULL,
     AnswerText NVARCHAR(1024) NULL, -- Short or summary for essay
     IsCorrect BIT NULL,
-    CONSTRAINT FK_UserAnswer_Attempt FOREIGN KEY (AttemptId) REFERENCES dbo.UserAttempt(AttemptId) ON DELETE CASCADE,
+    CONSTRAINT FK_UserAnswer_Attempt FOREIGN KEY (AttemptId) REFERENCES dbo.UserAttempt(AttemptId) -- NO ACTION
+    ,
     CONSTRAINT FK_UserAnswer_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
 );
 
