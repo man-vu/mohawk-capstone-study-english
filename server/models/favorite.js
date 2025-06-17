@@ -1,23 +1,41 @@
-const database = new (require("../config/database"))();
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/orm');
+
+const UserFavorite = sequelize.define('user_favorite', {
+  user_id: { type: DataTypes.INTEGER, primaryKey: true },
+  quiz_id: { type: DataTypes.INTEGER, primaryKey: true }
+}, { tableName: 'user_favorite', timestamps: false });
 
 class FavoriteModel {
   constructor() {
-    this.db = database;
+    this.UserFavorite = UserFavorite;
   }
 
   async findOne(quizId, userId) {
-    return await this.db.executeQuery(`SELECT COUNT(*) as favorite FROM user_favorite 
-    WHERE user_favorite.user_id = ${userId} AND user_favorite.quiz_id = ${quizId}`)  
+    try {
+      const count = await this.UserFavorite.count({ where: { quiz_id: quizId, user_id: userId } });
+      return { error: null, response: [{ favorite: count }] };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async addOne(quizId, userId) {
-    return await this.db.executeQuery(`
-    INSERT INTO user_favorite (user_id, quiz_id) VALUES ('${userId}', '${quizId}')`)
+    try {
+      const res = await this.UserFavorite.create({ user_id: userId, quiz_id: quizId });
+      return { error: null, response: { affectedRows: res ? 1 : 0 } };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async deleteOne(quizId, userId) {
-    return await this.db.executeQuery(`DELETE FROM user_favorite 
-    WHERE user_favorite.user_id = ${userId} AND user_favorite.quiz_id = ${quizId}`)
+    try {
+      const rows = await this.UserFavorite.destroy({ where: { user_id: userId, quiz_id: quizId } });
+      return { error: null, response: { affectedRows: rows } };
+    } catch (error) {
+      return { error };
+    }
   }
 }
 

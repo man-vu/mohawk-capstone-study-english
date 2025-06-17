@@ -1,12 +1,23 @@
-const database = new (require("../config/database"))();
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/orm');
+
+const QuizSkill = sequelize.define('quiz_skill', {
+  skill_id: { type: DataTypes.INTEGER, primaryKey: true },
+  skill_description: DataTypes.STRING
+}, { tableName: 'quiz_skill', timestamps: false });
 
 class SkillModel {
   constructor() {
-    this.db = database;
+    this.QuizSkill = QuizSkill;
   }
 
   async findAll() {
-    return await this.db.executeQuery(`SELECT * FROM quiz_skill`);
+    try {
+      const skills = await this.QuizSkill.findAll();
+      return { error: null, response: skills.map(s => s.toJSON()) };
+    } catch (error) {
+      return { error };
+    }
   }
 }
 
