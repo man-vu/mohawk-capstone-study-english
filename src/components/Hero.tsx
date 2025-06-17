@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Hero = ({ onExploreTests }) => {
+const Hero: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-800 dark:to-blue-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -14,8 +16,8 @@ const Hero = ({ onExploreTests }) => {
             expert feedback, and personalized study plans. Join thousands of successful students worldwide.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button 
-              onClick={onExploreTests}
+            <button
+              onClick={() => navigate('/templates')}
               className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-4 rounded-lg text-lg font-semibold transition-colors w-full sm:w-auto"
             >
               Start Free Practice Test

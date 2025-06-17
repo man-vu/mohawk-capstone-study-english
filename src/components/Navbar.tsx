@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const Navbar = ({ theme, toggleTheme }) => {
+interface NavbarProps {
+  theme: string;
+  toggleTheme: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout, openAuthModal } = useAuth();
 
@@ -11,17 +17,17 @@ const Navbar = ({ theme, toggleTheme }) => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <Link to="/" className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 IELTS Master
-              </h1>
+              </Link>
             </div>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#practice" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 text-sm font-medium transition-colors">
+            <Link to="/templates" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 text-sm font-medium transition-colors">
               Practice Tests
-            </a>
+            </Link>
             <a href="#courses" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 text-sm font-medium transition-colors">
               Courses
             </a>
@@ -98,7 +104,7 @@ const Navbar = ({ theme, toggleTheme }) => {
         {isMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-              <a href="#practice" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Practice Tests</a>
+              <Link to="/templates" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Practice Tests</Link>
               <a href="#courses" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Courses</a>
               <a href="#plans" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Study Plans</a>
               <a href="#about" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">About</a>

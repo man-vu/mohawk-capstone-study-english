@@ -45,7 +45,8 @@
     "node-cron": "^3.0.3",
     "resize-img": "^2.0.0",
     "dotenv": "^16.3.2",
-    "@prisma/client": "^5.13.0"
+    "@prisma/client": "^5.13.0",
+    "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
