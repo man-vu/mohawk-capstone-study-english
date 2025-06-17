@@ -46,7 +46,10 @@ async function unmarkFavorite({ quizId, userId }) {
  * @param {*} data All information about a new attempt
  */
 async function createNewAttempt({ questionIds, quizId, userId }) {
-  const attempt = await AttemptModel.create({ QuizId: quizId, UserId: userId });
+  const attempt = await AttemptModel.create({
+    Quiz: { connect: { QuizId: quizId } },
+    AppUser: { connect: { UserId: userId } },
+  });
   await UserAnswerModel.createMany(
     questionIds.map((id) => ({ AttemptId: attempt.AttemptId, QuestionId: id, AnswerText: '' }))
   );
