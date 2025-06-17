@@ -218,8 +218,13 @@ module.exports = {
    */
   updateAnswer: async (data) => {
     const { questionId, attemptId, answerText } = data;
+    const qId = Number(questionId);
+    const aId = Number(attemptId);
+    if (Number.isNaN(qId) || Number.isNaN(aId)) {
+      return sendFailure(STRINGS.INVALID_QUESTION_ID);
+    }
     try {
-      await UserAnswerModel.updateByAttemptAndQuestion(attemptId, questionId, { AnswerText: answerText });
+      await UserAnswerModel.updateByAttemptAndQuestion(aId, qId, { AnswerText: answerText });
       return sendSuccess(200, null);
     } catch (error) {
       console.log(error);

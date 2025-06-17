@@ -6,7 +6,10 @@ const authMiddleware = require("../middlewares/auth");
 // GET: [routes/questions]
 // Get question by id
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: "Invalid question id" });
+  }
 
   const question = await questionsController.getQuestion(id);
 
@@ -25,8 +28,12 @@ router.post("/", authMiddleware, async (req, res) => {
     paragraphTitle: !!req.body.paragraphTitle ? null : req.body.paragraphTitle,
     correctAnswers: req.body.correctAnswers,
     shuffleAnswers: req.body.shuffleAnswers ? req.body.shuffleAnswers : 1,
-    quizId: parseInt(req.body.quizId, 10)
+    quizId: Number(req.body.quizId)
   };
+
+  if (Number.isNaN(data.quizId)) {
+    return res.status(400).json({ error: "Invalid quiz id" });
+  }
 
   const question = await questionsController.createQuestion(data)
 
@@ -37,12 +44,16 @@ router.post("/", authMiddleware, async (req, res) => {
 // Create a new answer
 router.put("/answer/:id", authMiddleware, async (req, res) => {
   const data = {
-    questionId: parseInt(req.params.id, 10),
-    attemptId: parseInt(req.body.attemptId, 10),
-    quizId: parseInt(req.body.quizId, 10),
-    userId: req.user.id,
+    questionId: Number(req.params.id),
+    attemptId: Number(req.body.attemptId),
+    quizId: Number(req.body.quizId),
+    userId: Number(req.user.id),
     answerText: req.body.answerText
   };
+
+  if (Number.isNaN(data.questionId) || Number.isNaN(data.attemptId) || Number.isNaN(data.quizId) || Number.isNaN(data.userId)) {
+    return res.status(400).json({ error: "Invalid identifiers" });
+  }
 
   const answer = await questionsController.updateAnswer(data)
 

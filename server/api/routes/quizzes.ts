@@ -8,8 +8,12 @@ const router = express.Router();
  * Route that handles starting a quiz
  */
 router.post("/start/:id", authMiddleware, async (req, res) => {
-  const quizId = parseInt(req.params.id, 10);
-  const userId = req.user.id;
+  const quizId = Number(req.params.id);
+  const userId = Number(req.user.id);
+
+  if (Number.isNaN(quizId) || Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid quiz or user id" });
+  }
 
   const quiz = await quizzesController.startQuiz(quizId, userId);
   res.status(200).json(quiz);
@@ -19,7 +23,10 @@ router.post("/start/:id", authMiddleware, async (req, res) => {
  * Route that loads a quiz
  */
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: "Invalid quiz id" });
+  }
   const quiz = await quizzesController.getQuiz(id);
   res.status(200).json(quiz);
 });
@@ -34,7 +41,7 @@ router.post("/", [authMiddleware, authTeacherMiddleware], async (req, res) => {
     isActive: req.body.isActive,
     timeAllowed: req.body.timeAllowed,
     skillId: req.body.skillId,
-    userId: req.user.id,
+    userId: Number(req.user.id),
   };
 
   const quiz = await quizzesController.createQuiz(data);
@@ -46,14 +53,19 @@ router.post("/", [authMiddleware, authTeacherMiddleware], async (req, res) => {
  * Route that updates a quiz
  */
 router.put("/:id", [authMiddleware, authTeacherMiddleware], async (req, res) => {
+  const quizId = Number(req.params.id);
+  const userId = Number(req.user.id);
+  if (Number.isNaN(quizId) || Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid quiz or user id" });
+  }
   const data = {
-    quizId: parseInt(req.params.id, 10),
+    quizId,
     courseName: req.body.courseName,
     description: req.body.description,
     isActive: req.body.isActive,
     timeAllowed: req.body.timeAllowed,
     skillId: req.body.skillId,
-    userId: req.user.id,
+    userId,
   };
 
   const quiz = await quizzesController.updateQuiz(data);
@@ -65,8 +77,11 @@ router.put("/:id", [authMiddleware, authTeacherMiddleware], async (req, res) => 
  * Route that toggles user favorites for a quiz
  */
 router.put("/:id/favorite", authMiddleware, async (req, res) => {
-  let quizId = parseInt(req.params.id, 10);
-  const userId = req.user.id;
+  const quizId = Number(req.params.id);
+  const userId = Number(req.user.id);
+  if (Number.isNaN(quizId) || Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid quiz or user id" });
+  }
 
   const rating = await quizzesController.toggleFavorite({ quizId, userId });
 
@@ -77,9 +92,12 @@ router.put("/:id/favorite", authMiddleware, async (req, res) => {
  * Route that sets rating for a quiz
  */
 router.put("/:id/rating", authMiddleware, async (req, res) => {
-  const quizId = parseInt(req.params.id, 10);
-  const userId = req.user.id;
+  const quizId = Number(req.params.id);
+  const userId = Number(req.user.id);
   const ratingGiven = req.body.ratingGiven;
+  if (Number.isNaN(quizId) || Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid quiz or user id" });
+  }
 
   const rating = await quizzesController.setRating({
     quizId,
@@ -94,9 +112,13 @@ router.put("/:id/rating", authMiddleware, async (req, res) => {
  * Route that submits a quiz
  */
 router.post("/submit", authMiddleware, async (req, res) => {
-  const quizId = parseInt(req.body.quizId, 10);
-  const attemptId = parseInt(req.body.attemptId, 10);
-  const userId = req.user.id;
+  const quizId = Number(req.body.quizId);
+  const attemptId = Number(req.body.attemptId);
+  const userId = Number(req.user.id);
+
+  if (Number.isNaN(quizId) || Number.isNaN(attemptId) || Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid quiz, attempt or user id" });
+  }
 
   const submit = await quizzesController.submitAndMark({
     quizId,

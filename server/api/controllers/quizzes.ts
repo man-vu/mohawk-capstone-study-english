@@ -129,6 +129,9 @@ module.exports = {
   startQuiz: async (quizId, userId) => {
     const qId = Number(quizId);
     const uId = Number(userId);
+    if (Number.isNaN(qId) || Number.isNaN(uId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
     try {
       const latestAttempt = await AttemptModel.findLatest(qId, uId);
       const hasCompleted = latestAttempt && latestAttempt.EndTime !== null;
@@ -174,8 +177,12 @@ module.exports = {
    * Loads a quiz by Id
    */
   getQuiz: async (id) => {
+    const qId = Number(id);
+    if (Number.isNaN(qId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
     try {
-      const quiz = await QuizModel.findDetailed(id);
+      const quiz = await QuizModel.findDetailed(qId);
       return sendSuccess(quiz);
     } catch (error) {
       console.log(error);
@@ -203,6 +210,9 @@ module.exports = {
     const timeAllowed = Number(data.timeAllowed);
     const skillId = Number(data.skillId);
     const userId = Number(data.userId);
+    if (Number.isNaN(timeAllowed) || Number.isNaN(skillId) || Number.isNaN(userId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
 
     try {
       const quiz = await QuizModel.create({
@@ -226,6 +236,9 @@ module.exports = {
     const quizId = Number(data.quizId);
     const skillId = Number(data.skillId);
     const userId = Number(data.userId);
+    if (Number.isNaN(quizId) || Number.isNaN(skillId) || Number.isNaN(userId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
 
     if (!validator.validateIsActiveQuestion(data.isActive)) {
       return sendFailure(STRINGS.INVALID_IS_ACTIVE_VALUE);
@@ -260,6 +273,9 @@ module.exports = {
   toggleFavorite: async (data) => {
     const qId = Number(data.quizId);
     const uId = Number(data.userId);
+    if (Number.isNaN(qId) || Number.isNaN(uId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
     try {
       const exist = await FavoriteModel.findById(uId, qId);
       if (exist) {
@@ -278,7 +294,7 @@ module.exports = {
   setRating: async ({ quizId, userId, ratingGiven }) => {
     const qId = Number(quizId);
     const uId = Number(userId);
-    if (!qId || !uId || qId < 1 || uId < 0) {
+    if (Number.isNaN(qId) || Number.isNaN(uId) || qId < 1 || uId < 0) {
       return sendFailure(STRINGS.INVALID_QUIZ_ID);
     }
     if (!validator.validateRatingGiven(ratingGiven)) {
@@ -311,6 +327,10 @@ module.exports = {
     const qId = Number(data.quizId);
     const uId = Number(data.userId);
     const aId = Number(data.attemptId);
+
+    if (Number.isNaN(qId) || Number.isNaN(uId) || Number.isNaN(aId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
 
     const endTime = moment(Date.now());
     const getCorrectAnswers = await CorrectAnswerModel.findAll(qId);

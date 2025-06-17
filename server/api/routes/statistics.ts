@@ -8,7 +8,10 @@ const statisticsController = require("../controllers/statistics.ts");
  * Route that gets student statistics
  */
 router.get("/", authMiddleware, async (req, res) => {
-    const userId = req.user.id;
+    const userId = Number(req.user.id);
+    if (Number.isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user id" });
+    }
 
     const statistics = await statisticsController.getStatistics(userId)
 
@@ -21,7 +24,10 @@ router.get("/", authMiddleware, async (req, res) => {
 router.post("/board/quiz/:id", authTeacherMiddleware, async (req, res) => {
     const dateFrom = req.body.dateFrom
     const dateTo = req.body.dateTo
-    const quizId = parseInt(req.params.id, 10)
+    const quizId = Number(req.params.id)
+    if (Number.isNaN(quizId)) {
+        return res.status(400).json({ error: "Invalid quiz id" });
+    }
 
     const data = {dateFrom, dateTo, quizId}
     const statistics = await statisticsController.getBoardStatisticsByQuiz(data)
@@ -35,7 +41,10 @@ router.post("/board/quiz/:id", authTeacherMiddleware, async (req, res) => {
 router.post("/board/student/:id", authTeacherMiddleware, async (req, res) => {
     const dateFrom = req.body.dateFrom
     const dateTo = req.body.dateTo
-    const userId = parseInt(req.params.id, 10)
+    const userId = Number(req.params.id)
+    if (Number.isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user id" });
+    }
 
     const data = {dateFrom, dateTo, userId}
     const statistics = await statisticsController.getBoardStatisticsByStudent(data)
