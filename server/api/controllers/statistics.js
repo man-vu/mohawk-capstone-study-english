@@ -1,7 +1,8 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const StatisticsModel = new (require("../../models/statistics"))();
-const UserModel = new (require("../../models/user"))();
+require('ts-node/register/transpile-only');
+const StatisticsModel = require("../../new_models/StatisticsModel.ts").default;
+const AppUserModel = require("../../new_models/AppUserModel.ts").default;
 const moment = require("moment");
 
 /**
@@ -156,62 +157,54 @@ function createPieChart(statsType, stats, additionalInfo) {
 
 module.exports = {
   getStatistics: async (userId) => {
-    let quizStats = await StatisticsModel.findQuizOne(userId);
-    let answerStats = await StatisticsModel.findAnswerOne(userId);
-
-    if (!quizStats.error && !answerStats.error) {
-      const quizStatsData = quizStats.response[0];
-      const answerStatsData = answerStats.response[0];
+    try {
+      const quizStatsData = await StatisticsModel.findQuizOne(userId);
+      const answerStatsData = await StatisticsModel.findAnswerOne(userId);
 
       const quizStatistics = createPieChart(1, quizStatsData);
       const answerStatistics = createPieChart(2, answerStatsData);
 
       return sendSuccess({ quizStatistics, answerStatistics });
-    } else {
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.CANNOT_LOAD_STATISTICS);
     }
   },
   getBoardStatisticsByQuiz: async (data) => {
-    const { quizId, dateFrom, dateTo } = data;
-    const attempts = await StatisticsModel.findBoardStatisticsByQuiz(data);
-    const summary = getBoardStatisticsSummaryByQuiz(attempts.response);
+    try {
+      const { quizId } = data;
+      const attempts = await StatisticsModel.findBoardStatisticsByQuiz(data);
+      const summary = getBoardStatisticsSummaryByQuiz(attempts);
 
-    if (!attempts.error) {
-      if (attempts.response.length === 0) {
-        return sendSuccess({
-          attempts: false,
-          summary: false
-        })
+      if (attempts.length === 0) {
+        return sendSuccess({ attempts: false, summary: false });
       }
 
-      return sendSuccess({
-        attempts: attempts.response,
-        summary: { ...summary, quizId },
-      });
-    } else {
+      return sendSuccess({ attempts, summary: { ...summary, quizId } });
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.CANNOT_LOAD_STATISTICS);
     }
   },
   getBoardStatisticsByStudent: async (data) => {
-    const { userId, dateFrom, dateTo } = data;
-    const answer = await StatisticsModel.findBoardStatisticsByAnswerQuality( data );
-    const quiz = await StatisticsModel.findBoardStatisticsByQuizCompleted(data);
-    const user = await UserModel.findOneById(userId);
+    try {
+      const { userId, dateFrom, dateTo } = data;
+      const answerStatsData = await StatisticsModel.findBoardStatisticsByAnswerQuality(data);
+      const quizStatsData = await StatisticsModel.findBoardStatisticsByQuizCompleted(data);
+      const user = await AppUserModel.findById(userId);
 
-    if (!answer.error && !quiz.error && !user.error) {
-      const quizStatsData = quiz.response[0];
-      const answerStatsData = answer.response[0];
       const additionalInfo = {
-        firstName: user.response[0].first_name,
+        firstName: user?.FirstName,
         dateFrom: moment(dateFrom).format("YYYY-MMM-DD"),
         dateTo: moment(dateTo).format("YYYY-MMM-DD"),
       };
 
       const quizStatistics = createPieChart(1, quizStatsData, additionalInfo);
-      const answerStatistics = createPieChart( 2, answerStatsData, additionalInfo );
+      const answerStatistics = createPieChart(2, answerStatsData, additionalInfo);
 
       return sendSuccess({ quizStatistics, answerStatistics });
-    } else {
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.CANNOT_LOAD_STATISTICS);
     }
   },
