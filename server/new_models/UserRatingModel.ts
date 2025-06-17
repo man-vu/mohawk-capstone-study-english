@@ -26,5 +26,9 @@ export class UserRatingModel {
   static findAll() {
     return prisma.userRating.findMany();
   }
+
+  static deleteManyByQuiz(QuizId: number) {
+    return prisma.userRating.deleteMany({ where: { QuizId } });
+  }
 }
 export default UserRatingModel;

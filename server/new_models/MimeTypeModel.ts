@@ -15,6 +15,13 @@ export class MimeTypeModel {
     return prisma.mimeType.findUnique({ where: { MimeId } });
   }
 
+  static findOne(MimeId: number) {
+    return prisma.mimeType.findUnique({
+      where: { MimeId },
+      select: { ImageUrl: true, ImageAlt: true },
+    });
+  }
+
   static update(MimeId: number, data: Prisma.MimeTypeUpdateInput) {
     return prisma.mimeType.update({ where: { MimeId }, data });
   }

@@ -11,8 +11,9 @@ const {
   validateRoleId,
   validateName,
 } = require("../validators/validator");
-const UserModel = new (require("../../models/user"))();
-const MimeTypeModel = new (require("../../models/mime_type"))();
+require('ts-node/register/transpile-only');
+const AppUserModel = require("../../new_models/AppUserModel.ts").default;
+const MimeTypeModel = require("../../new_models/MimeTypeModel.ts").default;
 const {
   sendPasswordReset,
 } = require("../../services/email_notification/passwordReset");
@@ -61,50 +62,43 @@ module.exports = {
     // Generate hash and salt out of password
     const { passwordHash, passwordSalt } = await hashPasswordAsync(password);
 
-    // Add a user
-    const user = await UserModel.addOne(
-      email,
-      passwordHash,
-      passwordSalt,
-      gender,
-      roleId,
-      profilePictureId,
-      firstName,
-      lastName
-    );
-    
+    try {
+      const user = await AppUserModel.create({
+        Email: email,
+        PasswordHash: passwordHash,
+        PasswordSalt: passwordSalt,
+        Gender: gender,
+        RoleId: roleId,
+        ProfilePictureId: profilePictureId,
+        FirstName: firstName,
+        LastName: lastName,
+      });
 
-    if (!user.error) {
-      if (user.response.affectedRows === 1) {
-        const userId = user.response.insertId
-        const isTeacher = roleId === 1 ? true : false
-        const avatarUrl = getAvatarUrl(firstName)
+      const userId = user.UserId;
+      const isTeacher = roleId === 1 ? true : false;
+      const avatarUrl = getAvatarUrl(firstName);
 
-        const token = jwt.sign(
-          { id: userId, isTeacher: isTeacher },
-          jwt_secret_key,
-          {
-            expiresIn: jwt_expiry_time,
-          }
-        );
+      const token = jwt.sign(
+        { id: userId, isTeacher: isTeacher },
+        jwt_secret_key,
+        {
+          expiresIn: jwt_expiry_time,
+        }
+      );
 
-        return sendSuccess(201, {
-          email,
-          roleId,
-          profilePictureId,
-          gender,
-          firstName,
-          lastName,
-          token,
-          isTeacher,
-          avatarUrl
-        });
-      } else {
-        console.log(user.error)
-        return sendFailure(400, STRINGS.REGISTERING_USER_FAILED);
-      }
-    } else {
-      // console.log(user.error)
+      return sendSuccess(201, {
+        email,
+        roleId,
+        profilePictureId,
+        gender,
+        firstName,
+        lastName,
+        token,
+        isTeacher,
+        avatarUrl,
+      });
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.CANNOT_REGISTER_USER_WITH_EMAIL(email));
     }
   },
@@ -121,62 +115,60 @@ module.exports = {
       return sendFailure(STRINGS.EMAIL_IS_NOT_IN_CORRECT_FORMAT);
     }
 
-    // Get user_id and password
-    const validatedUser = await UserModel.findOneByEmail(email);
+    try {
+      const validatedUser = await AppUserModel.findByEmail(email);
 
-    if (!validatedUser.error) {
-      if (validatedUser.response.length === 0) {
+      if (!validatedUser) {
         return sendFailure(401, STRINGS.PLEASE_CHECK_YOUR_EMAIL);
-      } else {
-        const passwordHash = validatedUser.response[0].password_hash;
-        const firstName = validatedUser.response[0].first_name;
-        const lastName = validatedUser.response[0].last_name;
-        const userId = validatedUser.response[0].user_id;
-        const isTeacher = validatedUser.response[0].role_id === 1 ? true : false;
-        const avatarId = validatedUser.response[0].profile_picture_id;
-        const passwordResetHash = validatedUser.response[0].password_reset_hash
-        const passwordResetSalt = validatedUser.response[0].password_reset_salt
-        const passwordExpiry = validatedUser.response[0].password_reset_expiry
+      }
 
-        const mime = await MimeTypeModel.findOne(avatarId)
-        let success = await checkPassword(password, passwordHash);
+      const passwordHash = validatedUser.PasswordHash;
+      const firstName = validatedUser.FirstName;
+      const lastName = validatedUser.LastName;
+      const userId = validatedUser.UserId;
+      const isTeacher = validatedUser.RoleId === 1 ? true : false;
+      const avatarId = validatedUser.ProfilePictureId;
+      const passwordResetHash = validatedUser.PasswordResetHash;
+      const passwordResetSalt = validatedUser.PasswordResetSalt;
+      const passwordExpiry = validatedUser.PasswordResetExpiry;
 
-        if (passwordResetHash) {
-          const currentMoment = moment();
-          const difference = currentMoment.diff(moment(passwordExpiry), "seconds");
+      const mime = avatarId ? await MimeTypeModel.findOne(avatarId) : null;
+      let success = await checkPassword(password, passwordHash);
 
-          if (difference > 0) {
-            return sendFailure(401, STRINGS.PLEASE_CHECK_YOUR_PASSWORD);
-          } else {
-            success = await checkPassword(password, passwordResetHash)
-          }
-        }
-        
+      if (passwordResetHash) {
+        const currentMoment = moment();
+        const difference = currentMoment.diff(moment(passwordExpiry), "seconds");
 
-        if (success) {
-          let token = jwt.sign(
-            { id: userId, isTeacher: isTeacher },
-            jwt_secret_key,
-            {
-              expiresIn: jwt_expiry_time,
-            }
-          );
-
-
-          let avatarUrl
-          if (!mime.error && mime.response.length === 1 && mime.response[0].image_url !== "default-profile-picture.png") {
-            avatarUrl = mime.response[0].image_url
-          } else {
-            avatarUrl = getAvatarUrl(firstName)
-          }
-
-          return sendSuccess({ firstName, lastName, isTeacher, email, token, avatarUrl });
-        } else {
+        if (difference > 0) {
           return sendFailure(401, STRINGS.PLEASE_CHECK_YOUR_PASSWORD);
+        } else {
+          success = await checkPassword(password, passwordResetHash);
         }
       }
-    } else {
-      console.log(validatedUser.error)
+        
+
+      if (success) {
+        let token = jwt.sign(
+          { id: userId, isTeacher: isTeacher },
+          jwt_secret_key,
+          {
+            expiresIn: jwt_expiry_time,
+          }
+        );
+
+        let avatarUrl;
+        if (mime && mime.ImageUrl !== "default-profile-picture.png") {
+          avatarUrl = mime.ImageUrl;
+        } else {
+          avatarUrl = getAvatarUrl(firstName);
+        }
+
+        return sendSuccess({ firstName, lastName, isTeacher, email, token, avatarUrl });
+      } else {
+        return sendFailure(401, STRINGS.PLEASE_CHECK_YOUR_PASSWORD);
+      }
+    } catch (error) {
+      console.log(error);
       return sendFailure(401, STRINGS.AUTHENTICATION_FAILED);
     }
   },
@@ -188,42 +180,46 @@ module.exports = {
     }
 
     if (email) {
-      const validatedUser = await UserModel.findOneByEmail(email);
+      try {
+        const validatedUser = await AppUserModel.findByEmail(email);
 
-      if (!validatedUser.error) {
-        if (validatedUser.response.length === 0) {
+        if (!validatedUser) {
           return sendFailure(401, STRINGS.PLEASE_CHECK_YOUR_EMAIL);
-        } else {
-          const password = passwordGenerator.generate({
-            length: 12,
-            numbers: true,
-            uppercase: true,
-          });
-
-          const userId = validatedUser.response[0].user_id
-
-          const { passwordHash, passwordSalt } = await hashPasswordAsync(password);
-
-          const expiredTime = moment().add(password_reset_expiry_time, "seconds").format(datetime_format)
-
-          const addPasswordReset = await UserModel.saveResetPassword({userId, passwordHash, passwordSalt, passwordExpiry: expiredTime})
-
-          if (!addPasswordReset.error) {
-            const sendResult = await sendPasswordReset(email, password);
-
-            const statusCode = sendResult.response.substring(0, 3);
-  
-            if (statusCode === "250") {
-              return sendSuccess(200, null);
-            } else {
-              console.log(sendResult.response)
-              return sendFailure(STRINGS.PLEASE_CHECK_YOUR_EMAIL);
-            }
-          } else {
-            return sendFailure(STRINGS.PLEASE_CHECK_YOUR_EMAIL);
-          }
-
         }
+
+        const password = passwordGenerator.generate({
+          length: 12,
+          numbers: true,
+          uppercase: true,
+        });
+
+        const userId = validatedUser.UserId;
+
+        const { passwordHash, passwordSalt } = await hashPasswordAsync(password);
+
+        const expiredTime = moment()
+          .add(password_reset_expiry_time, "seconds")
+          .toDate();
+
+        await AppUserModel.update(userId, {
+          PasswordResetHash: passwordHash,
+          PasswordResetSalt: passwordSalt,
+          PasswordResetExpiry: expiredTime,
+        });
+
+        const sendResult = await sendPasswordReset(email, password);
+
+        const statusCode = sendResult.response.substring(0, 3);
+
+        if (statusCode === "250") {
+          return sendSuccess(200, null);
+        } else {
+          console.log(sendResult.response);
+          return sendFailure(STRINGS.PLEASE_CHECK_YOUR_EMAIL);
+        }
+      } catch (error) {
+        console.log(error);
+        return sendFailure(STRINGS.PLEASE_CHECK_YOUR_EMAIL);
       }
     } else {
       return sendFailure(STRINGS.PLEASE_CHECK_YOUR_EMAIL);

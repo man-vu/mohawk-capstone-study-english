@@ -1,15 +1,15 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const HomeModel = new (require("../../models/home"))();
-const SkillModel = new (require("../../models/skill"))();
-const RatingModel = new (require("../../models/rating"))();
-const QuestionTypeModel = new (require("../../models/question_type"))();
-const QuizModel = new (require("../../models/quiz"))();
-const QuestionModel = new (require("../../models/question"))();
-const MCModel = new (require("../../models/multiple_choice_option"))();
-const GModel = new (require("../../models/gap_filling_option"))();
-const MModel = new (require("../../models/matching_option"))();
-const InstructionModel = new (require("../../models/instruction"))();
+require('ts-node/register/transpile-only');
+const QuizSkillModel = require("../../new_models/QuizSkillModel.ts").default;
+const UserRatingModel = require("../../new_models/UserRatingModel.ts").default;
+const QuestionTypeModel = require("../../new_models/QuestionTypeModel.ts").default;
+const QuizModel = require("../../new_models/QuizModel.ts").default;
+const QuestionModel = require("../../new_models/QuestionModel.ts").default;
+const MCModel = require("../../new_models/QuestionMultipleChoiceModel.ts").default;
+const GModel = require("../../new_models/QuestionGapFillingModel.ts").default;
+const MModel = require("../../new_models/QuestionMatchingPairModel.ts").default;
+const InstructionModel = require("../../new_models/QuestionInstructionModel.ts").default;
 const validator = require("../validators/validator");
 
 /**
@@ -17,12 +17,15 @@ const validator = require("../validators/validator");
  * @param {*} instruction 
  */
 async function createInstruction(instruction) {
-  let createInstruction = await InstructionModel.addOne(instruction);
-
-  if (!createInstruction.error) {
-    return sendSuccess(201, createInstruction.response);
-  } else {
-    console.log(createInstruction.error)
+  try {
+    const exist = await InstructionModel.findByInstruction(instruction);
+    if (exist) {
+      return sendSuccess(201, { InstructionId: exist.InstructionId });
+    }
+    const newInst = await InstructionModel.create({ Instruction: instruction });
+    return sendSuccess(201, { InstructionId: newInst.InstructionId });
+  } catch (error) {
+    console.log(error);
     return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
   }
 }
@@ -32,12 +35,14 @@ async function createInstruction(instruction) {
  * @param {*} instruction 
  */
 async function getInstruction(instruction) {
-  const findInstruction = await InstructionModel.findOne(instruction);
-
-  if (!findInstruction.error && findInstruction.response.length === 1) {
-    return sendSuccess(findInstruction.response[0]);
-  } else {
-    console.log(findInstruction.error)
+  try {
+    const result = await InstructionModel.findByInstruction(instruction);
+    if (result) {
+      return sendSuccess(result);
+    }
+    return sendFailure(STRINGS.CANNOT_LOAD_INSTRUCTION);
+  } catch (error) {
+    console.log(error);
     return sendFailure(STRINGS.CANNOT_LOAD_INSTRUCTION);
   }
 }
@@ -54,46 +59,19 @@ async function updateQuestionContent(
   questionId,
   typeId,
   items,
-  correctAnswers,
-  shuffleAnswers
 ) {
-  if (typeId === 1) {
-    let content = await MCModel.saveMany(items, questionId);
-
-    if (!content.error) {
-      return sendSuccess(201);
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.ERROR_OCCURRED);
+  try {
+    if (typeId === 1) {
+      await MCModel.updateMany(questionId, items);
+    } else if (typeId === 2) {
+      await GModel.updateMany(questionId, items);
+    } else if (typeId === 3) {
+      await MModel.updateMany(questionId, [...items.leftItems, ...items.rightItems]);
     }
-  } else if (typeId === 2) {
-    let content = await GModel.saveMany(items, questionId);
-
-    if (!content.error) {
-      return sendSuccess(201);
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.ERROR_OCCURRED);
-    }
-  } else if (typeId === 3) {
-    let content = await MModel.saveMatchingQuestion(correctAnswers, questionId);
-
-    if (!content.error) {
-      let insertItems = await MModel.saveMany(
-        [...items.leftItems, ...items.rightItems],
-        questionId
-      );
-
-      if (!insertItems.error) {
-        return sendSuccess(201);
-      } else {
-        console.log(insertItems.error)
-        return sendFailure(STRINGS.ERROR_OCCURRED);
-      }
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.ERROR_OCCURRED);
-    }
+    return sendSuccess(201);
+  } catch (error) {
+    console.log(error);
+    return sendFailure(STRINGS.ERROR_OCCURRED);
   }
 }
 
@@ -104,50 +82,28 @@ async function updateQuestionContent(
  * @param {*} questionData 
  */
 async function getQuestionContent(id, typeId, questionData) {
-  if (typeId === 1) {
-    let content = await MCModel.findMany(id);
-
-    if (!content.error) {
-      return sendSuccess({ ...questionData, items: content.response });
+  try {
+    if (typeId === 1) {
+      const content = await MCModel.findManyByQuestion(id);
+      return sendSuccess({ ...questionData, items: content });
+    } else if (typeId === 2) {
+      const content = await GModel.findManyByQuestion(id);
+      return sendSuccess({ ...questionData, items: content });
     } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.CANNOT_LOAD_QUESTION);
-    }
-  } else if (typeId === 2) {
-    let content = await GModel.findMany(id);
-
-    if (!content.error) {
-      return sendSuccess({ ...questionData, items: content.response });
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.CANNOT_LOAD_QUESTION);
-    }
-  } else {
-    let content = await MModel.findMany(id);
-    let splits = null;
-
-    if (!content.error) {
-      let leftItems = content.response.filter(
-        (item) => item.column_assigned === 1
-      );
-      let rightItems = content.response.filter(
-        (item) => item.column_assigned === 2
-      );
-
-      splits = questionData.matching_question_correct_answers
-        .split(" ")
-        .map((s) => s.split("."));
-
-      splits.forEach((answer) => {
-        let item = leftItems.find((i) => i.letter === answer[0]);
-        item.correct_answer = answer[1];
-      });
-
+      const pairs = await MModel.findManyByQuestion(id);
+      const leftItems = pairs.filter((p) => p.PairOrder % 2 === 1).map((p) => ({
+        letter: String.fromCharCode(64 + p.PairOrder),
+        item: p.LeftText,
+      }));
+      const rightItems = pairs.filter((p) => p.PairOrder % 2 === 0).map((p) => ({
+        letter: String.fromCharCode(64 + p.PairOrder),
+        item: p.RightText,
+      }));
       return sendSuccess({ items: { leftItems, rightItems }, ...questionData });
-    } else {
-      console.log(content.error)
-      return sendFailure(STRINGS.CANNOT_LOAD_QUESTION);
     }
+  } catch (error) {
+    console.log(error);
+    return sendFailure(STRINGS.CANNOT_LOAD_QUESTION);
   }
 }
 
@@ -156,12 +112,11 @@ module.exports = {
    * Function that reset all ratings given by student for a quiz
    */
   resetRatings: async (quizId) => {
-    const deleteAllRatings = await RatingModel.deleteAll(quizId);
-
-    if (!deleteAllRatings.error) {
-      return sendSuccess(deleteAllRatings.response);
-    } else {
-      console.log(deleteAllRatings.error)
+    try {
+      await UserRatingModel.deleteManyByQuiz(quizId);
+      return sendSuccess(200, null);
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
@@ -172,13 +127,11 @@ module.exports = {
     if (!validator.validateQuizId(quizId)) {
       return sendFailure(STRINGS.INVALID_QUIZ_ID);
     }
-
-    const questions = await QuestionModel.findManyByQuizIdForEdit(quizId);
-
-    if (!questions.error) {
-      return sendSuccess(questions.response);
-    } else {
-      console.log(questions.error)
+    try {
+      const questions = await QuestionModel.findManyByQuizIdForEdit(quizId);
+      return sendSuccess(questions);
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
@@ -189,18 +142,16 @@ module.exports = {
     if (!id || id < 1) {
       return sendFailure(STRINGS.INVALID_QUESTION_ID);
     }
-
-    const question = await QuestionModel.findOneForEdit(id);
-
-    if (!question.error) {
-      const questionData = question.response[0];
+    try {
+      const questionData = await QuestionModel.findOneForEdit(id);
+      if (!questionData) return sendFailure(STRINGS.CANNOT_LOAD_QUESTION);
       const typeId = questionData.type_id;
       return await getQuestionContent(id, typeId, {
         ...questionData,
-        isActive: questionData.is_active == 1 ? true : false,
+        isActive: questionData.is_active ? true : false,
       });
-    } else {
-      console.log(question.error)
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.CANNOT_LOAD_QUESTION);
     }
   },
@@ -208,21 +159,17 @@ module.exports = {
    * Function that loads information for teacher page
    */
   getTeacherHome: async () => {
-    let homeSummary = await QuizModel.findAllForTeacher();
-    let allSkills = await SkillModel.findAll();
-    let questionTypes = await QuestionTypeModel.findAll();
-
-    if (!homeSummary.error && !allSkills.error && !questionTypes.error) {
+    try {
+      const quizzes = await QuizModel.findAllForTeacher();
+      const allSkills = await QuizSkillModel.findAll();
+      const questionTypes = await QuestionTypeModel.findAll();
       return sendSuccess({
-        quizzes: homeSummary.response,
-        allSkills: allSkills.response,
-        allQuestionTypes: questionTypes.response,
+        quizzes,
+        allSkills,
+        allQuestionTypes: questionTypes,
       });
-    } else {
-      console.log(homeSummary.error)
-      console.log(allSkills.error)
-      console.log(questionTypes.error)
-      
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_LOADING_TEACHER_PAGE);
     }
   },
@@ -233,13 +180,11 @@ module.exports = {
     if (!validator.validateQuizId(quizId)) {
       return sendFailure(STRINGS.INVALID_QUIZ_ID);
     }
-
-    const deleteQuiz = await QuizModel.deleteOne(quizId);
-
-    if (!deleteQuiz.error) {
+    try {
+      await QuizModel.delete(quizId);
       return sendSuccess(202);
-    } else {
-      console.log(deleteQuiz.error)
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
@@ -256,62 +201,44 @@ module.exports = {
     const create = await createInstruction(instruction);
 
     if (!create.error) {
-      let instructionId = create.response.insertId;
+      let instructionId = create.response.InstructionId;
 
-      if (instructionId === 0) {
+      if (!instructionId) {
         const findInstruction = await getInstruction(instruction);
-
         if (!findInstruction.error) {
-          instructionId = findInstruction.response.instruction_id;
+          instructionId = findInstruction.response.InstructionId;
         } else {
-          console.log(deleteQuiz.error)
           return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
         }
       }
 
-      if (instructionId > 0) {
-        const isActive = data.isActive === true ? 1 : 0;
-
-        const question = await QuestionModel.saveOne({
-          ...data,
-          instructionId,
-          isActive,
-        });
-        const questionsContent = await updateQuestionContent(
-          questionId,
-          typeId,
-          items,
-          correctAnswers,
-          1
-        );
-
-        if (!question.error && !questionsContent.error) {
+      if (instructionId) {
+        const isActiveFlag = isActive === true ? 1 : 0;
+        try {
+          await QuestionModel.saveOne({
+            ...data,
+            instructionId,
+            isActive: isActiveFlag,
+          });
+          await updateQuestionContent(questionId, typeId, items);
           return sendSuccess(202);
-        } else {
-          console.log(question.error)
-          console.log(questionsContent.error)
+        } catch (error) {
+          console.log(error);
           return sendFailure(STRINGS.ERROR_OCCURRED);
         }
-      } else {
-        console.log(create.error)
-        return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
       }
-    } else {
-      console.log(create.error)
-      return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
     }
+    return sendFailure(STRINGS.CANNOT_CREATE_INSTRUCTION);
   },
   deleteQuestion: async (questionId) => {
     if (!validator.validateQuestionId(questionId)) {
       return sendFailure(STRINGS.INVALID_QUESTION_ID);
     }
-
-    const deleteQuestion = await QuestionModel.deleteOne(questionId);
-
-    if (!deleteQuestion.error) {
+    try {
+      await QuestionModel.delete(questionId);
       return sendSuccess(202);
-    } else {
-      console.log(deleteQuestion.error)
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },

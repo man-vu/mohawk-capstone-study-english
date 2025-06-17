@@ -21,6 +21,10 @@ export class AppUserModel {
     return prisma.appUser.create({ data });
   }
 
+  static findByEmail(Email: string) {
+    return prisma.appUser.findUnique({ where: { Email } });
+  }
+
   static findById(UserId: number) {
     return prisma.appUser.findUnique({ where: { UserId } });
   }
@@ -35,6 +39,10 @@ export class AppUserModel {
 
   static findAll() {
     return prisma.appUser.findMany();
+  }
+
+  static findAllStudents() {
+    return prisma.appUser.findMany({ where: { RoleId: 2 } });
   }
 }
 export default AppUserModel;
