@@ -40,5 +40,9 @@ export class AppUserModel {
   static findAll() {
     return prisma.appUser.findMany();
   }
+
+  static findAllStudents() {
+    return prisma.appUser.findMany({ where: { RoleId: 2 } });
+  }
 }
 export default AppUserModel;

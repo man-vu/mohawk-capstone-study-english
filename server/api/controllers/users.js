@@ -1,6 +1,7 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const UserModel = new (require("../../models/user"))();
+require('ts-node/register/transpile-only');
+const AppUserModel = require("../../new_models/AppUserModel.ts").default;
 const { validateEmail, validateGender, validateName, validateNewPassword,
 } = require("../validators/validator");
 const { hashPasswordAsync } = require("../../misc/helper");
@@ -10,11 +11,11 @@ module.exports = {
    * Function loads all users regardless of students or teachers
    */
   getUsers: async () => {
-    const users = await UserModel.findAll();
-
-    if (!users.error) {
-      return sendSuccess(users.response);
-    } else {
+    try {
+      const users = await AppUserModel.findAll();
+      return sendSuccess(users);
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
@@ -23,11 +24,11 @@ module.exports = {
    * Function loads only all students 
    */
   getAllStudents: async () => {
-    const students = await UserModel.findAllStudents();
-
-    if (!students.error) {
-      return sendSuccess(students.response);
-    } else {
+    try {
+      const students = await AppUserModel.findAllStudents();
+      return sendSuccess(students);
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
@@ -36,16 +37,14 @@ module.exports = {
    * Function loads a user's information
    */
   getUser: async (id) => {
-    const user = await UserModel.findOneById(id);
-
-    if (!user.error) {
-      if (user.response.length === 0) {
+    try {
+      const user = await AppUserModel.findById(id);
+      if (!user) {
         return sendFailure(STRINGS.NO_SUCH_USER_EXISTS);
-      } else {
-        return sendSuccess(user.response[0]);
       }
-    } else {
-      console.log(user.error)
+      return sendSuccess(user);
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
@@ -70,23 +69,16 @@ module.exports = {
       return sendFailure(STRINGS.INVALID_GENDER);
     }
 
-    const userInfo = await UserModel.saveOne(
-      id,
-      email,
-      firstName,
-      lastName,
-      gender
-    );
-
-    if (!userInfo.error) {
-      if (userInfo.response.affectedRows === 1) {
-        return sendSuccess(200);
-      } else {
-        console.log(userInfo.error)
-        return sendFailure(STRINGS.CANNOT_SAVE_USER_INFO);
-      }
-    } else {
-      console.log(userInfo.error)
+    try {
+      await AppUserModel.update(id, {
+        Email: email,
+        FirstName: firstName,
+        LastName: lastName,
+        Gender: gender,
+      });
+      return sendSuccess(200);
+    } catch (error) {
+      console.log(error);
       return sendFailure(STRINGS.CANNOT_SAVE_USER_INFO);
     }
   },
@@ -101,15 +93,14 @@ module.exports = {
     if (validated === true) {
       const passwordInfo = await hashPasswordAsync(newPassword);
 
-      const userInfo = await UserModel.savePassword({
-        userId: id,
-        ...passwordInfo,
-      });
-
-      if (userInfo.response.affectedRows === 1) {
+      try {
+        await AppUserModel.update(id, {
+          PasswordHash: passwordInfo.passwordHash,
+          PasswordSalt: passwordInfo.passwordSalt,
+        });
         return sendSuccess(200);
-      } else {
-        console.log(userInfo.error)
+      } catch (error) {
+        console.log(error);
         return sendFailure(STRINGS.CANNOT_SAVE_NEW_PASSWORD);
       }
     } else {
