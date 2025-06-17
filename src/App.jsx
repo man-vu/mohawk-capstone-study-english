@@ -7,6 +7,8 @@ import Statistics from './components/Statistics';
 import Testimonials from './components/Testimonials';
 import QuestionTemplates from './components/QuestionTemplates';
 import Footer from './components/Footer';
+import { AuthProvider } from './context/AuthContext';
+import AuthModal from './components/auth/AuthModal';
 import { useTheme } from './hooks/useTheme';
 
 function App() {
@@ -14,25 +16,30 @@ function App() {
   const [showQuestionTemplates, setShowQuestionTemplates] = useState(false);
 
   return (
-    <div className={`${theme === 'dark' ? 'dark' : ''}`}>
-      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-        <Navbar theme={theme} toggleTheme={toggleTheme} />
-        
-        {!showQuestionTemplates ? (
-          <>
-            <Hero onExploreTests={() => setShowQuestionTemplates(true)} />
-            <Features />
-            <Categories />
-            <Statistics />
-            <Testimonials />
-          </>
-        ) : (
-          <QuestionTemplates onBackToHome={() => setShowQuestionTemplates(false)} />
-        )}
-        
-        <Footer />
+    <AuthProvider>
+      <div className={`${theme === 'dark' ? 'dark' : ''}`}>
+        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+          <Navbar theme={theme} toggleTheme={toggleTheme} />
+          
+          {!showQuestionTemplates ? (
+            <>
+              <Hero onExploreTests={() => setShowQuestionTemplates(true)} />
+              <Features />
+              <Categories />
+              <Statistics />
+              <Testimonials />
+            </>
+          ) : (
+            <QuestionTemplates onBackToHome={() => setShowQuestionTemplates(false)} />
+          )}
+          
+          <Footer />
+
+          {/* Auth Modal */}
+          <AuthModal />
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 }
 

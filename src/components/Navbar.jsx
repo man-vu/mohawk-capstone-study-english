@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 const Navbar = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout, openAuthModal } = useAuth();
 
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
@@ -36,6 +38,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -47,12 +50,35 @@ const Navbar = ({ theme, toggleTheme }) => {
                 </svg>
               )}
             </button>
-            <button className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-4 py-2 text-sm font-medium transition-colors">
-              Log In
-            </button>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              Sign Up
-            </button>
+
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                  Hello, {user.firstName}
+                </span>
+                <button 
+                  onClick={logout}
+                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => openAuthModal('login')}
+                  className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  Log In
+                </button>
+                <button 
+                  onClick={() => openAuthModal('register')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -80,11 +106,39 @@ const Navbar = ({ theme, toggleTheme }) => {
                 <button
                   onClick={toggleTheme}
                   className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
                   {theme === 'dark' ? '☀️' : '🌙'}
                 </button>
-                <button className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Log In</button>
-                <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Sign Up</button>
+                
+                {user ? (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                      Hello, {user.firstName}
+                    </span>
+                    <button 
+                      onClick={logout}
+                      className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => openAuthModal('login')}
+                      className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
+                    >
+                      Log In
+                    </button>
+                    <button 
+                      onClick={() => openAuthModal('register')}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

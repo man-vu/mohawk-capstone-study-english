@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary: 147, 51, 234; /* purple-600 */
+  --color-primary-hover: 126, 34, 206; /* purple-700 */
+  --color-primary-light: 233, 213, 255; /* purple-100 */
+  --color-primary-dark: 107, 33, 168; /* purple-800 */
+  --color-surface-light: 255, 255, 255; /* white */
+  --color-surface-dark: 17, 24, 39; /* gray-900 */
+  --color-text-light: 31, 41, 55; /* gray-800 */
+  --color-text-dark: 229, 231, 235; /* gray-200 */
+}
+
+/* Custom focus styles */
+.custom-focus:focus {
+  @apply outline-none ring-2 ring-purple-500 ring-offset-2;
+}
+
+/* Common style classes */
+.btn-primary {
+  @apply bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2;
+}
+
+.input-field {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white;
+}
+
+/* Transitions */
+.transition-all-fast {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.transition-all-medium {
+  @apply transition-all duration-300 ease-in-out;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
