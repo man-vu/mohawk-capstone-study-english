@@ -6,7 +6,7 @@ const authMiddleware = require("../middlewares/auth");
 // GET: [routes/questions]
 // Get question by id
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = req.params.id;
+  const id = parseInt(req.params.id, 10);
 
   const question = await questionsController.getQuestion(id);
 
@@ -25,7 +25,7 @@ router.post("/", authMiddleware, async (req, res) => {
     paragraphTitle: !!req.body.paragraphTitle ? null : req.body.paragraphTitle,
     correctAnswers: req.body.correctAnswers,
     shuffleAnswers: req.body.shuffleAnswers ? req.body.shuffleAnswers : 1,
-    quizId: req.body.quizId
+    quizId: parseInt(req.body.quizId, 10)
   };
 
   const question = await questionsController.createQuestion(data)
@@ -37,11 +37,11 @@ router.post("/", authMiddleware, async (req, res) => {
 // Create a new answer
 router.put("/answer/:id", authMiddleware, async (req, res) => {
   const data = {
-    questionId: req.params.id,
-    attemptId: req.body.attemptId,
-    quizId: req.body.quizId,
+    questionId: parseInt(req.params.id, 10),
+    attemptId: parseInt(req.body.attemptId, 10),
+    quizId: parseInt(req.body.quizId, 10),
     userId: req.user.id,
-    answerText: req.body.answerText 
+    answerText: req.body.answerText
   };
 
   const answer = await questionsController.updateAnswer(data)

@@ -8,7 +8,7 @@ const router = express.Router();
  * Route that handles starting a quiz
  */
 router.post("/start/:id", authMiddleware, async (req, res) => {
-  const quizId = req.params.id;
+  const quizId = parseInt(req.params.id, 10);
   const userId = req.user.id;
 
   const quiz = await quizzesController.startQuiz(quizId, userId);
@@ -19,7 +19,7 @@ router.post("/start/:id", authMiddleware, async (req, res) => {
  * Route that loads a quiz
  */
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = req.params.id;
+  const id = parseInt(req.params.id, 10);
   const quiz = await quizzesController.getQuiz(id);
   res.status(200).json(quiz);
 });
@@ -47,7 +47,7 @@ router.post("/", [authMiddleware, authTeacherMiddleware], async (req, res) => {
  */
 router.put("/:id", [authMiddleware, authTeacherMiddleware], async (req, res) => {
   const data = {
-    quizId: req.params.id,
+    quizId: parseInt(req.params.id, 10),
     courseName: req.body.courseName,
     description: req.body.description,
     isActive: req.body.isActive,
@@ -65,7 +65,7 @@ router.put("/:id", [authMiddleware, authTeacherMiddleware], async (req, res) => 
  * Route that toggles user favorites for a quiz
  */
 router.put("/:id/favorite", authMiddleware, async (req, res) => {
-  let quizId = req.params.id;
+  let quizId = parseInt(req.params.id, 10);
   const userId = req.user.id;
 
   const rating = await quizzesController.toggleFavorite({ quizId, userId });
@@ -77,7 +77,7 @@ router.put("/:id/favorite", authMiddleware, async (req, res) => {
  * Route that sets rating for a quiz
  */
 router.put("/:id/rating", authMiddleware, async (req, res) => {
-  const quizId = req.params.id;
+  const quizId = parseInt(req.params.id, 10);
   const userId = req.user.id;
   const ratingGiven = req.body.ratingGiven;
 
@@ -94,8 +94,8 @@ router.put("/:id/rating", authMiddleware, async (req, res) => {
  * Route that submits a quiz
  */
 router.post("/submit", authMiddleware, async (req, res) => {
-  const quizId = req.body.quizId;
-  const attemptId = req.body.attemptId;
+  const quizId = parseInt(req.body.quizId, 10);
+  const attemptId = parseInt(req.body.attemptId, 10);
   const userId = req.user.id;
 
   const submit = await quizzesController.submitAndMark({

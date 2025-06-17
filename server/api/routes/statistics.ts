@@ -21,7 +21,7 @@ router.get("/", authMiddleware, async (req, res) => {
 router.post("/board/quiz/:id", authTeacherMiddleware, async (req, res) => {
     const dateFrom = req.body.dateFrom
     const dateTo = req.body.dateTo
-    const quizId = req.params.id
+    const quizId = parseInt(req.params.id, 10)
 
     const data = {dateFrom, dateTo, quizId}
     const statistics = await statisticsController.getBoardStatisticsByQuiz(data)
@@ -35,7 +35,7 @@ router.post("/board/quiz/:id", authTeacherMiddleware, async (req, res) => {
 router.post("/board/student/:id", authTeacherMiddleware, async (req, res) => {
     const dateFrom = req.body.dateFrom
     const dateTo = req.body.dateTo
-    const userId = req.params.id
+    const userId = parseInt(req.params.id, 10)
 
     const data = {dateFrom, dateTo, userId}
     const statistics = await statisticsController.getBoardStatisticsByStudent(data)
