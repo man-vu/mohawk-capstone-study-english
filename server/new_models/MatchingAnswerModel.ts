@@ -18,6 +18,17 @@ export class MatchingAnswerModel {
     return prisma.matchingAnswer.delete({ where: { PromptId_ChoiceId: { PromptId, ChoiceId } } });
   }
 
+  static update(
+    PromptId: number,
+    ChoiceId: number,
+    data: Prisma.MatchingAnswerUpdateInput
+  ) {
+    return prisma.matchingAnswer.update({
+      where: { PromptId_ChoiceId: { PromptId, ChoiceId } },
+      data,
+    });
+  }
+
   static findAll() {
     return prisma.matchingAnswer.findMany();
   }
