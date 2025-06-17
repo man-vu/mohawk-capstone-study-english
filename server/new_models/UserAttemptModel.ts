@@ -31,23 +31,33 @@ export class UserAttemptModel {
     return prisma.userAttempt.findMany();
   }
 
-  static findIncompleteAttemptsByQuizId(QuizId: number) {
+  static findIncompleteAttemptsByQuizId(QuizId: number | string) {
+    const qId = Number(QuizId);
     return prisma.userAttempt.findMany({
-      where: { QuizId, EndTime: null },
+      where: { QuizId: qId, EndTime: null },
       select: { AttemptId: true, UserId: true },
     });
   }
 
-  static findLatest(QuizId: number, UserId: number) {
+  static findLatest(QuizId: number | string, UserId: number | string) {
+    const qId = Number(QuizId);
+    const uId = Number(UserId);
     return prisma.userAttempt.findFirst({
-      where: { QuizId, UserId },
+      where: { QuizId: qId, UserId: uId },
       orderBy: { AttemptId: 'desc' },
     });
   }
 
-  static findIncompleteAttempt(QuizId: number, UserId: number, AttemptId: number) {
+  static findIncompleteAttempt(
+    QuizId: number | string,
+    UserId: number | string,
+    AttemptId: number | string
+  ) {
+    const qId = Number(QuizId);
+    const uId = Number(UserId);
+    const aId = Number(AttemptId);
     return prisma.userAttempt.findFirst({
-      where: { QuizId, UserId, AttemptId, EndTime: null },
+      where: { QuizId: qId, UserId: uId, AttemptId: aId, EndTime: null },
       include: { Quiz: { select: { TimeAllowed: true } } },
     });
   }
@@ -68,17 +78,25 @@ export class UserAttemptModel {
     }));
   }
 
-  static findOne(QuizId: number, UserId: number, AttemptId: number) {
-    return prisma.userAttempt.findFirst({ where: { QuizId, UserId, AttemptId } });
+  static findOne(
+    QuizId: number | string,
+    UserId: number | string,
+    AttemptId: number | string
+  ) {
+    const qId = Number(QuizId);
+    const uId = Number(UserId);
+    const aId = Number(AttemptId);
+    return prisma.userAttempt.findFirst({ where: { QuizId: qId, UserId: uId, AttemptId: aId } });
   }
 
   static closeOne(AttemptId: number, data: Prisma.UserAttemptUpdateInput) {
     return prisma.userAttempt.update({ where: { AttemptId }, data });
   }
 
-  static async findManyIncompleteAttempts(UserId: number) {
+  static async findManyIncompleteAttempts(UserId: number | string) {
+    const uId = Number(UserId);
     const attempts = await prisma.userAttempt.findMany({
-      where: { UserId, EndTime: null },
+      where: { UserId: uId, EndTime: null },
       include: {
         Quiz: { select: { TimeAllowed: true } },
         UserAnswer: true,

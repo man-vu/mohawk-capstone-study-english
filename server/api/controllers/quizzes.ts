@@ -18,8 +18,10 @@ const { cleanObject } = require("../../misc/helper");
  * @param {*} param0 favorite's info
  */
 async function markFavorite({ quizId, userId }) {
+  const qId = Number(quizId);
+  const uId = Number(userId);
   try {
-    await FavoriteModel.create({ QuizId: quizId, UserId: userId });
+    await FavoriteModel.create({ QuizId: qId, UserId: uId });
     return sendSuccess(null);
   } catch (error) {
     console.log(error);
@@ -32,8 +34,10 @@ async function markFavorite({ quizId, userId }) {
  * @param {*} param0 favorite's info
  */
 async function unmarkFavorite({ quizId, userId }) {
+  const qId = Number(quizId);
+  const uId = Number(userId);
   try {
-    await FavoriteModel.delete(userId, quizId);
+    await FavoriteModel.delete(uId, qId);
     return sendSuccess(200, null);
   } catch (error) {
     console.log(error);
@@ -106,7 +110,10 @@ function convertToObject(object) {
  * @param {*} attemptId 
  */
 async function getCurrentQuizInfo (quizId, userId, attemptId) {
-  const thisAttempt = await AttemptModel.findIncompleteAttempt(quizId, userId, attemptId);
+  const qId = Number(quizId);
+  const uId = Number(userId);
+  const aId = Number(attemptId);
+  const thisAttempt = await AttemptModel.findIncompleteAttempt(qId, uId, aId);
   if (thisAttempt) {
     const expiredTime = moment(thisAttempt.StartTime).add(thisAttempt.Quiz.TimeAllowed, 'minutes');
     const difference = moment().diff(expiredTime, 'seconds');
@@ -193,14 +200,18 @@ module.exports = {
 
     const isActive = data.isActive === true;
 
+    const timeAllowed = Number(data.timeAllowed);
+    const skillId = Number(data.skillId);
+    const userId = Number(data.userId);
+
     try {
       const quiz = await QuizModel.create({
         Title: data.courseName,
         Description: data.description,
         IsActive: isActive,
-        TimeAllowed: data.timeAllowed,
-        SkillId: data.skillId,
-        CreatedBy: data.userId,
+        TimeAllowed: timeAllowed,
+        SkillId: skillId,
+        CreatedBy: userId,
       });
       return sendSuccess(await QuizModel.findDetailed(quiz.QuizId));
     } catch (error) {
@@ -212,7 +223,9 @@ module.exports = {
    * Function updates a quiz from teacher page
    */
   updateQuiz: async (data) => {
-    const { quizId } = data;
+    const quizId = Number(data.quizId);
+    const skillId = Number(data.skillId);
+    const userId = Number(data.userId);
 
     if (!validator.validateIsActiveQuestion(data.isActive)) {
       return sendFailure(STRINGS.INVALID_IS_ACTIVE_VALUE);
@@ -231,9 +244,9 @@ module.exports = {
         Title: data.courseName,
         Description: data.description,
         IsActive: isActive,
-        TimeAllowed: data.timeAllowed,
-        SkillId: data.skillId,
-        CreatedBy: data.userId,
+        TimeAllowed: Number(data.timeAllowed),
+        SkillId: skillId,
+        CreatedBy: userId,
       });
       return sendSuccess(await QuizModel.findDetailed(quizId));
     } catch (error) {
@@ -245,13 +258,14 @@ module.exports = {
    * Function toggles a quiz's favorite based on provided information
    */
   toggleFavorite: async (data) => {
-    const { quizId, userId } = data;
+    const qId = Number(data.quizId);
+    const uId = Number(data.userId);
     try {
-      const exist = await FavoriteModel.findById(userId, quizId);
+      const exist = await FavoriteModel.findById(uId, qId);
       if (exist) {
-        return unmarkFavorite(data);
+        return unmarkFavorite({ quizId: qId, userId: uId });
       } else {
-        return markFavorite(data);
+        return markFavorite({ quizId: qId, userId: uId });
       }
     } catch (error) {
       console.log(error);
@@ -262,7 +276,9 @@ module.exports = {
    * Function sets rating for quiz by a user
    */
   setRating: async ({ quizId, userId, ratingGiven }) => {
-    if (!quizId || !userId || quizId < 1 || userId < 0) {
+    const qId = Number(quizId);
+    const uId = Number(userId);
+    if (!qId || !uId || qId < 1 || uId < 0) {
       return sendFailure(STRINGS.INVALID_QUIZ_ID);
     }
     if (!validator.validateRatingGiven(ratingGiven)) {
@@ -270,14 +286,14 @@ module.exports = {
     }
 
     try {
-      const exist = await RatingModel.findById(userId, quizId);
+      const exist = await RatingModel.findById(uId, qId);
       if (exist) {
-        await RatingModel.update(userId, quizId, { RatingGiven: ratingGiven });
+        await RatingModel.update(uId, qId, { RatingGiven: ratingGiven });
       } else {
-        await RatingModel.create({ UserId: userId, QuizId: quizId, RatingGiven: ratingGiven });
+        await RatingModel.create({ UserId: uId, QuizId: qId, RatingGiven: ratingGiven });
       }
 
-      const ratingAgg = await require("../../new_models/QuizModel.ts").default.findDetailed(quizId);
+      const ratingAgg = await require("../../new_models/QuizModel.ts").default.findDetailed(qId);
       return sendSuccess(200, {
         average_rating: ratingAgg.average_rating,
         rating_count: ratingAgg.rating_count,
@@ -292,11 +308,13 @@ module.exports = {
    * Function handles submissions from students either by clicking on submit or timeout 
    */
   submitAndMark: async (data) => {
-    const { quizId, userId, attemptId } = data;
+    const qId = Number(data.quizId);
+    const uId = Number(data.userId);
+    const aId = Number(data.attemptId);
 
-    const endTime = moment(Date.now())
-    const getCorrectAnswers = await CorrectAnswerModel.findAll(quizId);
-    const userAnswerQuestions = await UserAnswerModel.findAll(data);
+    const endTime = moment(Date.now());
+    const getCorrectAnswers = await CorrectAnswerModel.findAll(qId);
+    const userAnswerQuestions = await UserAnswerModel.findAll({ quizId: qId, userId: uId, attemptId: aId });
     const response = { detailedAnswers: [], result: [], grade: null }
 
     if (!getCorrectAnswers.error && !userAnswerQuestions.error) {
@@ -411,7 +429,7 @@ module.exports = {
           }
         }
 
-        const ua = { quizId, userId, attemptId, questionId: question_id, markedResult}
+        const ua = { quizId: qId, userId: uId, attemptId: aId, questionId: question_id, markedResult }
 
         userAnswersModels.push(ua)
       }
@@ -421,16 +439,16 @@ module.exports = {
       const grade = result.correct === numQuestions ? 100 : (eachQuestionMark * result.correct + (eachQuestionMark / 2) * result.partial)
 
       const updateMarked = await UserAnswerModel.markOne(userAnswersModels)
-      const attemptData = { userId, quizId, attemptId, endTime: endTime.format(datetime_format), grade };
-      const closeAttempt = await AttemptModel.closeOne(attemptData)
-      const thisAttempt = await AttemptModel.findOne(quizId, userId, attemptId)
+      const attemptData = { endTime: endTime.format(datetime_format), grade };
+      const closeAttempt = await AttemptModel.closeOne(aId, attemptData)
+      const thisAttempt = await AttemptModel.findOne(qId, uId, aId)
 
       if(!updateMarked.error && !closeAttempt.error && !thisAttempt.error) {
         response.result = result
         response.result.total = numQuestions
         response.accuracy = grade
-        response.quiz_id = quizId
-        response.attempt_id = attemptId
+        response.quiz_id = qId
+        response.attempt_id = aId
         response.userAnswers = userAnswers
         response.time_taken = endTime.diff(thisAttempt.response[0].start_time, 'seconds')
   
