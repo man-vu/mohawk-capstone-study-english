@@ -46,9 +46,14 @@ async function unmarkFavorite({ quizId, userId }) {
  * @param {*} data All information about a new attempt
  */
 async function createNewAttempt({ questionIds, quizId, userId }) {
+  const qId = Number(quizId);
+  const uId = Number(userId);
+  if (Number.isNaN(qId) || Number.isNaN(uId)) {
+    throw new Error('Invalid quiz or user id');
+  }
   const attempt = await AttemptModel.create({
-    Quiz: { connect: { QuizId: quizId } },
-    AppUser: { connect: { UserId: userId } },
+    Quiz: { connect: { QuizId: qId } },
+    AppUser: { connect: { UserId: uId } },
   });
   await UserAnswerModel.createMany(
     questionIds.map((id) => ({ AttemptId: attempt.AttemptId, QuestionId: id, AnswerText: '' }))
@@ -115,20 +120,22 @@ module.exports = {
    * This function loads an incomplete attempt by student or creates a new attempt if they has completed their latest attempt or has never taken the quiz
    */
   startQuiz: async (quizId, userId) => {
+    const qId = Number(quizId);
+    const uId = Number(userId);
     try {
-      const latestAttempt = await AttemptModel.findLatest(quizId, userId);
+      const latestAttempt = await AttemptModel.findLatest(qId, uId);
       const hasCompleted = latestAttempt && latestAttempt.EndTime !== null;
       const hasNeverTaken = !latestAttempt;
 
-      const questionsContent = await QuestionModel.loadContent(quizId);
+      const questionsContent = await QuestionModel.loadContent(qId);
 
       if (hasCompleted || hasNeverTaken) {
-        const questions = await QuestionModel.findManyByQuizId({ quizId });
+        const questions = await QuestionModel.findManyByQuizId({ quizId: qId });
         const questionIds = questions.map((q) => q.question_id);
         if (questionIds.length === 0) return sendFailure(STRINGS.ERROR_OCCURRED);
-        const attemptId = await createNewAttempt({ questionIds, quizId, userId });
-        const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId, userId, attemptId });
-        const quizInfo = await getCurrentQuizInfo(quizId, userId, attemptId);
+        const attemptId = await createNewAttempt({ questionIds, quizId: qId, userId: uId });
+        const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId: qId, userId: uId, attemptId });
+        const quizInfo = await getCurrentQuizInfo(qId, uId, attemptId);
         const response = { questions: questionsWithAns, ...quizInfo };
         const resObject = convertToObject(questionsContent);
         for (const question of response.questions) {
@@ -136,9 +143,9 @@ module.exports = {
         }
         return sendSuccess(response);
       } else {
-        const data = { latestAttempt, quizId, userId };
+        const data = { latestAttempt, quizId: qId, userId: uId };
         const incomplete = await loadIncompleteAttempt(data);
-        const quizInfo = await getCurrentQuizInfo(quizId, userId, latestAttempt.AttemptId);
+        const quizInfo = await getCurrentQuizInfo(qId, uId, latestAttempt.AttemptId);
         const response = { questions: incomplete.questions, ...quizInfo };
         const resObject = convertToObject(incomplete.questionsContent);
         for (const question of response.questions) {
