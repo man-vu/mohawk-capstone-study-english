@@ -1,7 +1,5 @@
 const STRINGS = require("../../config/strings");
 const { sendSuccess, sendFailure } = require("../../config/res");
-const helper = require("../../misc/helper");
-const { datetime_format } = require("../../config/index");
 const moment = require("moment");
 const QuizModel = require("../../new_models/QuizModel.ts").default;
 const RatingModel = require("../../new_models/UserRatingModel.ts").default;
@@ -333,16 +331,20 @@ module.exports = {
     }
 
     const endTime = moment(Date.now());
-    const getCorrectAnswers = await CorrectAnswerModel.findAll(qId);
-    const userAnswerQuestions = await UserAnswerModel.findAll({ quizId: qId, userId: uId, attemptId: aId });
-    const response = { detailedAnswers: [], result: [], grade: null }
+    try {
+      const getCorrectAnswers = await CorrectAnswerModel.findAll(qId);
+      const uaRecords = await UserAnswerModel.findAllByAttempt(qId, uId, aId);
+      const userAnswers = uaRecords.map((ua) => ({
+        answer_text: ua.AnswerText,
+        question_id: ua.QuestionId,
+        type_id: ua.Question.TypeId,
+      }));
+      const response = { detailedAnswers: [], result: [], grade: null };
 
-    if (!getCorrectAnswers.error && !userAnswerQuestions.error) {
       // 1 - correct, 2 - partially correct, 3 - incorrect, 4 - unanswered
       const result = { correct: 0, partial: 0, incorrect: 0, unanswered: 0 };
-      const correctAnswers = convertToObject( cleanObject(getCorrectAnswers.response) );
-      const userAnswers = userAnswerQuestions.response;
-      const userAnswersModels = []
+      const correctAnswers = convertToObject(cleanObject(getCorrectAnswers));
+      const userAnswersModels = [];
       let markedResult
 
       for (const { answer_text, type_id, question_id } of userAnswers) {
@@ -486,31 +488,29 @@ module.exports = {
       }
 
       const numQuestions = Object.keys(correctAnswers).length;
-      const eachQuestionMark = 100 / numQuestions
-      const grade = result.correct === numQuestions ? 100 : (eachQuestionMark * result.correct + (eachQuestionMark / 2) * result.partial)
+      const eachQuestionMark = 100 / numQuestions;
+      const grade =
+        result.correct === numQuestions
+          ? 100
+          : eachQuestionMark * result.correct + (eachQuestionMark / 2) * result.partial;
 
-      const updateMarked = await UserAnswerModel.markOne(userAnswersModels)
-      const attemptData = { endTime: endTime.format(datetime_format), grade };
-      const closeAttempt = await AttemptModel.closeOne(aId, attemptData)
-      const thisAttempt = await AttemptModel.findOne(qId, uId, aId)
+      await UserAnswerModel.markOne(userAnswersModels);
+      const attemptData = { EndTime: endTime.toDate(), Grade: grade };
+      await AttemptModel.closeOne(aId, attemptData);
+      const thisAttempt = await AttemptModel.findOne(qId, uId, aId);
 
-      if(!updateMarked.error && !closeAttempt.error && !thisAttempt.error) {
-        response.result = result
-        response.result.total = numQuestions
-        response.accuracy = grade
-        response.quiz_id = qId
-        response.attempt_id = aId
-        response.userAnswers = userAnswers
-        response.time_taken = endTime.diff(thisAttempt.response[0].start_time, 'seconds')
-  
-        return sendSuccess(response)
-      } else {
-        return sendFailure(STRINGS.ERROR_OCCURRED)
-      }
-    } else {
-      console.log(getCorrectAnswers.error)
-      console.log(userAnswerQuestions.error)
-      return sendFailure(STRINGS.ERROR_OCCURRED)
+      response.result = result;
+      response.result.total = numQuestions;
+      response.accuracy = grade;
+      response.quiz_id = qId;
+      response.attempt_id = aId;
+      response.userAnswers = userAnswers;
+      response.time_taken = endTime.diff(thisAttempt?.StartTime, 'seconds');
+
+      return sendSuccess(response);
+    } catch (error) {
+      console.log(error);
+      return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
 };
