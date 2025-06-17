@@ -12,33 +12,21 @@ const Login = ({ switchToRegister }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-    
-    // Validate inputs
+
     if (!email || !password) {
       setErrorMsg('Please fill in all fields');
       return;
     }
-    
-    try {
-      setIsLoading(true);
-      
-      // In a real app, this would be an actual API call
-      // Simulating network request
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      login({
-        email,
-        firstName: 'Demo',
-        lastName: 'User',
-        email_verified: true
-      });
-      
-    } catch (error) {
-      setErrorMsg('Invalid email or password');
-    } finally {
-      setIsLoading(false);
+
+    setIsLoading(true);
+
+    const result = await login(email, password);
+
+    if (!result.success) {
+      setErrorMsg(result.message || 'Invalid email or password');
     }
+
+    setIsLoading(false);
   };
 
   const handleSocialLogin = (provider) => {
