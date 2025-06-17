@@ -49,13 +49,21 @@ export class UserAnswerModel {
     });
   }
 
-  static async markOne(items: { AttemptId: number; QuestionId: number; markedResult: number }[]) {
-    const queries = items.map((i) =>
-      prisma.userAnswer.updateMany({
-        where: { AttemptId: i.AttemptId, QuestionId: i.QuestionId },
-        data: { IsCorrect: i.markedResult },
-      })
-    );
+  static async markOne(items: { attemptId: number; questionId: number; markedResult: number }[]) {
+    const queries = items.map(({ attemptId, questionId, markedResult }) => {
+      let isCorrect: boolean | null;
+      if (markedResult === 1) {
+        isCorrect = true;
+      } else if (markedResult === 4) {
+        isCorrect = null;
+      } else {
+        isCorrect = false;
+      }
+      return prisma.userAnswer.updateMany({
+        where: { AttemptId: attemptId, QuestionId: questionId },
+        data: { IsCorrect: isCorrect },
+      });
+    });
     return prisma.$transaction(queries);
   }
 }
