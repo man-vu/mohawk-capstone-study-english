@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const usersController = require("../controllers/users");
-const avatarsController = require("../controllers/avatar");
+const usersController = require("../controllers/users.ts");
+const avatarsController = require("../controllers/avatar.ts");
 const { imageFilter } = require("../../misc/helper");
 const multer = require("multer");
 const path = require("path");
@@ -39,8 +39,12 @@ router.get("/all", authTeacherMiddleware, async (req, res) => {
  * Route that handles password change request
  */
 router.post("/changepassword", authMiddleware, async (req, res) => {
+  const userId = Number(req.user.id);
+  if (Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid user id" });
+  }
   const data = {
-    id: req.user.id,
+    id: userId,
     currentPassword: req.body.currentPassword,
     newPassword: req.body.newPassword,
   };
@@ -63,7 +67,11 @@ router.get("/students/all", authTeacherMiddleware, async (req, res) => {
  * Route that loads user info
  */
 router.get("/", authMiddleware, async (req, res) => {
-  const user = await usersController.getUser(req.user.id);
+  const userId = Number(req.user.id);
+  if (Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid user id" });
+  }
+  const user = await usersController.getUser(userId);
 
   res.json(user);
 });
@@ -72,8 +80,12 @@ router.get("/", authMiddleware, async (req, res) => {
  * Route that handles updating user info
  */
 router.put("/", authMiddleware, async (req, res) => {
+  const userId = Number(req.user.id);
+  if (Number.isNaN(userId)) {
+    return res.status(400).json({ error: "Invalid user id" });
+  }
   const data = {
-    id: req.user.id,
+    id: userId,
     email: req.body.email,
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -95,7 +107,10 @@ router.post("/avatar", [authMiddleware, upload.single("avatar")],
       secretAccessKey: aws_secret_key,
     });
 
-    const userId = req.user.id;
+    const userId = Number(req.user.id);
+    if (Number.isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
     const dimension = { width: 256, height: 256 };
     const image = await resizeImg(fs.readFileSync(req.file.path), dimension);
     const savedFilename = `${req.file.filename}-${dimension.width}x${dimension.height}.png`;

@@ -1,9 +1,6 @@
 const STRINGS = require("../../config/strings");
 const { sendSuccess, sendFailure } = require("../../config/res");
-const helper = require("../../misc/helper");
-const { datetime_format } = require("../../config/index");
 const moment = require("moment");
-require('ts-node/register/transpile-only');
 const QuizModel = require("../../new_models/QuizModel.ts").default;
 const RatingModel = require("../../new_models/UserRatingModel.ts").default;
 const FavoriteModel = require("../../new_models/UserFavoriteModel.ts").default;
@@ -19,8 +16,10 @@ const { cleanObject } = require("../../misc/helper");
  * @param {*} param0 favorite's info
  */
 async function markFavorite({ quizId, userId }) {
+  const qId = Number(quizId);
+  const uId = Number(userId);
   try {
-    await FavoriteModel.create({ QuizId: quizId, UserId: userId });
+    await FavoriteModel.create({ QuizId: qId, UserId: uId });
     return sendSuccess(null);
   } catch (error) {
     console.log(error);
@@ -33,8 +32,10 @@ async function markFavorite({ quizId, userId }) {
  * @param {*} param0 favorite's info
  */
 async function unmarkFavorite({ quizId, userId }) {
+  const qId = Number(quizId);
+  const uId = Number(userId);
   try {
-    await FavoriteModel.delete(userId, quizId);
+    await FavoriteModel.delete(uId, qId);
     return sendSuccess(200, null);
   } catch (error) {
     console.log(error);
@@ -47,7 +48,15 @@ async function unmarkFavorite({ quizId, userId }) {
  * @param {*} data All information about a new attempt
  */
 async function createNewAttempt({ questionIds, quizId, userId }) {
-  const attempt = await AttemptModel.create({ QuizId: quizId, UserId: userId });
+  const qId = Number(quizId);
+  const uId = Number(userId);
+  if (Number.isNaN(qId) || Number.isNaN(uId)) {
+    throw new Error('Invalid quiz or user id');
+  }
+  const attempt = await AttemptModel.create({
+    Quiz: { connect: { QuizId: qId } },
+    AppUser: { connect: { UserId: uId } },
+  });
   await UserAnswerModel.createMany(
     questionIds.map((id) => ({ AttemptId: attempt.AttemptId, QuestionId: id, AnswerText: '' }))
   );
@@ -99,7 +108,10 @@ function convertToObject(object) {
  * @param {*} attemptId 
  */
 async function getCurrentQuizInfo (quizId, userId, attemptId) {
-  const thisAttempt = await AttemptModel.findIncompleteAttempt(quizId, userId, attemptId);
+  const qId = Number(quizId);
+  const uId = Number(userId);
+  const aId = Number(attemptId);
+  const thisAttempt = await AttemptModel.findIncompleteAttempt(qId, uId, aId);
   if (thisAttempt) {
     const expiredTime = moment(thisAttempt.StartTime).add(thisAttempt.Quiz.TimeAllowed, 'minutes');
     const difference = moment().diff(expiredTime, 'seconds');
@@ -113,20 +125,25 @@ module.exports = {
    * This function loads an incomplete attempt by student or creates a new attempt if they has completed their latest attempt or has never taken the quiz
    */
   startQuiz: async (quizId, userId) => {
+    const qId = Number(quizId);
+    const uId = Number(userId);
+    if (Number.isNaN(qId) || Number.isNaN(uId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
     try {
-      const latestAttempt = await AttemptModel.findLatest(quizId, userId);
+      const latestAttempt = await AttemptModel.findLatest(qId, uId);
       const hasCompleted = latestAttempt && latestAttempt.EndTime !== null;
       const hasNeverTaken = !latestAttempt;
 
-      const questionsContent = await QuestionModel.loadContent(quizId);
+      const questionsContent = await QuestionModel.loadContent(qId);
 
       if (hasCompleted || hasNeverTaken) {
-        const questions = await QuestionModel.findManyByQuizId({ quizId });
+        const questions = await QuestionModel.findManyByQuizId({ quizId: qId });
         const questionIds = questions.map((q) => q.question_id);
         if (questionIds.length === 0) return sendFailure(STRINGS.ERROR_OCCURRED);
-        const attemptId = await createNewAttempt({ questionIds, quizId, userId });
-        const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId, userId, attemptId });
-        const quizInfo = await getCurrentQuizInfo(quizId, userId, attemptId);
+        const attemptId = await createNewAttempt({ questionIds, quizId: qId, userId: uId });
+        const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId: qId, userId: uId, attemptId });
+        const quizInfo = await getCurrentQuizInfo(qId, uId, attemptId);
         const response = { questions: questionsWithAns, ...quizInfo };
         const resObject = convertToObject(questionsContent);
         for (const question of response.questions) {
@@ -134,9 +151,9 @@ module.exports = {
         }
         return sendSuccess(response);
       } else {
-        const data = { latestAttempt, quizId, userId };
+        const data = { latestAttempt, quizId: qId, userId: uId };
         const incomplete = await loadIncompleteAttempt(data);
-        const quizInfo = await getCurrentQuizInfo(quizId, userId, latestAttempt.AttemptId);
+        const quizInfo = await getCurrentQuizInfo(qId, uId, latestAttempt.AttemptId);
         const response = { questions: incomplete.questions, ...quizInfo };
         const resObject = convertToObject(incomplete.questionsContent);
         for (const question of response.questions) {
@@ -158,8 +175,12 @@ module.exports = {
    * Loads a quiz by Id
    */
   getQuiz: async (id) => {
+    const qId = Number(id);
+    if (Number.isNaN(qId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
     try {
-      const quiz = await QuizModel.findDetailed(id);
+      const quiz = await QuizModel.findDetailed(qId);
       return sendSuccess(quiz);
     } catch (error) {
       console.log(error);
@@ -184,14 +205,21 @@ module.exports = {
 
     const isActive = data.isActive === true;
 
+    const timeAllowed = Number(data.timeAllowed);
+    const skillId = Number(data.skillId);
+    const userId = Number(data.userId);
+    if (Number.isNaN(timeAllowed) || Number.isNaN(skillId) || Number.isNaN(userId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
+
     try {
       const quiz = await QuizModel.create({
         Title: data.courseName,
         Description: data.description,
         IsActive: isActive,
-        TimeAllowed: data.timeAllowed,
-        SkillId: data.skillId,
-        CreatedBy: data.userId,
+        TimeAllowed: timeAllowed,
+        SkillId: skillId,
+        CreatedBy: userId,
       });
       return sendSuccess(await QuizModel.findDetailed(quiz.QuizId));
     } catch (error) {
@@ -203,7 +231,12 @@ module.exports = {
    * Function updates a quiz from teacher page
    */
   updateQuiz: async (data) => {
-    const { quizId } = data;
+    const quizId = Number(data.quizId);
+    const skillId = Number(data.skillId);
+    const userId = Number(data.userId);
+    if (Number.isNaN(quizId) || Number.isNaN(skillId) || Number.isNaN(userId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
 
     if (!validator.validateIsActiveQuestion(data.isActive)) {
       return sendFailure(STRINGS.INVALID_IS_ACTIVE_VALUE);
@@ -222,9 +255,9 @@ module.exports = {
         Title: data.courseName,
         Description: data.description,
         IsActive: isActive,
-        TimeAllowed: data.timeAllowed,
-        SkillId: data.skillId,
-        CreatedBy: data.userId,
+        TimeAllowed: Number(data.timeAllowed),
+        SkillId: skillId,
+        CreatedBy: userId,
       });
       return sendSuccess(await QuizModel.findDetailed(quizId));
     } catch (error) {
@@ -236,13 +269,17 @@ module.exports = {
    * Function toggles a quiz's favorite based on provided information
    */
   toggleFavorite: async (data) => {
-    const { quizId, userId } = data;
+    const qId = Number(data.quizId);
+    const uId = Number(data.userId);
+    if (Number.isNaN(qId) || Number.isNaN(uId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
     try {
-      const exist = await FavoriteModel.findById(userId, quizId);
+      const exist = await FavoriteModel.findById(uId, qId);
       if (exist) {
-        return unmarkFavorite(data);
+        return unmarkFavorite({ quizId: qId, userId: uId });
       } else {
-        return markFavorite(data);
+        return markFavorite({ quizId: qId, userId: uId });
       }
     } catch (error) {
       console.log(error);
@@ -253,7 +290,9 @@ module.exports = {
    * Function sets rating for quiz by a user
    */
   setRating: async ({ quizId, userId, ratingGiven }) => {
-    if (!quizId || !userId || quizId < 1 || userId < 0) {
+    const qId = Number(quizId);
+    const uId = Number(userId);
+    if (Number.isNaN(qId) || Number.isNaN(uId) || qId < 1 || uId < 0) {
       return sendFailure(STRINGS.INVALID_QUIZ_ID);
     }
     if (!validator.validateRatingGiven(ratingGiven)) {
@@ -261,14 +300,14 @@ module.exports = {
     }
 
     try {
-      const exist = await RatingModel.findById(userId, quizId);
+      const exist = await RatingModel.findById(uId, qId);
       if (exist) {
-        await RatingModel.update(userId, quizId, { RatingGiven: ratingGiven });
+        await RatingModel.update(uId, qId, { RatingGiven: ratingGiven });
       } else {
-        await RatingModel.create({ UserId: userId, QuizId: quizId, RatingGiven: ratingGiven });
+        await RatingModel.create({ UserId: uId, QuizId: qId, RatingGiven: ratingGiven });
       }
 
-      const ratingAgg = await require("../../new_models/QuizModel.ts").default.findDetailed(quizId);
+      const ratingAgg = await require("../../new_models/QuizModel.ts").default.findDetailed(qId);
       return sendSuccess(200, {
         average_rating: ratingAgg.average_rating,
         rating_count: ratingAgg.rating_count,
@@ -283,34 +322,57 @@ module.exports = {
    * Function handles submissions from students either by clicking on submit or timeout 
    */
   submitAndMark: async (data) => {
-    const { quizId, userId, attemptId } = data;
+    const qId = Number(data.quizId);
+    const uId = Number(data.userId);
+    const aId = Number(data.attemptId);
 
-    const endTime = moment(Date.now())
-    const getCorrectAnswers = await CorrectAnswerModel.findAll(quizId);
-    const userAnswerQuestions = await UserAnswerModel.findAll(data);
-    const response = { detailedAnswers: [], result: [], grade: null }
+    if (Number.isNaN(qId) || Number.isNaN(uId) || Number.isNaN(aId)) {
+      return sendFailure(STRINGS.INVALID_QUIZ_ID);
+    }
 
-    if (!getCorrectAnswers.error && !userAnswerQuestions.error) {
+    const endTime = moment(Date.now());
+    try {
+      const getCorrectAnswers = await CorrectAnswerModel.findAll(qId);
+      const uaRecords = await UserAnswerModel.findAllByAttempt(qId, uId, aId);
+      const userAnswers = uaRecords.map((ua) => ({
+        answer_text: ua.AnswerText,
+        question_id: ua.QuestionId,
+        type_id: ua.Question.TypeId,
+      }));
+      const response = { detailedAnswers: [], result: [], grade: null };
+
       // 1 - correct, 2 - partially correct, 3 - incorrect, 4 - unanswered
       const result = { correct: 0, partial: 0, incorrect: 0, unanswered: 0 };
-      const correctAnswers = convertToObject( cleanObject(getCorrectAnswers.response) );
-      const userAnswers = userAnswerQuestions.response;
-      const userAnswersModels = []
+      const correctAnswers = convertToObject(cleanObject(getCorrectAnswers));
+      const userAnswersModels = [];
       let markedResult
 
       for (const { answer_text, type_id, question_id } of userAnswers) {
-        const corrects = type_id === 3 ?  correctAnswers[question_id][0].correct_answers.split(" ") .map((a) => a.split(".")) : correctAnswers[question_id]
+        const corrects = correctAnswers[question_id]
 
         if (answer_text === "") {
           result.unanswered += 1;
-          markedResult = 4
+          markedResult = 4;
 
           if (type_id === 1) {
-            response.detailedAnswers.push({answers: corrects.map(c => ({...c, marked: 0 === c.is_correct_choice, user_answer: 0}))})
+            response.detailedAnswers.push({ answers: corrects.map(c => ({ ...c, marked: 0 === c.is_correct_choice, user_answer: 0 })) });
           } else if (type_id === 2) {
-            response.detailedAnswers.push({answers: corrects })
+            response.detailedAnswers.push({ answers: corrects });
           } else if (type_id === 3) {
-            response.detailedAnswers.push({answers: corrects.map((c,i) => ({ type_id: 3, sequence_id: i + 1, correct_answer: c[1]}))})
+            const map: Record<number, string[]> = {};
+            for (const c of corrects) {
+              const po = c.prompt_order ?? c.PromptOrder;
+              const co = c.choice_order ?? c.ChoiceOrder;
+              const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
+              if (isCorrect) {
+                if (!map[po]) map[po] = [];
+                map[po].push(String.fromCharCode(64 + co));
+              }
+            }
+            const orders = Object.keys(map).map(n => Number(n)).sort((a,b) => a - b);
+            response.detailedAnswers.push({
+              answers: orders.map(o => ({ type_id: 3, sequence_id: o, correct_answer: map[o].join('/') }))
+            });
 
           }
         } else {
@@ -377,62 +439,78 @@ module.exports = {
               result.partial += 1
             }
           } else if (type_id === 3) {
-            const answers = answer_text.split(" ").map((a) => a.split("."));
-            const marked = answers.map((item, i) => item[1] === corrects[i][1])
+            const map: Record<number, string[]> = {};
+            for (const c of corrects) {
+              const po = c.prompt_order ?? c.PromptOrder;
+              const co = c.choice_order ?? c.ChoiceOrder;
+              const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
+              if (isCorrect) {
+                if (!map[po]) map[po] = [];
+                map[po].push(String.fromCharCode(64 + co));
+              }
+            }
+            const orders = Object.keys(map).map(n => Number(n)).sort((a,b) => a - b);
 
-            response.detailedAnswers[index].answers = corrects.map(c => ({ correct_answer: c[1]}))
-            
-            for (let i = 0; i < marked.length; i++) {
-              response.detailedAnswers[index].answers[i].type_id = 3
-              response.detailedAnswers[index].answers[i].sequence_id = i + 1
-              response.detailedAnswers[index].answers[i].user_answer = answers[i][1]
-              response.detailedAnswers[index].answers[i].marked = marked[i]
+            const answers = answer_text.split(" ").map(a => a.split("."));
+            const marks: boolean[] = [];
+            response.detailedAnswers[index].answers = [];
+            for (let i = 0; i < orders.length; i++) {
+              const po = orders[i];
+              const userChoice = answers[i] ? answers[i][1] : '';
+              const correctLetters = map[po] || [];
+              const isCorrect = userChoice && correctLetters.includes(userChoice);
+              marks.push(isCorrect);
+              response.detailedAnswers[index].answers.push({
+                type_id: 3,
+                sequence_id: po,
+                correct_answer: correctLetters.join('/'),
+                user_answer: userChoice,
+                marked: isCorrect
+              });
             }
 
-            if (marked.length === corrects.length && marked.every(m => m === true)) {
+            if (marks.length === orders.length && marks.every(m => m)) {
               markedResult = 1;
-              result.correct += 1
-            } else if (marked.every(m => m === false)) {
-              markedResult = 2
-              result.incorrect += 1
+              result.correct += 1;
+            } else if (marks.every(m => !m)) {
+              markedResult = 2;
+              result.incorrect += 1;
             } else {
-              markedResult = 3
-              result.partial += 1
+              markedResult = 3;
+              result.partial += 1;
             }
           }
         }
 
-        const ua = { quizId, userId, attemptId, questionId: question_id, markedResult}
+        const ua = { quizId: qId, userId: uId, attemptId: aId, questionId: question_id, markedResult }
 
         userAnswersModels.push(ua)
       }
 
       const numQuestions = Object.keys(correctAnswers).length;
-      const eachQuestionMark = 100 / numQuestions
-      const grade = result.correct === numQuestions ? 100 : (eachQuestionMark * result.correct + (eachQuestionMark / 2) * result.partial)
+      const eachQuestionMark = 100 / numQuestions;
+      const grade =
+        result.correct === numQuestions
+          ? 100
+          : eachQuestionMark * result.correct + (eachQuestionMark / 2) * result.partial;
 
-      const updateMarked = await UserAnswerModel.markOne(userAnswersModels)
-      const attemptData = { userId, quizId, attemptId, endTime: endTime.format(datetime_format), grade };
-      const closeAttempt = await AttemptModel.closeOne(attemptData)
-      const thisAttempt = await AttemptModel.findOne(quizId, userId, attemptId)
+      await UserAnswerModel.markOne(userAnswersModels);
+      const attemptData = { EndTime: endTime.toDate(), Grade: grade };
+      await AttemptModel.closeOne(aId, attemptData);
+      const thisAttempt = await AttemptModel.findOne(qId, uId, aId);
 
-      if(!updateMarked.error && !closeAttempt.error && !thisAttempt.error) {
-        response.result = result
-        response.result.total = numQuestions
-        response.accuracy = grade
-        response.quiz_id = quizId
-        response.attempt_id = attemptId
-        response.userAnswers = userAnswers
-        response.time_taken = endTime.diff(thisAttempt.response[0].start_time, 'seconds')
-  
-        return sendSuccess(response)
-      } else {
-        return sendFailure(STRINGS.ERROR_OCCURRED)
-      }
-    } else {
-      console.log(getCorrectAnswers.error)
-      console.log(userAnswerQuestions.error)
-      return sendFailure(STRINGS.ERROR_OCCURRED)
+      response.result = result;
+      response.result.total = numQuestions;
+      response.accuracy = grade;
+      response.quiz_id = qId;
+      response.attempt_id = aId;
+      response.userAnswers = userAnswers;
+      response.time_taken = endTime.diff(thisAttempt?.StartTime, 'seconds');
+
+      return sendSuccess(response);
+    } catch (error) {
+      console.log(error);
+      return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
 };

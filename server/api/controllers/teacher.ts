@@ -1,6 +1,5 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-require('ts-node/register/transpile-only');
 const QuizSkillModel = require("../../new_models/QuizSkillModel.ts").default;
 const UserRatingModel = require("../../new_models/UserRatingModel.ts").default;
 const QuestionTypeModel = require("../../new_models/QuestionTypeModel.ts").default;
@@ -8,7 +7,8 @@ const QuizModel = require("../../new_models/QuizModel.ts").default;
 const QuestionModel = require("../../new_models/QuestionModel.ts").default;
 const MCModel = require("../../new_models/QuestionMultipleChoiceModel.ts").default;
 const GModel = require("../../new_models/QuestionGapFillingModel.ts").default;
-const MModel = require("../../new_models/QuestionMatchingPairModel.ts").default;
+const PromptModel = require("../../new_models/MatchingPromptModel.ts").default;
+const ChoiceModel = require("../../new_models/MatchingChoiceModel.ts").default;
 const InstructionModel = require("../../new_models/QuestionInstructionModel.ts").default;
 const validator = require("../validators/validator");
 
@@ -66,7 +66,8 @@ async function updateQuestionContent(
     } else if (typeId === 2) {
       await GModel.updateMany(questionId, items);
     } else if (typeId === 3) {
-      await MModel.updateMany(questionId, [...items.leftItems, ...items.rightItems]);
+      await PromptModel.updateMany(questionId, items.leftItems || []);
+      await ChoiceModel.updateMany(questionId, items.rightItems || []);
     }
     return sendSuccess(201);
   } catch (error) {
@@ -90,14 +91,15 @@ async function getQuestionContent(id, typeId, questionData) {
       const content = await GModel.findManyByQuestion(id);
       return sendSuccess({ ...questionData, items: content });
     } else {
-      const pairs = await MModel.findManyByQuestion(id);
-      const leftItems = pairs.filter((p) => p.PairOrder % 2 === 1).map((p) => ({
-        letter: String.fromCharCode(64 + p.PairOrder),
+      const prompts = await PromptModel.findManyByQuestion(id);
+      const choices = await ChoiceModel.findManyByQuestion(id);
+      const leftItems = prompts.map((p) => ({
+        letter: String.fromCharCode(64 + p.PromptOrder),
         item: p.LeftText,
       }));
-      const rightItems = pairs.filter((p) => p.PairOrder % 2 === 0).map((p) => ({
-        letter: String.fromCharCode(64 + p.PairOrder),
-        item: p.RightText,
+      const rightItems = choices.map((c) => ({
+        letter: String.fromCharCode(64 + c.ChoiceOrder),
+        item: c.RightText,
       }));
       return sendSuccess({ items: { leftItems, rightItems }, ...questionData });
     }

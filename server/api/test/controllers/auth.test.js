@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const STRINGS = require("../../../config/strings");
-const authController = require("../../controllers/auth");
+const authController = require("../../controllers/auth.ts");
 const UserModel = new (require("../../../models/user"))();
 const { users, addUsers, deleteUsers } = require("../helpers/users");
 

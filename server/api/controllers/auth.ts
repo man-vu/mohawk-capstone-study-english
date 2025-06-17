@@ -11,7 +11,6 @@ const {
   validateRoleId,
   validateName,
 } = require("../validators/validator");
-require('ts-node/register/transpile-only');
 const AppUserModel = require("../../new_models/AppUserModel.ts").default;
 const MimeTypeModel = require("../../new_models/MimeTypeModel.ts").default;
 const {

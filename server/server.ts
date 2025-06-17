@@ -10,18 +10,18 @@ const sequelize = require("./config/orm");
 sequelize.authenticate().catch(err => console.error("Sequelize connection error:", err));
 
 const scheduler = require("./services/scheduler/checkAttempts");
-const history = require("connect-history-api-fallback");
+const connectHistory = require("connect-history-api-fallback");
 
 /* 
   Import all routes in the application
 */
-const authRoutes = require("./api/routes/auth");
-const homeRoutes = require("./api/routes/home");
-const userRoutes = require("./api/routes/users");
-const quizRoutes = require("./api/routes/quizzes");
-const teacherRoutes = require("./api/routes/teacher");
-const statisticsRoutes = require("./api/routes/statistics");
-const questionsRoutes = require("./api/routes/questions");
+const authRoutes = require("./api/routes/auth.ts");
+const homeRoutes = require("./api/routes/home.ts");
+const userRoutes = require("./api/routes/users.ts");
+const quizRoutes = require("./api/routes/quizzes.ts");
+const teacherRoutes = require("./api/routes/teacher.ts");
+const statisticsRoutes = require("./api/routes/statistics.ts");
+const questionsRoutes = require("./api/routes/questions.ts");
 
 /**
  * Set CORS policy in development environment to prevent CORS blocking
@@ -40,7 +40,7 @@ app.use(bodyParser.json());
 
 if (process.env.NODE_ENV === "production") {
   // Allowing refreshing current page without errors in production
-  app.use(history());
+  app.use(connectHistory());
   app.use(express.static(path.join(__dirname, "../dist")));
 
   // Redirecting to https protocol when user is landing on http protocol
