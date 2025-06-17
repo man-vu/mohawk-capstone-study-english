@@ -2,16 +2,25 @@ import prisma from '../prismaClient';
 
 export class CorrectAnswerModel {
   static findAll(quizId: number) {
-    const query = `SELECT q.QuestionId, qmc.ChoiceText, qmc.ChoiceOrder as choice_id, qmc.IsCorrect as is_correct_choice,
-      qgf.SequenceId, qgf.CorrectAnswer, qmp.CorrectAnswers, q.TypeId
+    const query = `SELECT q.QuestionId as question_id,
+      q.TypeId as type_id,
+      qmc.ChoiceText as choice_text,
+      qmc.ChoiceOrder as choice_id,
+      qmc.IsCorrect as is_correct_choice,
+      qgf.SequenceId as sequence_id,
+      qgf.CorrectAnswer as correct_answer,
+      mp.PromptOrder as prompt_order,
+      mc.ChoiceOrder as choice_order,
+      CASE WHEN ma.ChoiceId IS NULL THEN 0 ELSE 1 END as is_correct
       FROM Question q
       JOIN QuizQuestion qq ON qq.QuestionId = q.QuestionId
-      JOIN QuestionInstruction qi ON q.InstructionId = qi.InstructionId
       LEFT JOIN QuestionMultipleChoice qmc ON q.QuestionId = qmc.QuestionId
       LEFT JOIN QuestionGapFilling qgf ON q.QuestionId = qgf.QuestionId
-      LEFT JOIN QuestionMatchingPair qmp ON q.QuestionId = qmp.QuestionId
+      LEFT JOIN MatchingPrompt mp ON q.QuestionId = mp.QuestionId
+      LEFT JOIN MatchingAnswer ma ON mp.PromptId = ma.PromptId
+      LEFT JOIN MatchingChoice mc ON ma.ChoiceId = mc.ChoiceId
       WHERE qq.QuizId = ${quizId} AND q.IsActive = 1
-      ORDER BY q.QuestionId, qmc.ChoiceOrder, qgf.SequenceId`;
+      ORDER BY q.QuestionId, qmc.ChoiceOrder, qgf.SequenceId, mp.PromptOrder, mc.ChoiceOrder`;
     return prisma.$queryRawUnsafe(query);
   }
 }
