@@ -10,6 +10,10 @@ export class QuestionInstructionModel {
     return prisma.questionInstruction.create({ data });
   }
 
+  static findByInstruction(Instruction: string) {
+    return prisma.questionInstruction.findFirst({ where: { Instruction } });
+  }
+
   static findById(InstructionId: number) {
     return prisma.questionInstruction.findUnique({ where: { InstructionId } });
   }
