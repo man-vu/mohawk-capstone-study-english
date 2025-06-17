@@ -15,7 +15,8 @@
     "test": "cross-env NODE_ENV=test mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
     "test-coverage": "cross-env NODE_ENV=test nyc mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
     "dev": "cross-env NODE_ENV=development nodemon --inspect=9300 'server/server.js'",
-    "prod": "cross-env NODE_ENV=production node 'server/server.js'"
+    "prod": "cross-env NODE_ENV=production node 'server/server.js'",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@achrinza/node-ipc": "^10.1.11",
@@ -56,7 +57,8 @@
     "vue-loader": "17.4.2",
     "vue-router": "4.5.1",
     "vue3-apexcharts": "1.8.0",
-    "vuex": "4.1.0"
+    "vuex": "4.1.0",
+    "@prisma/client": "^6.9.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.27.5",
@@ -68,7 +70,8 @@
     "eslint-plugin-vue": "9.19.2",
     "moment-duration-format": "^2.3.2",
     "nightwatch": "^1.6.4",
-    "nyc": "^15.1.0"
+    "nyc": "^15.1.0",
+    "prisma": "^6.9.0"
   },
   "eslintConfig": {
     "root": true,

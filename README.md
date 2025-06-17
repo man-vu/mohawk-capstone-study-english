@@ -22,3 +22,9 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### Prisma
+Generate Prisma client after editing the schema:
+```
+npm run prisma:generate
+```

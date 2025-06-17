@@ -1,0 +1,245 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  RoleId   Int    @id @default(autoincrement())
+  RoleName String @unique
+  RolePermission RolePermission[]
+  AppUser  AppUser[]
+}
+
+model Permission {
+  PermissionId   Int    @id @default(autoincrement())
+  PermissionName String @unique
+  RolePermission RolePermission[]
+}
+
+model RolePermission {
+  RoleId      Int
+  PermissionId Int
+  Enabled     Boolean @default(true)
+  Role        Role      @relation(fields: [RoleId], references: [RoleId], onDelete: Cascade)
+  Permission  Permission @relation(fields: [PermissionId], references: [PermissionId], onDelete: Cascade)
+
+  @@id([RoleId, PermissionId])
+}
+
+model MimeType {
+  MimeId  Int    @id @default(autoincrement())
+  ImageUrl String @unique
+  ImageAlt String?
+  AppUser  AppUser[] @relation("ProfilePicture")
+}
+
+model AppUser {
+  UserId            Int       @id @default(autoincrement())
+  Email             String    @unique
+  PasswordHash      String?
+  PasswordSalt      String?
+  Gender            String    @default("U")
+  RoleId            Int
+  ProfilePictureId  Int?
+  CreatedAt         DateTime  @default(now())
+  FirstName         String?
+  LastName          String?
+  PasswordResetHash String?
+  PasswordResetSalt String?
+  PasswordResetExpiry DateTime?
+  Role              Role      @relation(fields: [RoleId], references: [RoleId])
+  ProfilePicture    MimeType? @relation("ProfilePicture", fields: [ProfilePictureId], references: [MimeId])
+  Quiz              Quiz[]    @relation("CreatedQuizzes")
+  UserAttempt       UserAttempt[]
+  UserFavorite      UserFavorite[]
+  UserRating        UserRating[]
+  AppLog            AppLog[]
+  AuditTrail        AuditTrail[]
+  UserActivity      UserActivity[]
+}
+
+model QuizSkill {
+  SkillId         Int    @id @default(autoincrement())
+  SkillDescription String
+  Quiz            Quiz[]
+}
+
+model Quiz {
+  QuizId     Int      @id @default(autoincrement())
+  Title      String
+  SkillId    Int?
+  Description String?
+  IsActive   Boolean  @default(true)
+  TimeAllowed Int     @default(60)
+  CreatedBy   Int
+  CreatedAt   DateTime @default(now())
+  Skill       QuizSkill? @relation(fields: [SkillId], references: [SkillId])
+  Creator     AppUser  @relation("CreatedQuizzes", fields: [CreatedBy], references: [UserId])
+  QuizQuestion QuizQuestion[]
+  UserAttempt  UserAttempt[]
+  UserFavorite UserFavorite[]
+  UserRating   UserRating[]
+}
+
+model QuestionType {
+  TypeId   Int    @id @default(autoincrement())
+  TypeName String @unique
+  Question Question[]
+}
+
+model QuestionInstruction {
+  InstructionId Int    @id @default(autoincrement())
+  Instruction   String @unique
+  Question      Question[]
+}
+
+model Question {
+  QuestionId     Int      @id @default(autoincrement())
+  TypeId         Int
+  InstructionId  Int
+  IsActive       Boolean  @default(true)
+  ParagraphTitle String?
+  QuestionText   String
+  CreatedAt      DateTime @default(now())
+  Type           QuestionType        @relation(fields: [TypeId], references: [TypeId])
+  Instruction    QuestionInstruction @relation(fields: [InstructionId], references: [InstructionId])
+  QuizQuestion   QuizQuestion[]
+  QuestionMultipleChoice QuestionMultipleChoice[]
+  QuestionGapFilling     QuestionGapFilling[]
+  QuestionMatchingPair   QuestionMatchingPair[]
+  QuestionEssay          QuestionEssay?
+  UserAnswer             UserAnswer[]
+}
+
+model QuizQuestion {
+  QuizId     Int
+  QuestionId Int
+  SortOrder  Int?
+  Quiz       Quiz     @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade)
+  Question   Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade)
+
+  @@id([QuizId, QuestionId])
+}
+
+model QuestionMultipleChoice {
+  QMCId     Int    @id @default(autoincrement())
+  QuestionId Int
+  ChoiceText String
+  ChoiceOrder Int
+  IsCorrect  Boolean @default(false)
+  Question   Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade)
+}
+
+model QuestionGapFilling {
+  QGFId      Int    @id @default(autoincrement())
+  QuestionId Int
+  SequenceId Int
+  CorrectAnswer String
+  Question   Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade)
+}
+
+model QuestionMatchingPair {
+  QMPairId   Int    @id @default(autoincrement())
+  QuestionId Int
+  LeftText   String
+  RightText  String
+  PairOrder  Int
+  Question   Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade)
+}
+
+model QuestionEssay {
+  QuestionId         Int   @id
+  WordLimit          Int?
+  SuggestedTimeMinutes Int?
+  ModelAnswer        String?
+  Question           Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade)
+}
+
+model UserAttempt {
+  AttemptId    Int     @id @default(autoincrement())
+  UserId       Int
+  QuizId       Int
+  StartTime    DateTime @default(now())
+  EndTime      DateTime?
+  RemainingTime Int?
+  Grade        Decimal? @db.Decimal(5,2)
+  User         AppUser  @relation(fields: [UserId], references: [UserId], onDelete: Cascade)
+  Quiz         Quiz     @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade)
+  UserAnswer   UserAnswer[]
+}
+
+model UserAnswer {
+  UserAnswerId Int     @id @default(autoincrement())
+  AttemptId    Int
+  QuestionId   Int
+  AnswerText   String?
+  IsCorrect    Boolean?
+  Attempt      UserAttempt @relation(fields: [AttemptId], references: [AttemptId], onDelete: Cascade)
+  Question     Question    @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade)
+  UserEssayAnswer UserEssayAnswer?
+}
+
+model UserEssayAnswer {
+  UserAnswerId   Int  @id
+  EssayText      String
+  Mark           Decimal? @db.Decimal(5,2)
+  TeacherFeedback String?
+  UserAnswer      UserAnswer @relation(fields: [UserAnswerId], references: [UserAnswerId], onDelete: Cascade)
+}
+
+model UserFavorite {
+  UserId Int
+  QuizId Int
+  User   AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade)
+  Quiz   Quiz    @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade)
+
+  @@id([UserId, QuizId])
+}
+
+model UserRating {
+  UserId Int
+  QuizId Int
+  RatingGiven Int
+  User   AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade)
+  Quiz   Quiz    @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade)
+
+  @@id([UserId, QuizId])
+}
+
+model AppLog {
+  LogId      Int     @id @default(autoincrement())
+  LogLevel   String
+  LogMessage String
+  UserId     Int?
+  CreatedAt  DateTime @default(now())
+  Source     String?
+  User       AppUser? @relation(fields: [UserId], references: [UserId])
+}
+
+model AuditTrail {
+  AuditId     Int     @id @default(autoincrement())
+  TableName   String
+  RecordId    Int
+  Action      String
+  UserId      Int?
+  ChangeTimestamp DateTime @default(now())
+  OldValues   String?
+  NewValues   String?
+  Context     String?
+  User        AppUser? @relation(fields: [UserId], references: [UserId])
+}
+
+model UserActivity {
+  ActivityId  Int     @id @default(autoincrement())
+  UserId      Int
+  ActivityType String
+  TargetId    Int?
+  ActivityTime DateTime @default(now())
+  Details     String?
+  User        AppUser @relation(fields: [UserId], references: [UserId])
+}
+
