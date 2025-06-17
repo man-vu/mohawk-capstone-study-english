@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = "sqlserver://localhost:1433;database=QuizVerse;integratedSecurity=true;trustServerCertificate=true"
+}
+
+model AppLog {
+  LogId      Int      @id(map: "PK__AppLog__5E5486489076CCA9") @default(autoincrement())
+  LogLevel   String   @db.NVarChar(20)
+  LogMessage String   @db.NVarChar(Max)
+  UserId     Int?
+  CreatedAt  DateTime @default(dbgenerated("sysdatetime()"), map: "DF__AppLog__CreatedA__02FC7413")
+  Source     String?  @db.NVarChar(100)
+  AppUser    AppUser? @relation(fields: [UserId], references: [UserId], onDelete: NoAction, onUpdate: NoAction, map: "FK_AppLog_User")
+}
+
+model AppUser {
+  UserId              Int            @id(map: "PK__AppUser__1788CC4CB600BA96") @default(autoincrement())
+  Email               String         @unique(map: "UQ__AppUser__A9D1053459B26B93") @db.NVarChar(100)
+  PasswordHash        String?        @db.NVarChar(200)
+  PasswordSalt        String?        @db.NVarChar(200)
+  Gender              String         @default("U", map: "DF__AppUser__Gender__45F365D3") @db.Char(1)
+  RoleId              Int
+  ProfilePictureId    Int?
+  CreatedAt           DateTime       @default(dbgenerated("sysdatetime()"), map: "DF__AppUser__Created__46E78A0C")
+  FirstName           String?        @db.NVarChar(45)
+  LastName            String?        @db.NVarChar(45)
+  PasswordResetHash   String?        @db.NVarChar(200)
+  PasswordResetSalt   String?        @db.NVarChar(200)
+  PasswordResetExpiry DateTime?
+  AppLog              AppLog[]
+  MimeType            MimeType?      @relation(fields: [ProfilePictureId], references: [MimeId], onDelete: NoAction, onUpdate: NoAction, map: "FK_User_ProfilePic")
+  Role                Role           @relation(fields: [RoleId], references: [RoleId], onUpdate: NoAction, map: "FK_User_Role")
+  Quiz                Quiz[]
+  UserActivity        UserActivity[]
+  UserAttempt         UserAttempt[]
+  UserFavorite        UserFavorite[]
+  UserRating          UserRating[]
+}
+
+model AuditTrail {
+  AuditId         Int      @id(map: "PK__AuditTra__A17F2398A9B3A865") @default(autoincrement())
+  TableName       String   @db.NVarChar(100)
+  RecordId        Int
+  Action          String   @db.NVarChar(20)
+  UserId          Int?
+  ChangeTimestamp DateTime @default(dbgenerated("sysdatetime()"), map: "DF__AuditTrai__Chang__06CD04F7")
+  OldValues       String?  @db.NVarChar(Max)
+  NewValues       String?  @db.NVarChar(Max)
+  Context         String?  @db.NVarChar(200)
+}
+
+model MimeType {
+  MimeId   Int       @id(map: "PK__MimeType__7AC4564598F220F4") @default(autoincrement())
+  ImageUrl String    @unique(map: "UQ__MimeType__372CE60D9748AC36") @db.NVarChar(255)
+  ImageAlt String?   @db.NVarChar(255)
+  AppUser  AppUser[]
+}
+
+model Permission {
+  PermissionId   Int              @id(map: "PK__Permissi__EFA6FB2F9E5AEF15") @default(autoincrement())
+  PermissionName String           @unique(map: "UQ__Permissi__0FFDA35787EA197A") @db.NVarChar(100)
+  RolePermission RolePermission[]
+}
+
+model Question {
+  QuestionId             Int                      @id(map: "PK__Question__0DC06FAC05768176") @default(autoincrement())
+  TypeId                 Int
+  InstructionId          Int
+  IsActive               Boolean                  @default(true, map: "DF__Question__IsActi__59FA5E80")
+  ParagraphTitle         String?                  @db.NVarChar(100)
+  QuestionText           String                   @db.NVarChar(Max)
+  CreatedAt              DateTime                 @default(dbgenerated("sysdatetime()"), map: "DF__Question__Create__5AEE82B9")
+  QuestionInstruction    QuestionInstruction      @relation(fields: [InstructionId], references: [InstructionId], onUpdate: NoAction, map: "FK_Question_Instruction")
+  QuestionType           QuestionType             @relation(fields: [TypeId], references: [TypeId], onUpdate: NoAction, map: "FK_Question_Type")
+  QuestionEssay          QuestionEssay?
+  QuestionGapFilling     QuestionGapFilling[]
+  QuestionMatchingPair   QuestionMatchingPair[]
+  QuestionMultipleChoice QuestionMultipleChoice[]
+  QuizQuestion           QuizQuestion[]
+  UserAnswer             UserAnswer[]
+}
+
+model QuestionEssay {
+  QuestionId           Int      @id(map: "PK__Question__0DC06FAC4B4BB58E")
+  WordLimit            Int?
+  SuggestedTimeMinutes Int?
+  ModelAnswer          String?  @db.NVarChar(Max)
+  Question             Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QuestionEssay_Question")
+}
+
+model QuestionGapFilling {
+  QGFId         Int      @id(map: "PK__Question__CBEA8A16E785F09B") @default(autoincrement())
+  QuestionId    Int
+  SequenceId    Int
+  CorrectAnswer String   @db.NVarChar(255)
+  Question      Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QGF_Question")
+}
+
+model QuestionInstruction {
+  InstructionId Int        @id(map: "PK__Question__CE069471BBC73AD3") @default(autoincrement())
+  Instruction   String     @unique(map: "UQ__Question__EEDB4FE73CE9295D") @db.NVarChar(255)
+  Question      Question[]
+}
+
+model QuestionMatchingPair {
+  QMPairId   Int      @id(map: "PK__Question__0E63BDEF785DB0D8") @default(autoincrement())
+  QuestionId Int
+  LeftText   String   @db.NVarChar(255)
+  RightText  String   @db.NVarChar(255)
+  PairOrder  Int
+  Question   Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QMPair_Question")
+}
+
+model QuestionMultipleChoice {
+  QMCId       Int      @id(map: "PK__Question__FD853F8A7F86E1D4") @default(autoincrement())
+  QuestionId  Int
+  ChoiceText  String   @db.NVarChar(128)
+  ChoiceOrder Int
+  IsCorrect   Boolean  @default(false, map: "DF__QuestionM__IsCor__6383C8BA")
+  Question    Question @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QMC_Question")
+}
+
+model QuestionType {
+  TypeId   Int        @id(map: "PK__Question__516F03B5B6D2F51D") @default(autoincrement())
+  TypeName String     @unique(map: "UQ__Question__D4E7DFA8430678E0") @db.NVarChar(100)
+  Question Question[]
+}
+
+model Quiz {
+  QuizId       Int            @id(map: "PK__Quiz__8B42AE8E5EA6E9DA") @default(autoincrement())
+  Title        String         @db.NVarChar(100)
+  SkillId      Int?
+  Description  String?        @db.NVarChar(500)
+  IsActive     Boolean        @default(true, map: "DF__Quiz__IsActive__4D94879B")
+  TimeAllowed  Int            @default(60, map: "DF__Quiz__TimeAllowe__4E88ABD4")
+  CreatedBy    Int
+  CreatedAt    DateTime       @default(dbgenerated("sysdatetime()"), map: "DF__Quiz__CreatedAt__4F7CD00D")
+  AppUser      AppUser        @relation(fields: [CreatedBy], references: [UserId], onUpdate: NoAction, map: "FK_Quiz_CreatedBy")
+  QuizSkill    QuizSkill?     @relation(fields: [SkillId], references: [SkillId], onDelete: NoAction, onUpdate: NoAction, map: "FK_Quiz_Skill")
+  QuizQuestion QuizQuestion[]
+  UserAttempt  UserAttempt[]
+  UserFavorite UserFavorite[]
+  UserRating   UserRating[]
+}
+
+model QuizQuestion {
+  QuizId     Int
+  QuestionId Int
+  SortOrder  Int?
+  Question   Question @relation(fields: [QuestionId], references: [QuestionId], onUpdate: NoAction, map: "FK_QuizQuestion_Question")
+  Quiz       Quiz     @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QuizQuestion_Quiz")
+
+  @@id([QuizId, QuestionId], map: "PK__QuizQues__5B9EA8742674A4BB")
+}
+
+model QuizSkill {
+  SkillId          Int    @id(map: "PK__QuizSkil__DFA09187500A3012") @default(autoincrement())
+  SkillDescription String @db.NVarChar(100)
+  Quiz             Quiz[]
+}
+
+model Role {
+  RoleId         Int              @id(map: "PK__Role__8AFACE1A0633E49A") @default(autoincrement())
+  RoleName       String           @unique(map: "UQ__Role__8A2B616097E373C6") @db.NVarChar(100)
+  AppUser        AppUser[]
+  RolePermission RolePermission[]
+}
+
+model RolePermission {
+  RoleId       Int
+  PermissionId Int
+  Enabled      Boolean    @default(true, map: "DF__RolePermi__Enabl__3D5E1FD2")
+  Permission   Permission @relation(fields: [PermissionId], references: [PermissionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_RolePermission_Permission")
+  Role         Role       @relation(fields: [RoleId], references: [RoleId], onDelete: Cascade, onUpdate: NoAction, map: "FK_RolePermission_Role")
+
+  @@id([RoleId, PermissionId], map: "PK_RolePermission")
+}
+
+model UserActivity {
+  ActivityId   Int      @id(map: "PK__UserActi__45F4A7918AAD0396") @default(autoincrement())
+  UserId       Int
+  ActivityType String   @db.NVarChar(50)
+  TargetId     Int?
+  ActivityTime DateTime @default(dbgenerated("sysdatetime()"), map: "DF__UserActiv__Activ__09A971A2")
+  Details      String?  @db.NVarChar(500)
+  AppUser      AppUser  @relation(fields: [UserId], references: [UserId], onUpdate: NoAction, map: "FK_UserActivity_User")
+}
+
+model UserAnswer {
+  UserAnswerId    Int              @id(map: "PK__UserAnsw__47CE237F747044DE") @default(autoincrement())
+  AttemptId       Int
+  QuestionId      Int
+  AnswerText      String?          @db.NVarChar(1024)
+  IsCorrect       Boolean?
+  UserAttempt     UserAttempt      @relation(fields: [AttemptId], references: [AttemptId], onUpdate: NoAction, map: "FK_UserAnswer_Attempt")
+  Question        Question         @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserAnswer_Question")
+  UserEssayAnswer UserEssayAnswer?
+}
+
+model UserAttempt {
+  AttemptId     Int          @id(map: "PK__UserAtte__891A68E630F2F9BC") @default(autoincrement())
+  UserId        Int
+  QuizId        Int
+  StartTime     DateTime     @default(dbgenerated("sysdatetime()"), map: "DF__UserAttem__Start__6FE99F9F")
+  EndTime       DateTime?
+  RemainingTime Int?
+  Grade         Decimal?     @db.Decimal(5, 2)
+  UserAnswer    UserAnswer[]
+  Quiz          Quiz         @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserAttempt_Quiz")
+  AppUser       AppUser      @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserAttempt_User")
+}
+
+model UserEssayAnswer {
+  UserAnswerId    Int        @id(map: "PK__UserEssa__47CE237F22EB7A99")
+  EssayText       String     @db.NVarChar(Max)
+  Mark            Decimal?   @db.Decimal(5, 2)
+  TeacherFeedback String?    @db.NVarChar(Max)
+  UserAnswer      UserAnswer @relation(fields: [UserAnswerId], references: [UserAnswerId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserEssayAnswer_UserAnswer")
+}
+
+model UserFavorite {
+  UserId  Int
+  QuizId  Int
+  Quiz    Quiz    @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserFavorite_Quiz")
+  AppUser AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserFavorite_User")
+
+  @@id([UserId, QuizId], map: "PK__UserFavo__EF3CE6A4766A4150")
+}
+
+model UserRating {
+  UserId      Int
+  QuizId      Int
+  RatingGiven Int     @db.TinyInt
+  Quiz        Quiz    @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserRating_Quiz")
+  AppUser     AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserRating_User")
+
+  @@id([UserId, QuizId], map: "PK__UserRati__EF3CE6A4F3F6594C")
+}
