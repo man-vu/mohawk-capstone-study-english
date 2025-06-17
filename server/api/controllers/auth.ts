@@ -48,7 +48,7 @@ module.exports = {
     if (!validatePassword(password)) {
       return sendFailure(STRINGS.PASSWORD_MUST_BE_AT_LEAST());
     }
-    if (!validateProfilePictureId(profilePictureId)) {
+    if (profilePictureId !== undefined && !validateProfilePictureId(profilePictureId)) {
       return sendFailure(STRINGS.INVALID_PROFILE_PICTURE_ID);
     }
     if (!validateGender(gender)) {
@@ -62,16 +62,20 @@ module.exports = {
     const { passwordHash, passwordSalt } = await hashPasswordAsync(password);
 
     try {
-      const user = await AppUserModel.create({
+      const createData: any = {
         Email: email,
         PasswordHash: passwordHash,
         PasswordSalt: passwordSalt,
         Gender: gender,
         RoleId: parseInt(roleId, 10),
-        ProfilePictureId: profilePictureId,
         FirstName: firstName,
         LastName: lastName,
-      });
+      };
+      if (profilePictureId !== undefined) {
+        createData.ProfilePictureId = profilePictureId;
+      }
+
+      const user = await AppUserModel.create(createData);
 
       const userId = user.UserId;
       const isTeacher = roleId === 1 ? true : false;
@@ -88,7 +92,7 @@ module.exports = {
       return sendSuccess(201, {
         email,
         roleId,
-        profilePictureId,
+        profilePictureId: profilePictureId,
         gender,
         firstName,
         lastName,
