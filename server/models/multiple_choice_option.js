@@ -1,39 +1,60 @@
-const database = new (require("../config/database"))();
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/orm');
+
+const QuestionMultipleChoice = sequelize.define('question_multiple_choice', {
+  question_id: { type: DataTypes.INTEGER, primaryKey: true },
+  choice_id: { type: DataTypes.INTEGER, primaryKey: true },
+  choice_text: DataTypes.STRING,
+  is_correct_choice: DataTypes.BOOLEAN
+}, { tableName: 'question_multiple_choice', timestamps: false });
 
 class MultipleChoiceOptionModel {
   constructor() {
-    this.db = database;
+    this.QuestionMultipleChoice = QuestionMultipleChoice;
   }
 
   async findMany(questionId) {
-    return await this.db.executeQuery(`SELECT qmc.choice_id, qmc.choice_text, qmc.is_correct_choice
-    FROM question q 
-    JOIN question_multiple_choice qmc ON q.question_id = qmc.question_id
-    WHERE q.question_id = ${questionId}
-    ORDER BY choice_id`)
+    try {
+      const res = await this.QuestionMultipleChoice.findAll({
+        where: { question_id: questionId },
+        attributes: ['choice_id', 'choice_text', 'is_correct_choice'],
+        order: [['choice_id', 'ASC']]
+      });
+      return { error: null, response: res.map(r => r.toJSON()) };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async addMany(items, questionId) {
-    let query = `INSERT INTO question_multiple_choice (question_id, choice_id, choice_text, is_correct_choice) VALUES `;
-
-    for (let i = 0; i < items.length; i++) {
-      query = query.concat(
-        `(${questionId}, ${items[i].choice_id}, '${items[i].choice_text}', '${items[i].is_correct_choice}'), `
-      );
+    const records = items.map(i => ({
+      question_id: questionId,
+      choice_id: i.choice_id,
+      choice_text: i.choice_text,
+      is_correct_choice: i.is_correct_choice
+    }));
+    try {
+      const res = await this.QuestionMultipleChoice.bulkCreate(records);
+      return { error: null, response: { affectedRows: res.length } };
+    } catch (error) {
+      return { error };
     }
-
-    let formattedQuery = query.substring(0, query.length - 2);
-
-    return await this.db.executeQuery(formattedQuery)
   }
 
   async saveMany(items, questionId) {
-    let query = ''
-    for (const { choice_id, choice_text, is_correct_choice} of items) {
-      query += `UPDATE question_multiple_choice SET choice_text = '${choice_text}', is_correct_choice = ${is_correct_choice} WHERE choice_id = ${choice_id} AND question_id = ${questionId};`;
+    try {
+      const promises = items.map(({ choice_id, choice_text, is_correct_choice }) =>
+        this.QuestionMultipleChoice.update(
+          { choice_text, is_correct_choice },
+          { where: { choice_id, question_id: questionId } }
+        )
+      );
+      const results = await Promise.all(promises);
+      const affectedRows = results.reduce((a, [c]) => a + c, 0);
+      return { error: null, response: { affectedRows } };
+    } catch (error) {
+      return { error };
     }
-    
-    return await this.db.executeQuery(query)
   }
 }
 

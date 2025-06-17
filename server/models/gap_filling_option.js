@@ -1,39 +1,58 @@
-const database = new (require("../config/database"))();
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/orm');
+
+const QuestionGapFilling = sequelize.define('question_gap_filling', {
+  question_id: { type: DataTypes.INTEGER, primaryKey: true },
+  sequence_id: { type: DataTypes.INTEGER, primaryKey: true },
+  correct_answer: DataTypes.STRING
+}, { tableName: 'question_gap_filling', timestamps: false });
 
 class GapFillingOptionModel {
   constructor() {
-    this.db = database;
+    this.QuestionGapFilling = QuestionGapFilling;
   }
 
   async findMany(questionId) {
-    return await this.db.executeQuery(`SELECT qgf.sequence_id, qgf.correct_answer
-    FROM question q 
-    JOIN question_gap_filling qgf ON q.question_id = qgf.question_id
-    WHERE q.question_id = ${questionId}
-    ORDER BY sequence_id`)
+    try {
+      const res = await this.QuestionGapFilling.findAll({
+        where: { question_id: questionId },
+        attributes: ['sequence_id', 'correct_answer'],
+        order: [['sequence_id', 'ASC']]
+      });
+      return { error: null, response: res.map(r => r.toJSON()) };
+    } catch (error) {
+      return { error };
+    }
   }
 
   async addMany(items, questionId) {
-    let query = `INSERT INTO question_gap_filling (question_id, sequence_id, correct_answer) VALUES `;
-
-    for (let i = 0; i < items.length; i++) {
-      query = query.concat(
-        `(${questionId}, ${items[i].sequence_id}, '${items[i].correct_answer}'), `
-      );
+    const records = items.map(i => ({
+      question_id: questionId,
+      sequence_id: i.sequence_id,
+      correct_answer: i.correct_answer
+    }));
+    try {
+      const res = await this.QuestionGapFilling.bulkCreate(records);
+      return { error: null, response: { affectedRows: res.length } };
+    } catch (error) {
+      return { error };
     }
-
-    let formattedQuery = query.substring(0, query.length - 2);
-
-    return await this.db.executeQuery(formattedQuery)
   }
 
   async saveMany(items, questionId) {
-    let query = ''
-    for (const { sequence_id, correct_answer} of items) {
-      query += `UPDATE question_gap_filling SET correct_answer = '${correct_answer}' WHERE sequence_id = ${sequence_id} AND question_id = ${questionId};`;
+    try {
+      const promises = items.map(({ sequence_id, correct_answer }) =>
+        this.QuestionGapFilling.update(
+          { correct_answer },
+          { where: { sequence_id, question_id: questionId } }
+        )
+      );
+      const results = await Promise.all(promises);
+      const affectedRows = results.reduce((a, [c]) => a + c, 0);
+      return { error: null, response: { affectedRows } };
+    } catch (error) {
+      return { error };
     }
-    
-    return await this.db.executeQuery(query)
   }
 }
 
