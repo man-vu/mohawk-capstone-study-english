@@ -1,5 +1,5 @@
 import prisma from '../prismaClient';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 export interface UserFavorite {
   UserId: number;
   QuizId: number;
