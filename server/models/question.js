@@ -1,4 +1,4 @@
-const { DataTypes, QueryTypes } = require('sequelize');
+const { DataTypes, fn, col } = require('sequelize');
 const sequelize = require('../config/orm');
 
 const Question = sequelize.define('question', {
@@ -110,19 +110,23 @@ class QuestionModel {
 
   async loadContent(quizId) {
     try {
-      const res = await sequelize.query(
-        `SELECT q.question_id, qmc.choice_id, qmc.choice_text, qgf.sequence_id , qms.letter, qms.subquestion_id, qms.text, qmc.is_correct_choice, qms.column_assigned
-      FROM question q
-      JOIN quiz_question qq ON qq.question_id = q.question_id
-      JOIN question_instruction qi ON q.instruction_id = qi.instruction_id
-      LEFT JOIN question_multiple_choice qmc ON q.question_id =  qmc.question_id
-      LEFT JOIN question_gap_filling qgf ON q.question_id = qgf.question_id
-      LEFT JOIN question_matching_sub qms ON q.question_id = qms.question_id
-      WHERE qq.quiz_id = :quizId AND q.is_active = 1
-      ORDER BY q.question_id, qmc.choice_id, qgf.sequence_id, qms.subquestion_id`,
-        { replacements: { quizId }, type: QueryTypes.SELECT }
-      );
-      return { error: null, response: res };
+      const res = await this.Question.findAll({
+        where: { is_active: 1 },
+        include: [
+          { model: QuizQuestion, where: { quiz_id: quizId }, attributes: [] },
+          { model: QuestionMultipleChoice, attributes: ['choice_id', 'choice_text', 'is_correct_choice'], required: false },
+          { model: QuestionGapFilling, attributes: ['sequence_id', 'correct_answer'], required: false },
+          { model: QuestionMatchingSub, attributes: ['letter', 'subquestion_id', 'text', 'column_assigned'], required: false }
+        ],
+        attributes: ['question_id'],
+        order: [
+          ['question_id', 'ASC'],
+          [QuestionMultipleChoice, 'choice_id', 'ASC'],
+          [QuestionGapFilling, 'sequence_id', 'ASC'],
+          [QuestionMatchingSub, 'subquestion_id', 'ASC']
+        ]
+      });
+      return { error: null, response: res.map(r => r.toJSON()) };
     } catch (error) {
       return { error };
     }
@@ -130,16 +134,22 @@ class QuestionModel {
 
   async findManyByQuizIdForEdit(quizId) {
     try {
-      const res = await sequelize.query(
-        `SELECT q.question_id, q.type_id, qt.type_name, q.is_active, q.paragraph_title, q.question, qi.instruction
-        FROM question q
-        JOIN quiz_question qq ON qq.question_id = q.question_id
-        JOIN question_instruction qi ON q.instruction_id = qi.instruction_id
-        JOIN question_type qt ON q.type_id = qt.type_id
-        WHERE qq.quiz_id = :quizId
-        ORDER BY q.question_id`,
-        { replacements: { quizId }, type: QueryTypes.SELECT }
-      );
+      const qs = await this.Question.findAll({
+        include: [
+          { model: QuizQuestion, where: { quiz_id: quizId }, attributes: [] },
+          { model: QuestionInstruction, attributes: ['instruction'] },
+          { model: QuestionType, attributes: ['type_name'] }
+        ],
+        order: [['question_id', 'ASC']]
+      });
+      const res = qs.map(q => {
+        const obj = q.toJSON();
+        obj.instruction = obj.question_instruction.instruction;
+        obj.type_name = obj.question_type.type_name;
+        delete obj.question_instruction;
+        delete obj.question_type;
+        return obj;
+      });
       return { error: null, response: res };
     } catch (error) {
       return { error };
@@ -148,32 +158,32 @@ class QuestionModel {
 
   async findManyByQuizId({quizId, userId, attemptId}) {
     try {
+      const include = [
+        { model: QuizQuestion, where: { quiz_id: quizId }, attributes: [] },
+        { model: QuestionInstruction, attributes: ['instruction'] },
+        { model: QuestionType, attributes: ['type_name'] }
+      ];
       if (attemptId && userId) {
-        const res = await sequelize.query(
-          `SELECT q.question_id, q.type_id, qt.type_name, q.is_active, q.paragraph_title, q.question, qi.instruction, uaq.*
-            FROM question q
-            JOIN quiz_question qq ON qq.question_id = q.question_id
-            JOIN question_instruction qi ON q.instruction_id = qi.instruction_id
-            JOIN question_type qt ON q.type_id = qt.type_id
-            JOIN user_answer_question uaq ON uaq.question_id = q.question_id
-            WHERE uaq.quiz_id = :quizId AND q.is_active = 1 AND uaq.user_id = :userId AND uaq.attempt_id = :attemptId
-            ORDER BY q.question_id`,
-          { replacements: { quizId, userId, attemptId }, type: QueryTypes.SELECT }
-        );
-        return { error: null, response: res };
-      } else {
-        const res = await sequelize.query(
-          `SELECT q.question_id, q.type_id, qt.type_name, q.is_active, q.paragraph_title, q.question, qi.instruction
-            FROM question q
-            JOIN quiz_question qq ON qq.question_id = q.question_id
-            JOIN question_instruction qi ON q.instruction_id = qi.instruction_id
-            JOIN question_type qt ON q.type_id = qt.type_id
-            WHERE qq.quiz_id = :quizId AND q.is_active = 1
-            ORDER BY q.question_id`,
-          { replacements: { quizId }, type: QueryTypes.SELECT }
-        );
-        return { error: null, response: res };
+        include.push({
+          model: UserAnswerQuestion,
+          where: { quiz_id: quizId, user_id: userId, attempt_id: attemptId },
+          required: false
+        });
       }
+      const qs = await this.Question.findAll({
+        where: { is_active: 1 },
+        include,
+        order: [['question_id', 'ASC']]
+      });
+      const res = qs.map(q => {
+        const obj = q.toJSON();
+        obj.instruction = obj.question_instruction.instruction;
+        obj.type_name = obj.question_type.type_name;
+        delete obj.question_instruction;
+        delete obj.question_type;
+        return obj;
+      });
+      return { error: null, response: res };
     } catch (error) {
       return { error };
     }
@@ -181,13 +191,11 @@ class QuestionModel {
 
   async findNumberOfQuestions() {
     try {
-      const res = await sequelize.query(
-        `SELECT quiz.quiz_id,
-    (SELECT COUNT(*) FROM quiz_question WHERE quiz.quiz_id = quiz_question.quiz_id) AS number_of_questions
-    FROM quiz`,
-        { type: QueryTypes.SELECT }
-      );
-      return { error: null, response: res };
+      const res = await QuizQuestion.findAll({
+        attributes: ['quiz_id', [sequelize.fn('COUNT', sequelize.col('question_id')), 'number_of_questions']],
+        group: ['quiz_id']
+      });
+      return { error: null, response: res.map(r => r.toJSON()) };
     } catch (error) {
       return { error };
     }
