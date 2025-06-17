@@ -9,7 +9,11 @@ const router = express.Router();
  */
 router.post("/start/:id", authMiddleware, async (req, res) => {
   const quizId = req.params.id;
-  const userId = req.user.id;
+  const userId = req.user && req.user.id;
+
+  if (userId === undefined) {
+    return res.status(401).json({ error: "Invalid user" });
+  }
 
   const quiz = await quizzesController.startQuiz(quizId, userId);
   res.status(200).json(quiz);
