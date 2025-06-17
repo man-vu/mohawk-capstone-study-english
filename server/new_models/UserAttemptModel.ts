@@ -52,6 +52,22 @@ export class UserAttemptModel {
     });
   }
 
+  static async findAllIncompleteAttempts() {
+    const attempts = await prisma.userAttempt.findMany({
+      where: { EndTime: null },
+      include: { Quiz: { select: { TimeAllowed: true } } },
+      orderBy: { StartTime: 'asc' },
+    });
+
+    return attempts.map((a) => ({
+      attempt_id: a.AttemptId,
+      user_id: a.UserId,
+      quiz_id: a.QuizId,
+      start_time: a.StartTime,
+      time_allowed: a.Quiz.TimeAllowed,
+    }));
+  }
+
   static findOne(QuizId: number, UserId: number, AttemptId: number) {
     return prisma.userAttempt.findFirst({ where: { QuizId, UserId, AttemptId } });
   }
