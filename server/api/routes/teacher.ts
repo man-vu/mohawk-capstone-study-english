@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authTeacherMiddleware = require("../middlewares/authTeacher");
-const teacherController = require("../controllers/teacher");
+const teacherController = require("../controllers/teacher.ts");
 
 /**
  * Route that gets teacher home 

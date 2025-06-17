@@ -1,6 +1,5 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-require('ts-node/register/transpile-only');
 const UserAnswerModel = require("../../new_models/UserAnswerModel.ts").default;
 const QuizQuestionModel = require("../../new_models/QuizQuestionModel.ts").default;
 const QuestionModel = require("../../new_models/QuestionModel.ts").default;

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const questionsController = require("../controllers/questions");
+const questionsController = require("../controllers/questions.ts");
 const authMiddleware = require("../middlewares/auth");
 
 // GET: [routes/questions]

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/auth");
 const authTeacherMiddleware = require("../middlewares/authTeacher");
-const statisticsController = require("../controllers/statistics");
+const statisticsController = require("../controllers/statistics.ts");
 
 /**
  * Route that gets student statistics

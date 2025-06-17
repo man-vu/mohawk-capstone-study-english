@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const STRINGS = require("../../../config/strings");
-const homeController = require("../../controllers/home");
+const homeController = require("../../controllers/home.ts");
 const { users, addUsers, deleteUsers } = require("../helpers/users");
 
 before(async function() {

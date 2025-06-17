@@ -12,10 +12,10 @@
     "heroku-prebuild": "npm install",
     "heroku-postbuild": "vue-cli-service build",
     "start": "npm run prod",
-    "test": "cross-env NODE_ENV=test mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
-    "test-coverage": "cross-env NODE_ENV=test nyc mocha 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
-    "dev": "cross-env NODE_ENV=development nodemon --inspect=9300 'server/server.js'",
-    "prod": "cross-env NODE_ENV=production node 'server/server.js'",
+    "test": "cross-env NODE_ENV=test mocha -r ts-node/register/transpile-only 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
+    "test-coverage": "cross-env NODE_ENV=test nyc mocha -r ts-node/register/transpile-only 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
+    "dev": "cross-env NODE_ENV=development nodemon --require ts-node/register --inspect=9300 server/server.ts",
+    "prod": "cross-env NODE_ENV=production node --require ts-node/register server/server.ts",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {

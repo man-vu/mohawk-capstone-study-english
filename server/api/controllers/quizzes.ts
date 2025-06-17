@@ -3,7 +3,6 @@ const { sendSuccess, sendFailure } = require("../../config/res");
 const helper = require("../../misc/helper");
 const { datetime_format } = require("../../config/index");
 const moment = require("moment");
-require('ts-node/register/transpile-only');
 const QuizModel = require("../../new_models/QuizModel.ts").default;
 const RatingModel = require("../../new_models/UserRatingModel.ts").default;
 const FavoriteModel = require("../../new_models/UserFavoriteModel.ts").default;

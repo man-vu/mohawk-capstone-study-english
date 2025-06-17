@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const usersController = require("../controllers/users");
-const avatarsController = require("../controllers/avatar");
+const usersController = require("../controllers/users.ts");
+const avatarsController = require("../controllers/avatar.ts");
 const { imageFilter } = require("../../misc/helper");
 const multer = require("multer");
 const path = require("path");

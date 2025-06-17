@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/auth");
-const homeController = require("../controllers/home");
+const homeController = require("../controllers/home.ts");
 
 /**
  * This handles loading data for Home Page

@@ -1,6 +1,5 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-require('ts-node/register/transpile-only');
 const AppUserModel = require("../../new_models/AppUserModel.ts").default;
 const { validateEmail, validateGender, validateName, validateNewPassword,
 } = require("../validators/validator");
