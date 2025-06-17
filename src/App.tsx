@@ -14,7 +14,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <div className={theme === 'dark' ? 'dark' : ''}>
-        <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+        <div className="min-h-screen bg-[rgb(var(--color-surface))] text-[rgb(var(--color-text))] transition-colors duration-300">
           <Router>
             <Navbar theme={theme} toggleTheme={toggleTheme} />
             <Routes>
