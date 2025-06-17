@@ -7,9 +7,6 @@ import LogoutPage from "../components/auth/LogoutPage";
 import RegisterPage from "../components/auth/RegisterPage";
 import QuizPage from "../components/quiz/QuizPage";
 import QuizResult from "../components/quiz/QuizResult";
-import DiscussionForum from "../components/discussion/DiscussionForum";
-import ThreadView from "../components/discussion/ThreadView";
-import CreateThread from "../components/discussion/CreateThread";
 import TeacherPage from "../components/teacher/TeacherPage";
 import StudentStatistics from "../components/statistics/StudentStatistics";
 import AccountSettings from "../components/settings/AccountSettings";
@@ -42,7 +39,6 @@ const router = createRouter({
       },
     },
     { path: "/logout", name: "logout", component: LogoutPage },
-    { path: "/thread/:id", name: "threads.index", component: ThreadView },
     {
       path: "/register",
       name: "register",
@@ -76,33 +72,6 @@ const router = createRouter({
       component: QuizResult,
       meta: {
         title: "Result",
-        requiresAuth: true,
-      },
-    },
-    {
-      path: "/discussion",
-      name: "discussion",
-      component: DiscussionForum,
-      meta: {
-        title: "Discussion Forum",
-        requiresAuth: true,
-      },
-    },
-    {
-      path: "/discussion/filter",
-      name: "discussion.index",
-      component: DiscussionForum,
-      meta: {
-        title: "Filtered Result | Discussion Forum",
-        requiresAuth: true,
-      },
-    },
-    {
-      path: "/create-thread",
-      name: "threads.create",
-      component: CreateThread,
-      meta: {
-        title: "Create Thread",
         requiresAuth: true,
       },
     },

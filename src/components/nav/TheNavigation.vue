@@ -35,9 +35,6 @@
             <router-link to="/quiz">Quiz</router-link>
           </li>
           <li class="nav-item" v-if="isAuthenticated">
-            <router-link to="/discussion">Discussion</router-link>
-          </li>
-          <li class="nav-item" v-if="isAuthenticated">
             <router-link to="/statistics">Statistics</router-link>
           </li>
           <li class="nav-item" v-if="isTeacher">

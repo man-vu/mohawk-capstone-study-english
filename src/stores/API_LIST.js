@@ -13,17 +13,7 @@ export default {
   getUsers: { method: "get", url: "users", baseURL },
   getDataForHome: { method: "get", url: "home", baseURL },
   getDataForTeacher: { method: "get", url: "teacher", baseURL },
-  getDataForDiscussion: { method: "get", url: "discussion", baseURL },
   getStatistics: { method: "get", url: "statistics", baseURL },
-
-  createThread: (body) => ({
-    method: "post",
-    url: "threads",
-    baseURL,
-    data: body,
-  }),
-  createPost: (body) => ({ method: "post", url: "posts", baseURL, data: body }),
-  deletePost: (id) => ({ method: "delete", url: `posts/${id}`, baseURL}),
   createQuiz: (body) => ({
     method: "post",
     url: "quizzes",
@@ -106,11 +96,6 @@ export default {
     baseURL,
   }),
 
-  getDiscussionThreadById: (threadId) => ({
-    method: "get",
-    url: `threads/${threadId}`,
-    baseURL,
-  }),
 
   saveQuizById: (quizId, body) => ({
     method: "put",
@@ -152,12 +137,6 @@ export default {
     data: body 
   }),
 
-  searchThread: (body) => ({
-    method: "post",
-    url: `discussion/search`,
-    baseURL,
-    data: body 
-  }),
 
   getAllStudents: {
     method: "get",

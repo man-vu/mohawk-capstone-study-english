@@ -31,9 +31,6 @@
             }}</span>
           </h5>
           <h4 class="mb-4">{{ description }}</h4>
-          <a @click="navigateToDiscussion" href="" class="discussion-title"
-            >Discussion</a
-          >
           <button @click="navigateToQuiz" v-if="latestAttempt" class="btn">
             Continue
           </button>
@@ -129,12 +126,6 @@ export default {
       this.$router.push({
         name: "quizzes.index",
         params: { id: this.quiz_id },
-      });
-    },
-    navigateToDiscussion() {
-      this.$router.push({
-        name: "discussion.index",
-        query: { quizid: this.quiz_id },
       });
     },
   },
@@ -246,17 +237,6 @@ export default {
   cursor: pointer;
 }
 
-.discussion-title {
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 16px;
-  padding: 12px 25px;
-  position: absolute;
-  bottom: 15px;
-  left: 5px;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
 
 .favorite-icon {
   position: absolute;
@@ -281,13 +261,6 @@ export default {
   }
 }
 
-/* Small devices (portrait tablets and large phones, 600px and up) */
-@media only screen and (max-width: 600px) {
-  .discussion-title {
-    position: unset;
-    padding: unset;
-  }
-}
 
 /* Small devices (portrait tablets and large phones, 600px and up) */
 @media only screen and (max-width: 700px) {
