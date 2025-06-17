@@ -4,17 +4,19 @@ GO
 IF EXISTS (SELECT * FROM sys.databases WHERE name = 'QuizVerse')
 BEGIN
     PRINT 'Database QuizVerse already exists. Resetting...';
-    ALTER DATABASE QuizVerse SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE QuizVerse;
+    EXEC sp_executesql N'ALTER DATABASE QuizVerse SET SINGLE_USER WITH ROLLBACK IMMEDIATE;';
+    EXEC sp_executesql N'DROP DATABASE QuizVerse;';
 END
-ELSE
-CREATE DATABASE QuizVerse;
+
+PRINT 'Creating database QuizVerse...';
+EXEC sp_executesql N'CREATE DATABASE QuizVerse;';
 GO
 USE QuizVerse;
 GO
 
 
 -- DROP TABLES in correct order for reset (add more as needed)
+IF OBJECT_ID('dbo.MimeType', 'U') IS NOT NULL DROP TABLE dbo.MimeType;
 IF OBJECT_ID('dbo.UserEssayAnswer', 'U') IS NOT NULL DROP TABLE dbo.UserEssayAnswer;
 IF OBJECT_ID('dbo.UserAnswer', 'U') IS NOT NULL DROP TABLE dbo.UserAnswer;
 IF OBJECT_ID('dbo.UserAttempt', 'U') IS NOT NULL DROP TABLE dbo.UserAttempt;
@@ -58,17 +60,29 @@ CREATE TABLE dbo.RolePermission (
     CONSTRAINT FK_RolePermission_Permission FOREIGN KEY (PermissionId) REFERENCES dbo.Permission(PermissionId) ON DELETE CASCADE
 );
 
+CREATE TABLE MimeType (
+    MimeId INT IDENTITY PRIMARY KEY,
+    ImageUrl NVARCHAR(255) NOT NULL UNIQUE,
+    ImageAlt NVARCHAR(255) NULL
+);
+
 -- Users
 CREATE TABLE dbo.AppUser (
     UserId INT IDENTITY PRIMARY KEY,
     Email NVARCHAR(100) NOT NULL UNIQUE,
     PasswordHash NVARCHAR(200) NULL,
+    PasswordSalt NVARCHAR(200) NULL,
     Gender CHAR(1) NOT NULL DEFAULT 'U',
     RoleId INT NOT NULL,
+    ProfilePictureId INT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     FirstName NVARCHAR(45) NULL,
     LastName NVARCHAR(45) NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    CONSTRAINT FK_AppUser_Role FOREIGN KEY (RoleId) REFERENCES dbo.Role(RoleId)
+    PasswordResetHash NVARCHAR(200) NULL,
+    PasswordResetSalt NVARCHAR(200) NULL,
+    PasswordResetExpiry DATETIME2 NULL,
+    CONSTRAINT FK_User_Role FOREIGN KEY (RoleId) REFERENCES dbo.Role(RoleId),
+    CONSTRAINT FK_User_ProfilePic FOREIGN KEY (ProfilePictureId) REFERENCES dbo.MimeType(MimeId)
 );
 
 -- Quiz, Skill, and Instructions
@@ -242,6 +256,11 @@ CREATE TABLE dbo.UserActivity (
     CONSTRAINT FK_UserActivity_User FOREIGN KEY (UserId) REFERENCES dbo.AppUser(UserId)
 );
 
+-- ========== END OF TABLE DEFINITIONS ==========
+
+-- ========== START OF SEED DATA ==========
+-- Ensure the database is ready for seeding
+
 USE QuizVerse;
 GO
 
@@ -382,3 +401,5 @@ INSERT INTO dbo.UserRating (UserId, QuizId, RatingGiven) VALUES (1,1,5);
 -- (You can seed these as needed, or leave empty for now.)
 
 -- ========== END ==========
+-- Ensure all tables are created and seeded correctly
+PRINT 'Database QuizVerse created and seeded successfully.';
