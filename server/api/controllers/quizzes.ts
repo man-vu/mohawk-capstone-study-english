@@ -346,18 +346,31 @@ module.exports = {
       let markedResult
 
       for (const { answer_text, type_id, question_id } of userAnswers) {
-        const corrects = type_id === 3 ?  correctAnswers[question_id][0].correct_answers.split(" ") .map((a) => a.split(".")) : correctAnswers[question_id]
+        const corrects = correctAnswers[question_id]
 
         if (answer_text === "") {
           result.unanswered += 1;
-          markedResult = 4
+          markedResult = 4;
 
           if (type_id === 1) {
-            response.detailedAnswers.push({answers: corrects.map(c => ({...c, marked: 0 === c.is_correct_choice, user_answer: 0}))})
+            response.detailedAnswers.push({ answers: corrects.map(c => ({ ...c, marked: 0 === c.is_correct_choice, user_answer: 0 })) });
           } else if (type_id === 2) {
-            response.detailedAnswers.push({answers: corrects })
+            response.detailedAnswers.push({ answers: corrects });
           } else if (type_id === 3) {
-            response.detailedAnswers.push({answers: corrects.map((c,i) => ({ type_id: 3, sequence_id: i + 1, correct_answer: c[1]}))})
+            const map: Record<number, string[]> = {};
+            for (const c of corrects) {
+              const po = c.prompt_order ?? c.PromptOrder;
+              const co = c.choice_order ?? c.ChoiceOrder;
+              const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
+              if (isCorrect) {
+                if (!map[po]) map[po] = [];
+                map[po].push(String.fromCharCode(64 + co));
+              }
+            }
+            const orders = Object.keys(map).map(n => Number(n)).sort((a,b) => a - b);
+            response.detailedAnswers.push({
+              answers: orders.map(o => ({ type_id: 3, sequence_id: o, correct_answer: map[o].join('/') }))
+            });
 
           }
         } else {
@@ -424,27 +437,45 @@ module.exports = {
               result.partial += 1
             }
           } else if (type_id === 3) {
-            const answers = answer_text.split(" ").map((a) => a.split("."));
-            const marked = answers.map((item, i) => item[1] === corrects[i][1])
+            const map: Record<number, string[]> = {};
+            for (const c of corrects) {
+              const po = c.prompt_order ?? c.PromptOrder;
+              const co = c.choice_order ?? c.ChoiceOrder;
+              const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
+              if (isCorrect) {
+                if (!map[po]) map[po] = [];
+                map[po].push(String.fromCharCode(64 + co));
+              }
+            }
+            const orders = Object.keys(map).map(n => Number(n)).sort((a,b) => a - b);
 
-            response.detailedAnswers[index].answers = corrects.map(c => ({ correct_answer: c[1]}))
-            
-            for (let i = 0; i < marked.length; i++) {
-              response.detailedAnswers[index].answers[i].type_id = 3
-              response.detailedAnswers[index].answers[i].sequence_id = i + 1
-              response.detailedAnswers[index].answers[i].user_answer = answers[i][1]
-              response.detailedAnswers[index].answers[i].marked = marked[i]
+            const answers = answer_text.split(" ").map(a => a.split("."));
+            const marks: boolean[] = [];
+            response.detailedAnswers[index].answers = [];
+            for (let i = 0; i < orders.length; i++) {
+              const po = orders[i];
+              const userChoice = answers[i] ? answers[i][1] : '';
+              const correctLetters = map[po] || [];
+              const isCorrect = userChoice && correctLetters.includes(userChoice);
+              marks.push(isCorrect);
+              response.detailedAnswers[index].answers.push({
+                type_id: 3,
+                sequence_id: po,
+                correct_answer: correctLetters.join('/'),
+                user_answer: userChoice,
+                marked: isCorrect
+              });
             }
 
-            if (marked.length === corrects.length && marked.every(m => m === true)) {
+            if (marks.length === orders.length && marks.every(m => m)) {
               markedResult = 1;
-              result.correct += 1
-            } else if (marked.every(m => m === false)) {
-              markedResult = 2
-              result.incorrect += 1
+              result.correct += 1;
+            } else if (marks.every(m => !m)) {
+              markedResult = 2;
+              result.incorrect += 1;
             } else {
-              markedResult = 3
-              result.partial += 1
+              markedResult = 3;
+              result.partial += 1;
             }
           }
         }
