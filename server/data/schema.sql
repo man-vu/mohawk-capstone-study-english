@@ -168,7 +168,7 @@ CREATE TABLE dbo.QuizQuestion (
     SortOrder INT NULL,
     PRIMARY KEY (QuizId, QuestionId),
     CONSTRAINT FK_QuizQuestion_Quiz FOREIGN KEY (QuizId) REFERENCES dbo.Quiz(QuizId) ON DELETE CASCADE,
-    CONSTRAINT FK_QuizQuestion_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) -- NO ACTION,
+    CONSTRAINT FK_QuizQuestion_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId), -- NO ACTION
     CONSTRAINT FK_QuizQuestion_Part FOREIGN KEY (PartId) REFERENCES dbo.QuizPart(PartId) ON DELETE CASCADE
 );
 
@@ -218,8 +218,7 @@ CREATE TABLE dbo.UserAnswer (
     QuestionId INT NOT NULL,
     AnswerText NVARCHAR(1024) NULL, -- Short or summary for essay
     IsCorrect BIT NULL,
-    CONSTRAINT FK_UserAnswer_Attempt FOREIGN KEY (AttemptId) REFERENCES dbo.UserAttempt(AttemptId) -- NO ACTION
-    ,
+    CONSTRAINT FK_UserAnswer_Attempt FOREIGN KEY (AttemptId) REFERENCES dbo.UserAttempt(AttemptId), -- NO ACTION
     CONSTRAINT FK_UserAnswer_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) ON DELETE CASCADE
 );
 
@@ -399,7 +398,9 @@ INSERT INTO dbo.Question (QuestionId, TypeId, InstructionId, IsActive, Paragraph
     (2,2,21,1,NULL,'The Eiffel Tower is located in ______ and was completed in ______.','2021-05-30 16:45:00'),
     (3,3,36,1,NULL,'Match each country with its capital city.','2021-05-30 16:46:00'),
     (4,3,36,1,NULL,'Match each science field with its definition.','2021-05-30 16:47:00'),
-    (5,3,36,1,NULL,'Match each author with their famous work.','2021-05-30 16:48:00');
+    (5,3,36,1,NULL,'Match each author with their famous work.','2021-05-30 16:48:00'),
+    (6,2,13,1,NULL,'______ is known as the Red Planet.','2021-05-30 16:49:00'),
+    (7,3,36,1,NULL,'Match each animal with its typical sound.','2021-05-30 16:50:00');
 SET IDENTITY_INSERT dbo.Question OFF;
 
 -- ========== QUESTION MULTIPLE CHOICE (sample only) ==========
@@ -412,7 +413,8 @@ INSERT INTO dbo.QuestionMultipleChoice (QuestionId, ChoiceText, ChoiceOrder, IsC
 -- ========== QUESTION GAP FILLING ==========
 INSERT INTO dbo.QuestionGapFilling (QuestionId, SequenceId, CorrectAnswer) VALUES
     (2,1,'Paris'),
-    (2,2,'1889');
+    (2,2,'1889'),
+    (6,1,'Mars');
 
 -- ========== QUESTION MATCHING PAIRS ==========
 INSERT INTO dbo.MatchingPrompt (QuestionId, LeftText, PromptOrder) VALUES
@@ -423,7 +425,10 @@ INSERT INTO dbo.MatchingPrompt (QuestionId, LeftText, PromptOrder) VALUES
     (4,'Biology',3),
     (5,'Shakespeare',1),
     (5,'Homer',2),
-    (5,'J.K. Rowling',3);
+    (5,'J.K. Rowling',3),
+    (7,'Dog',1),
+    (7,'Cat',2),
+    (7,'Cow',3);
 INSERT INTO dbo.MatchingChoice (QuestionId, RightText, ChoiceOrder) VALUES
     (3,'Paris',1),
     (3,'Tokyo',2),
@@ -432,7 +437,10 @@ INSERT INTO dbo.MatchingChoice (QuestionId, RightText, ChoiceOrder) VALUES
     (4,'Study of living organisms',3),
     (5,'Hamlet',1),
     (5,'The Odyssey',2),
-    (5,'Harry Potter',3);
+    (5,'Harry Potter',3),
+    (7,'Bark',1),
+    (7,'Meow',2),
+    (7,'Moo',3);
 
 INSERT INTO dbo.MatchingAnswer (PromptId, ChoiceId) VALUES
     (1,1),
@@ -442,7 +450,10 @@ INSERT INTO dbo.MatchingAnswer (PromptId, ChoiceId) VALUES
     (5,5),
     (6,6),
     (7,7),
-    (8,8);
+    (8,8),
+    (9,9),
+    (10,10),
+    (11,11);
 
 -- ========== QUIZ QUESTION ==========
 INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, PartId, SortOrder) VALUES
@@ -450,7 +461,9 @@ INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, PartId, SortOrder) VALUES
     (1,2,1,2),
     (1,3,2,3),
     (1,4,2,4),
-    (1,5,2,5);
+    (1,5,2,5),
+    (1,6,1,6),
+    (1,7,2,7);
 
 -- ========== USER ATTEMPT (sample only) ==========
 SET IDENTITY_INSERT dbo.UserAttempt ON;
