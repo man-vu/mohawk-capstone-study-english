@@ -7,6 +7,7 @@ import AuthModal from './components/auth/AuthModal';
 import { useTheme } from './hooks/useTheme';
 import HomePage from './pages/HomePage';
 import TemplatesPage from './pages/TemplatesPage';
+import PracticePage from './pages/PracticePage';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -20,6 +21,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/practice/:id" element={<PracticePage />} />
             </Routes>
             <Footer />
             <AuthModal />
