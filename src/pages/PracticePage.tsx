@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import PracticeQuiz from '../components/PracticeQuiz';
 
 interface QuizResponse {
   questions: any[];
@@ -37,11 +38,9 @@ const PracticePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Quiz {id}</h2>
-      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto text-sm">
-        {JSON.stringify(data.questions, null, 2)}
-      </pre>
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quiz {id}</h2>
+      <PracticeQuiz questions={data.questions} />
     </div>
   );
 };
