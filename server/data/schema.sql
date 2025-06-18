@@ -80,6 +80,14 @@ CREATE TABLE dbo.Quiz (
     CONSTRAINT FK_Quiz_CreatedBy FOREIGN KEY (CreatedBy) REFERENCES dbo.AppUser(UserId)
 );
 
+CREATE TABLE dbo.QuizPart (
+    PartId INT IDENTITY PRIMARY KEY,
+    QuizId INT NOT NULL,
+    PartTitle NVARCHAR(100) NOT NULL,
+    SortOrder INT NOT NULL,
+    CONSTRAINT FK_QuizPart_Quiz FOREIGN KEY (QuizId) REFERENCES dbo.Quiz(QuizId) ON DELETE CASCADE
+);
+
 CREATE TABLE dbo.QuestionType (
     TypeId INT IDENTITY PRIMARY KEY,
     TypeName NVARCHAR(100) NOT NULL UNIQUE
@@ -156,10 +164,12 @@ CREATE TABLE dbo.MatchingUserAnswer (
 CREATE TABLE dbo.QuizQuestion (
     QuizId INT NOT NULL,
     QuestionId INT NOT NULL,
+    PartId INT NOT NULL,
     SortOrder INT NULL,
     PRIMARY KEY (QuizId, QuestionId),
     CONSTRAINT FK_QuizQuestion_Quiz FOREIGN KEY (QuizId) REFERENCES dbo.Quiz(QuizId) ON DELETE CASCADE,
-    CONSTRAINT FK_QuizQuestion_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) -- NO ACTION
+    CONSTRAINT FK_QuizQuestion_Question FOREIGN KEY (QuestionId) REFERENCES dbo.Question(QuestionId) -- NO ACTION,
+    CONSTRAINT FK_QuizQuestion_Part FOREIGN KEY (PartId) REFERENCES dbo.QuizPart(PartId) ON DELETE CASCADE
 );
 
 -- Subtype tables for questions
@@ -375,6 +385,13 @@ INSERT INTO dbo.Quiz (QuizId, Title, SkillId, Description, IsActive, TimeAllowed
     (16,'IELTS 101',2,'Traveling',1,60,1,'2021-06-10 12:54:02');
 SET IDENTITY_INSERT dbo.Quiz OFF;
 
+-- ========== QUIZ PART ==========
+SET IDENTITY_INSERT dbo.QuizPart ON;
+INSERT INTO dbo.QuizPart (PartId, QuizId, PartTitle, SortOrder) VALUES
+    (1,1,'Part 1',1),
+    (2,1,'Part 2',2);
+SET IDENTITY_INSERT dbo.QuizPart OFF;
+
 -- ========== SAMPLE QUESTIONS (add more as needed) ==========
 SET IDENTITY_INSERT dbo.Question ON;
 INSERT INTO dbo.Question (QuestionId, TypeId, InstructionId, IsActive, ParagraphTitle, QuestionText, CreatedAt) VALUES
@@ -428,12 +445,12 @@ INSERT INTO dbo.MatchingAnswer (PromptId, ChoiceId) VALUES
     (8,8);
 
 -- ========== QUIZ QUESTION ==========
-INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, SortOrder) VALUES
-    (1,1,1),
-    (1,2,2),
-    (1,3,3),
-    (1,4,4),
-    (1,5,5);
+INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, PartId, SortOrder) VALUES
+    (1,1,1,1),
+    (1,2,1,2),
+    (1,3,2,3),
+    (1,4,2,4),
+    (1,5,2,5);
 
 -- ========== USER ATTEMPT (sample only) ==========
 SET IDENTITY_INSERT dbo.UserAttempt ON;

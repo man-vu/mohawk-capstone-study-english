@@ -1,6 +1,6 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const AppUserModel = require("../../new_models/AppUserModel.ts").default;
+const AppUserModel = require("../../models/AppUserModel.ts").default;
 const { validateEmail, validateGender, validateName, validateNewPassword,
 } = require("../validators/validator");
 const { hashPasswordAsync } = require("../../misc/helper");

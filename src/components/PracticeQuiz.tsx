@@ -10,16 +10,24 @@ interface Question {
   type_id: number;
   question: string;
   instruction?: string;
+  part_id?: number;
   content: any[];
+}
+
+interface Part {
+  part_id: number;
+  part_title: string;
+  sort_order: number;
 }
 
 interface Props {
   questions: Question[];
+  parts: Part[];
   quizId: number;
   attemptId: number;
 }
 
-const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
+const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId }) => {
   const { user } = useAuth();
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const [current, setCurrent] = useState(0);
@@ -27,7 +35,16 @@ const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const partMap = React.useMemo(() => {
+    const map: Record<number, string> = {};
+    parts.forEach((p) => {
+      map[p.part_id] = p.part_title;
+    });
+    return map;
+  }, [parts]);
+
   const currentQuestion = questions[current];
+  const currentPartTitle = currentQuestion.part_id ? partMap[currentQuestion.part_id] : undefined;
 
   const updateAnswer = (questionId: number, answerText: string) => {
     fetch(`${API_URL}questions/answer/${questionId}`, {
@@ -153,6 +170,11 @@ const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
 
   return (
     <div className="space-y-8">
+      {currentPartTitle && (
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {currentPartTitle}
+        </h3>
+      )}
       {renderQuestion()}
       <div className="mt-6 flex justify-between items-center">
         <button

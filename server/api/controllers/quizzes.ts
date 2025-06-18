@@ -1,13 +1,14 @@
 const STRINGS = require("../../config/strings");
 const { sendSuccess, sendFailure } = require("../../config/res");
 const moment = require("moment");
-const QuizModel = require("../../new_models/QuizModel.ts").default;
-const RatingModel = require("../../new_models/UserRatingModel.ts").default;
-const FavoriteModel = require("../../new_models/UserFavoriteModel.ts").default;
-const QuestionModel = require("../../new_models/QuestionModel.ts").default;
-const AttemptModel = require("../../new_models/UserAttemptModel.ts").default;
-const UserAnswerModel = require("../../new_models/UserAnswerModel.ts").default;
-const CorrectAnswerModel = require("../../new_models/CorrectAnswerModel.ts").default;
+const QuizModel = require("../../models/QuizModel.ts").default;
+const RatingModel = require("../../models/UserRatingModel.ts").default;
+const FavoriteModel = require("../../models/UserFavoriteModel.ts").default;
+const QuestionModel = require("../../models/QuestionModel.ts").default;
+const AttemptModel = require("../../models/UserAttemptModel.ts").default;
+const UserAnswerModel = require("../../models/UserAnswerModel.ts").default;
+const CorrectAnswerModel = require("../../models/CorrectAnswerModel.ts").default;
+const QuizPartModel = require("../../models/QuizPartModel.ts").default;
 const validator = require("../validators/validator");
 const { cleanObject } = require("../../misc/helper");
 
@@ -207,7 +208,8 @@ module.exports = {
         const attemptId = await createNewAttempt({ questionIds, quizId: qId, userId: uId });
         const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId: qId, userId: uId, attemptId });
         const quizInfo = await getCurrentQuizInfo(qId, uId, attemptId);
-        const response = { questions: questionsWithAns, attempt_id: attemptId, ...quizInfo };
+        const parts = await QuizPartModel.findAllByQuiz(qId);
+        const response = { questions: questionsWithAns, parts, attempt_id: attemptId, ...quizInfo };
         const resObject = convertToObject(questionsContent);
         for (const question of response.questions) {
           question.content = resObject[question.question_id];
@@ -217,7 +219,8 @@ module.exports = {
         const data = { latestAttempt, quizId: qId, userId: uId };
         const incomplete = await loadIncompleteAttempt(data);
         const quizInfo = await getCurrentQuizInfo(qId, uId, latestAttempt.AttemptId);
-        const response = { questions: incomplete.questions, attempt_id: latestAttempt.AttemptId, ...quizInfo };
+        const parts = await QuizPartModel.findAllByQuiz(qId);
+        const response = { questions: incomplete.questions, parts, attempt_id: latestAttempt.AttemptId, ...quizInfo };
         const resObject = convertToObject(incomplete.questionsContent);
         for (const question of response.questions) {
           if (question.type_id === 1) {
@@ -370,7 +373,7 @@ module.exports = {
         await RatingModel.create({ UserId: uId, QuizId: qId, RatingGiven: ratingGiven });
       }
 
-      const ratingAgg = await require("../../new_models/QuizModel.ts").default.findDetailed(qId);
+      const ratingAgg = await require("../../models/QuizModel.ts").default.findDetailed(qId);
       return sendSuccess(200, {
         average_rating: ratingAgg.average_rating,
         rating_count: ratingAgg.rating_count,

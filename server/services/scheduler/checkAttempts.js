@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const moment = require("moment");
 require('ts-node/register/transpile-only');
-const UserAttemptModel = require("../../new_models/UserAttemptModel.ts").default;
+const UserAttemptModel = require("../../models/UserAttemptModel.ts").default;
 const quizzesController = require("../../api/controllers/quizzes.ts");
 
 cron.schedule("*/15 * * * * *", async () => {

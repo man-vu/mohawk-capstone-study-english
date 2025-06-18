@@ -11,8 +11,8 @@ const {
   validateRoleId,
   validateName,
 } = require("../validators/validator");
-const AppUserModel = require("../../new_models/AppUserModel.ts").default;
-const MimeTypeModel = require("../../new_models/MimeTypeModel.ts").default;
+const AppUserModel = require("../../models/AppUserModel.ts").default;
+const MimeTypeModel = require("../../models/MimeTypeModel.ts").default;
 const {
   sendPasswordReset,
 } = require("../../services/email_notification/passwordReset");

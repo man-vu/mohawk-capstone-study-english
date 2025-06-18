@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 export interface QuizQuestion {
   QuizId: number;
   QuestionId: number;
+  PartId: number;
   SortOrder: number;
 }
 

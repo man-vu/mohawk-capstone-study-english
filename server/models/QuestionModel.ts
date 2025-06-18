@@ -39,8 +39,9 @@ export class QuestionModel {
           QuestionInstruction: true,
           QuestionType: true,
           UserAnswer: { where: { AttemptId: attemptId } },
+          QuizQuestion: { where: { QuizId: quizId }, select: { PartId: true, SortOrder: true } },
         },
-        orderBy: { QuestionId: 'asc' },
+        orderBy: { QuizQuestion: { SortOrder: 'asc' } },
       });
       return questions.map((q) => ({
         question_id: q.QuestionId,
@@ -51,13 +52,18 @@ export class QuestionModel {
         question: q.QuestionText,
         instruction: q.QuestionInstruction.Instruction,
         answer_text: q.UserAnswer[0]?.AnswerText ?? '',
+        part_id: q.QuizQuestion[0]?.PartId ?? null,
       }));
     }
 
     const questions = await prisma.question.findMany({
       where: { IsActive: true, QuizQuestion: { some: { QuizId: quizId } } },
-      include: { QuestionInstruction: true, QuestionType: true },
-      orderBy: { QuestionId: 'asc' },
+      include: {
+        QuestionInstruction: true,
+        QuestionType: true,
+        QuizQuestion: { where: { QuizId: quizId }, select: { PartId: true, SortOrder: true } },
+      },
+      orderBy: { QuizQuestion: { SortOrder: 'asc' } },
     });
     return questions.map((q) => ({
       question_id: q.QuestionId,
@@ -67,6 +73,7 @@ export class QuestionModel {
       paragraph_title: q.ParagraphTitle,
       question: q.QuestionText,
       instruction: q.QuestionInstruction.Instruction,
+      part_id: q.QuizQuestion[0]?.PartId ?? null,
     }));
   }
 
@@ -78,8 +85,9 @@ export class QuestionModel {
         QuestionGapFilling: true,
         MatchingPrompt: true,
         MatchingChoice: true,
+        QuizQuestion: { where: { QuizId: quizId }, select: { PartId: true, SortOrder: true } },
       },
-      orderBy: { QuestionId: 'asc' },
+      orderBy: { QuizQuestion: { SortOrder: 'asc' } },
     });
 
     const result: any[] = [];

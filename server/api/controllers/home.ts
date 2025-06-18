@@ -1,7 +1,7 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const QuizModel = require("../../new_models/QuizModel.ts").default;
-const UserAttemptModel = require("../../new_models/UserAttemptModel.ts").default;
+const QuizModel = require("../../models/QuizModel.ts").default;
+const UserAttemptModel = require("../../models/UserAttemptModel.ts").default;
 
 module.exports = {
   /**
