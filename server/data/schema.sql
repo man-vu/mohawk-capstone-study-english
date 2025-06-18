@@ -553,15 +553,65 @@ INSERT INTO dbo.UserAnswer (UserAnswerId, AttemptId, QuestionId, AnswerText, IsC
     (1,1,1,'identification',1);
 SET IDENTITY_INSERT dbo.UserAnswer OFF;
 
--- ========== USER ESSAY ANSWER (none for sample) ==========
--- INSERT INTO dbo.UserEssayAnswer (UserAnswerId, EssayText, Mark, TeacherFeedback) VALUES
---    (1, 'Sample essay answer text...', 90.00, 'Good job!');
+-- ========== USER ESSAY ANSWER ==========
+SET IDENTITY_INSERT dbo.UserEssayAnswer ON;
+INSERT INTO dbo.UserEssayAnswer (UserAnswerId, EssayText, Mark, TeacherFeedback) VALUES
+    (1, 'Sample essay answer text...', 90.00, 'Good job!');
+SET IDENTITY_INSERT dbo.UserEssayAnswer OFF;
 
 -- ========== USER FAVORITE ==========
 INSERT INTO dbo.UserFavorite (UserId, QuizId) VALUES (1,1);
 
 -- ========== USER RATING ==========
 INSERT INTO dbo.UserRating (UserId, QuizId, RatingGiven) VALUES (1,1,5);
+
+-- ========== VOCABULARY WORDS ==========
+SET IDENTITY_INSERT dbo.VocabularyWord ON;
+INSERT INTO dbo.VocabularyWord (WordId, Word, Definition, Example, PartOfSpeech, Level, Category, Difficulty) VALUES
+    (1, 'abandon', 'to leave behind or give up completely', 'He decided to abandon the plan.', 'verb', 'B2', 'general', 'medium'),
+    (2, 'benevolent', 'well meaning and kindly', 'A benevolent smile spread across her face.', 'adjective', 'C1', 'behavior', 'hard'),
+    (3, 'candid', 'truthful and straightforward; frank', 'She gave a candid interview.', 'adjective', 'C1', 'communication', 'medium');
+SET IDENTITY_INSERT dbo.VocabularyWord OFF;
+
+-- ========== WORD GROUP ==========
+SET IDENTITY_INSERT dbo.WordGroup ON;
+INSERT INTO dbo.WordGroup (GroupId, Theme, Description) VALUES
+    (1, 'Technology', 'Terms related to modern technology'),
+    (2, 'Education', 'Words commonly seen in education topics');
+SET IDENTITY_INSERT dbo.WordGroup OFF;
+
+-- ========== VOCABULARY WORD GROUP ==========
+INSERT INTO dbo.VocabularyWordGroup (WordId, GroupId) VALUES
+    (1, 2),
+    (2, 1),
+    (3, 2);
+
+-- ========== USER VOCABULARY PROGRESS ==========
+INSERT INTO dbo.UserVocabularyProgress (UserId, WordId, Mastery, LastReviewed, CorrectStreak, Attempts, Memorized) VALUES
+    (1, 1, 1, '2025-06-10', 1, 1, 0),
+    (1, 2, 0, NULL, 0, 0, 0),
+    (2, 3, 2, '2025-06-11', 2, 3, 1);
+
+-- ========== MOCK TEST ==========
+SET IDENTITY_INSERT dbo.MockTest ON;
+INSERT INTO dbo.MockTest (MockTestId, Title, Description, TotalDuration, CreatedBy, CreatedAt) VALUES
+    (1, 'IELTS Mock Test 1', 'Sample IELTS test with four sections', 180, 1, '2025-06-18 00:00:00');
+SET IDENTITY_INSERT dbo.MockTest OFF;
+
+-- ========== MOCK TEST SECTION ==========
+SET IDENTITY_INSERT dbo.MockTestSection ON;
+INSERT INTO dbo.MockTestSection (SectionId, MockTestId, QuizId, SkillId, Duration, TotalQuestions, SortOrder) VALUES
+    (1, 1, 1, 1, 30, 7, 1),
+    (2, 1, 5, 2, 60, 7, 2),
+    (3, 1, 15, 3, 60, 1, 3),
+    (4, 1, 13, 4, 30, 1, 4);
+SET IDENTITY_INSERT dbo.MockTestSection OFF;
+
+-- ========== WRITING ASSESSMENT ==========
+SET IDENTITY_INSERT dbo.WritingAssessment ON;
+INSERT INTO dbo.WritingAssessment (AssessmentId, UserEssayAnswerId, TaskResponseScore, CoherenceCohesionScore, LexicalResourcesScore, GrammaticalAccuracyScore, OverallBand, EstimatedIELTSScore, CreatedAt) VALUES
+    (1, 1, 6.5, 6.0, 6.5, 6.0, 6.5, 6.5, '2025-06-18 00:00:00');
+SET IDENTITY_INSERT dbo.WritingAssessment OFF;
 
 -- ========== AUDIT TRAIL, APP LOG, USER ACTIVITY ==========
 -- (You can seed these as needed, or leave empty for now.)
