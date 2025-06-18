@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import MultipleChoiceQuestion from './MultipleChoiceQuestion';
+import GapFillingQuestion from './GapFillingQuestion';
+import MatchingPairsQuestion from './MatchingPairsQuestion';
 
 interface Question {
   question_id: number;
@@ -24,6 +26,24 @@ const PracticeQuiz: React.FC<Props> = ({ questions }) => {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
   };
 
+  const handleGapAnswer = (qid: number, seq: number, value: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [qid]: { ...(prev[qid] || {}), [seq]: value },
+    }));
+  };
+
+  const handleMatchAnswer = (
+    qid: number,
+    choice: number,
+    prompt: number
+  ) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [qid]: { ...(prev[qid] || {}), [choice]: prompt },
+    }));
+  };
+
   const renderQuestion = () => {
     switch (currentQuestion.type_id) {
       case 1:
@@ -32,6 +52,26 @@ const PracticeQuiz: React.FC<Props> = ({ questions }) => {
             question={currentQuestion as any}
             answer={answers[currentQuestion.question_id]}
             onAnswer={(val) => handleAnswer(currentQuestion.question_id, val)}
+          />
+        );
+      case 2:
+        return (
+          <GapFillingQuestion
+            question={currentQuestion as any}
+            answers={answers[currentQuestion.question_id] || {}}
+            onAnswer={(seq, val) =>
+              handleGapAnswer(currentQuestion.question_id, seq, val)
+            }
+          />
+        );
+      case 3:
+        return (
+          <MatchingPairsQuestion
+            question={currentQuestion as any}
+            answers={answers[currentQuestion.question_id] || {}}
+            onAnswer={(choice, prompt) =>
+              handleMatchAnswer(currentQuestion.question_id, choice, prompt)
+            }
           />
         );
       default:
@@ -58,7 +98,9 @@ const PracticeQuiz: React.FC<Props> = ({ questions }) => {
           >
             <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">{q.question}</p>
             {answers[q.question_id] !== undefined ? (
-              <p className="text-sm text-gray-700 dark:text-gray-300">Your answer: {String(answers[q.question_id])}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Your answer: {JSON.stringify(answers[q.question_id])}
+              </p>
             ) : (
               <p className="text-sm text-gray-700 dark:text-gray-300">No answer</p>
             )}

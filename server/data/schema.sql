@@ -378,7 +378,9 @@ SET IDENTITY_INSERT dbo.Quiz OFF;
 -- ========== SAMPLE QUESTIONS (add more as needed) ==========
 SET IDENTITY_INSERT dbo.Question ON;
 INSERT INTO dbo.Question (QuestionId, TypeId, InstructionId, IsActive, ParagraphTitle, QuestionText, CreatedAt) VALUES
-    (1,1,1,1,NULL,'I felt an _______ with the writer from his descriptions of a world that seemed to have a great deal in common with my own.','2021-05-30 16:42:55');
+    (1,1,1,1,NULL,'I felt an _______ with the writer from his descriptions of a world that seemed to have a great deal in common with my own.','2021-05-30 16:42:55'),
+    (2,2,21,1,NULL,'The Eiffel Tower is located in ______ and was completed in ______.','2021-05-30 16:45:00'),
+    (3,3,36,1,NULL,'Match each country with its capital city.','2021-05-30 16:46:00');
 SET IDENTITY_INSERT dbo.Question OFF;
 
 -- ========== QUESTION MULTIPLE CHOICE (sample only) ==========
@@ -388,9 +390,24 @@ INSERT INTO dbo.QuestionMultipleChoice (QuestionId, ChoiceText, ChoiceOrder, IsC
     (1,'preference',3,0),
     (1,'tolerance',4,0);
 
+-- ========== QUESTION GAP FILLING ==========
+INSERT INTO dbo.QuestionGapFilling (QuestionId, SequenceId, CorrectAnswer) VALUES
+    (2,1,'Paris'),
+    (2,2,'1889');
+
+-- ========== QUESTION MATCHING PAIRS ==========
+INSERT INTO dbo.MatchingPrompt (QuestionId, LeftText, PromptOrder) VALUES
+    (3,'France',1),
+    (3,'Japan',2);
+INSERT INTO dbo.MatchingChoice (QuestionId, RightText, ChoiceOrder) VALUES
+    (3,'Paris',1),
+    (3,'Tokyo',2);
+
 -- ========== QUIZ QUESTION ==========
 INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, SortOrder) VALUES
-    (1,1,1);
+    (1,1,1),
+    (1,2,2),
+    (1,3,3);
 
 -- ========== USER ATTEMPT (sample only) ==========
 SET IDENTITY_INSERT dbo.UserAttempt ON;
