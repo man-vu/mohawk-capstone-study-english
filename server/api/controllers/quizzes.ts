@@ -101,6 +101,69 @@ function convertToObject(object) {
   return resObject;
 }
 
+function evaluateMultipleChoice(text: string, corrects: any[]) {
+  const selected = text.split(',').map((v) => Number(v));
+  const correctIds = corrects.filter((c: any) => c.is_correct_choice).map((c: any) => c.choice_id);
+  const details = corrects.map((c: any) => {
+    const chosen = selected.includes(c.choice_id);
+    return {
+      ...c,
+      user_answer: chosen ? 1 : 0,
+      marked: (chosen && c.is_correct_choice === 1) || (!chosen && c.is_correct_choice === 0),
+    };
+  });
+  if (!selected.length) return { result: 4, details };
+  const marks = selected.map((id) => correctIds.includes(id));
+  if (marks.length === correctIds.length && marks.every(Boolean)) return { result: 1, details };
+  if (marks.every((m) => !m)) return { result: 2, details };
+  return { result: 3, details };
+}
+
+function evaluateGapFilling(text: string, corrects: any[]) {
+  const answers = text.split(',').map((a) => a.split('.'));
+  const details = corrects.map((c: any, idx: number) => {
+    const val = answers[idx] ? answers[idx][1] : '';
+    const expect = c.correct_answer.toLowerCase().trim();
+    let isCorrect = false;
+    if (expect.includes('/') || expect.includes('|')) {
+      const opts = (expect.includes('/') ? expect.split('/') : expect.split('|')).map((o) => o.trim());
+      isCorrect = opts.some((o) => val.toLowerCase().trim() === o);
+    } else {
+      isCorrect = val.toLowerCase().trim() === expect;
+    }
+    return { ...c, user_answer: val, marked: isCorrect };
+  });
+  const marks = details.map((d) => d.marked);
+  if (marks.every(Boolean)) return { result: 1, details };
+  if (marks.every((m) => !m)) return { result: 2, details };
+  return { result: 3, details };
+}
+
+function evaluateMatchingPairs(text: string, corrects: any[]) {
+  const map: Record<number, string[]> = {};
+  for (const c of corrects) {
+    const po = c.prompt_order ?? c.PromptOrder;
+    const co = c.choice_order ?? c.ChoiceOrder;
+    if (!map[po]) map[po] = [];
+    map[po].push(String.fromCharCode(64 + co));
+  }
+  const orders = Object.keys(map).map((n) => Number(n)).sort((a, b) => a - b);
+  const pairs = text.split(' ').map((p) => p.split('.'));
+  const details: any[] = [];
+  const marks: boolean[] = [];
+  for (let i = 0; i < orders.length; i++) {
+    const po = orders[i];
+    const choice = pairs[i] ? pairs[i][1] : '';
+    const correctLetters = map[po] || [];
+    const ok = !!choice && correctLetters.includes(choice);
+    marks.push(ok);
+    details.push({ type_id: 3, sequence_id: po, correct_answer: correctLetters.join('/'), user_answer: choice, marked: ok });
+  }
+  if (marks.length === orders.length && marks.every(Boolean)) return { result: 1, details };
+  if (marks.every((m) => !m)) return { result: 2, details };
+  return { result: 3, details };
+}
+
 /**
  * Function loads the current quiz info
  * @param {*} quizId 
@@ -353,106 +416,25 @@ module.exports = {
       const detailedAnswers: any[] = [];
       const markUpdates: any[] = [];
 
-      const evalMC = (text: string, corrects: any[]) => {
-        const selected = text.split(',').map((v) => Number(v));
-        const correctIds = corrects.filter((c) => c.is_correct_choice).map((c) => c.choice_id);
-        const details = corrects.map((c) => {
-          const chosen = selected.includes(c.choice_id);
-          return {
-            ...c,
-            user_answer: chosen ? 1 : 0,
-            marked: (chosen && c.is_correct_choice === 1) || (!chosen && c.is_correct_choice === 0),
-          };
-        });
-        if (!selected.length) return { result: 4, details };
-        const marks = selected.map((id) => correctIds.includes(id));
-        if (marks.length === correctIds.length && marks.every(Boolean)) return { result: 1, details };
-        if (marks.every((m) => !m)) return { result: 2, details };
-        return { result: 3, details };
-      };
 
-      const evalGap = (text: string, corrects: any[]) => {
-        const answers = text.split(',').map((a) => a.split('.'));
-        const details = corrects.map((c: any, idx: number) => {
-          const val = answers[idx] ? answers[idx][1] : '';
-          const expect = c.correct_answer.toLowerCase().trim();
-          let isCorrect = false;
-          if (expect.includes('/') || expect.includes('|')) {
-            const opts = (expect.includes('/') ? expect.split('/') : expect.split('|')).map((o) => o.trim());
-            isCorrect = opts.some((o) => val.toLowerCase().trim() === o);
-          } else {
-            isCorrect = val.toLowerCase().trim() === expect;
-          }
-          return { ...c, user_answer: val, marked: isCorrect };
-        });
-        const marks = details.map((d) => d.marked);
-        if (marks.every(Boolean)) return { result: 1, details };
-        if (marks.every((m) => !m)) return { result: 2, details };
-        return { result: 3, details };
+      const evaluators: any = {
+        1: evaluateMultipleChoice,
+        2: evaluateGapFilling,
+        3: evaluateMatchingPairs,
       };
-
-      const evalMatch = (text: string, corrects: any[]) => {
-        const map: Record<number, string[]> = {};
-        for (const c of corrects) {
-          const po = c.prompt_order ?? c.PromptOrder;
-          const co = c.choice_order ?? c.ChoiceOrder;
-          const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
-          if (isCorrect) {
-            if (!map[po]) map[po] = [];
-            map[po].push(String.fromCharCode(64 + co));
-          }
-        }
-        const orders = Object.keys(map).map((n) => Number(n)).sort((a, b) => a - b);
-        const pairs = text.split(' ').map((p) => p.split('.'));
-        const details: any[] = [];
-        const marks: boolean[] = [];
-        for (let i = 0; i < orders.length; i++) {
-          const po = orders[i];
-          const choice = pairs[i] ? pairs[i][1] : '';
-          const correctLetters = map[po] || [];
-          const ok = !!choice && correctLetters.includes(choice);
-          marks.push(ok);
-          details.push({ type_id: 3, sequence_id: po, correct_answer: correctLetters.join('/'), user_answer: choice, marked: ok });
-        }
-        if (marks.length === orders.length && marks.every(Boolean)) return { result: 1, details };
-        if (marks.every((m) => !m)) return { result: 2, details };
-        return { result: 3, details };
-      };
+      const answerMaps: any = { 1: mcMap, 2: gapMap, 3: matchMap };
 
       for (const { question_id, type_id, answer_text } of userAnswers) {
-        let corrects: any[] = [];
-        if (type_id === 1) corrects = mcMap[question_id] || [];
-        else if (type_id === 2) corrects = gapMap[question_id] || [];
-        else if (type_id === 3) corrects = matchMap[question_id] || [];
-        let evaluation;
-        if (!answer_text) {
-          evaluation = { result: 4, details: corrects };
-        } else if (type_id === 1) {
-          evaluation = evalMC(answer_text, corrects);
-        } else if (type_id === 2) {
-          evaluation = evalGap(answer_text, corrects);
-        } else if (type_id === 3) {
-          evaluation = evalMatch(answer_text, corrects);
-        } else {
-          evaluation = { result: 4, details: [] };
-        }
+        const corrects = answerMaps[type_id]?.[question_id] || [];
+        const evaluation = !answer_text
+          ? { result: 4, details: corrects }
+          : evaluators[type_id]
+          ? evaluators[type_id](answer_text, corrects)
+          : { result: 4, details: [] };
 
-        switch (evaluation.result) {
-          case 1:
-            result.correct += 1;
-            break;
-          case 2:
-            result.incorrect += 1;
-            break;
-          case 3:
-            result.partial += 1;
-            break;
-          case 4:
-            result.unanswered += 1;
-            break;
-          default:
-            break;
-        }
+        const keyMap: any = { 1: 'correct', 2: 'incorrect', 3: 'partial', 4: 'unanswered' };
+        const key = keyMap[evaluation.result];
+        if (key) result[key] += 1;
 
         detailedAnswers.push({ answers: evaluation.details });
         markUpdates.push({ quizId: qId, userId: uId, attemptId: aId, questionId: question_id, markedResult: evaluation.result });
