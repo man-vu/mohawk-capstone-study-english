@@ -130,24 +130,96 @@ const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
       .catch((err) => console.error('submit quiz', err));
   };
 
+  const resultLabel = (res: number) => {
+    switch (res) {
+      case 1:
+        return 'Correct';
+      case 2:
+        return 'Incorrect';
+      case 3:
+        return 'Partially Correct';
+      default:
+        return 'Unanswered';
+    }
+  };
+
+  const computeResult = (answers: any[]) => {
+    if (!answers || !answers.length) return 4;
+    const hasValue = answers.some(
+      (a) => a.user_answer !== undefined && a.user_answer !== null && a.user_answer !== '' && a.user_answer !== 0
+    );
+    if (!hasValue) return 4;
+    const marks = answers.map((a) => a.marked);
+    if (marks.every(Boolean)) return 1;
+    if (marks.every((m) => !m)) return 2;
+    return 3;
+  };
+
+  const renderResult = (q: any, idx: number) => {
+    const detail = result.detailedAnswers[idx];
+    if (!detail || !detail.answers) return null;
+
+    let userAns = '';
+    let correctAns = '';
+
+    if (q.type_id === 1) {
+      const selectedIds = detail.answers
+        .filter((a: any) => a.user_answer === 1)
+        .map((a: any) => a.choice_id);
+      const correctIds = detail.answers
+        .filter((a: any) => a.is_correct_choice === 1)
+        .map((a: any) => a.choice_id);
+      userAns = selectedIds
+        .map((id: number) => q.content.find((c: any) => c.choice_id === id)?.choice_text)
+        .filter(Boolean)
+        .join(', ') || 'No answer';
+      correctAns = correctIds
+        .map((id: number) => q.content.find((c: any) => c.choice_id === id)?.choice_text)
+        .filter(Boolean)
+        .join(', ');
+    } else if (q.type_id === 2) {
+      userAns = detail.answers
+        .sort((a: any, b: any) => a.sequence_id - b.sequence_id)
+        .map((a: any) => a.user_answer || '')
+        .join(', ');
+      correctAns = detail.answers
+        .sort((a: any, b: any) => a.sequence_id - b.sequence_id)
+        .map((a: any) => a.correct_answer)
+        .join(', ');
+    } else if (q.type_id === 3) {
+      userAns = detail.answers
+        .sort((a: any, b: any) => a.sequence_id - b.sequence_id)
+        .map((a: any) => (a.user_answer ? String.fromCharCode(64 + a.user_answer) : '-'))
+        .join(' ');
+      correctAns = detail.answers
+        .sort((a: any, b: any) => a.sequence_id - b.sequence_id)
+        .map((a: any) => a.correct_answer)
+        .join(' ');
+    }
+
+    const computed = computeResult(detail.answers);
+    const label = resultLabel(computed);
+    const color = computed === 1 ? 'text-green-600' : computed === 3 ? 'text-yellow-600' : computed === 4 ? 'text-gray-600' : 'text-red-600';
+
+    return (
+      <div
+        key={q.question_id}
+        className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+      >
+        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">{q.question}</p>
+        <p className={`text-sm font-medium mb-1 ${color}`}>{label}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">Your answer: {userAns}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">Correct: {correctAns}</p>
+      </div>
+    );
+  };
+
   if (submitted && result) {
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Results</h2>
         <p className="font-medium text-gray-900 dark:text-white">Score: {result.accuracy}%</p>
-        {questions.map((q, idx) => (
-          <div
-            key={q.question_id}
-            className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
-          >
-            <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">{q.question}</p>
-            {result.detailedAnswers[idx] && result.detailedAnswers[idx].answers && (
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Correct: {result.detailedAnswers[idx].answers.map((a: any) => a.correct_answer || a.choice_text).join(', ')}
-              </p>
-            )}
-          </div>
-        ))}
+        {questions.map((q, idx) => renderResult(q, idx))}
       </div>
     );
   }
