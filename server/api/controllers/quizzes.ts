@@ -214,7 +214,12 @@ module.exports = {
         const attemptId = await createNewAttempt({ questionIds, quizId: qId, userId: uId });
         const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId: qId, userId: uId, attemptId });
         const quizInfo = await getCurrentQuizInfo(qId, uId, attemptId);
-        const parts = await QuizPartModel.findAllByQuiz(qId);
+        const rawParts = await QuizPartModel.findAllByQuiz(qId);
+        const parts = rawParts.map((p) => ({
+          part_id: p.PartId,
+          part_title: p.PartTitle,
+          sort_order: p.SortOrder,
+        }));
         const response = { questions: questionsWithAns, parts, attempt_id: attemptId, ...quizInfo };
         const resObject = convertToObject(questionsContent);
         for (const question of response.questions) {
@@ -225,7 +230,12 @@ module.exports = {
         const data = { latestAttempt, quizId: qId, userId: uId };
         const incomplete = await loadIncompleteAttempt(data);
         const quizInfo = await getCurrentQuizInfo(qId, uId, latestAttempt.AttemptId);
-        const parts = await QuizPartModel.findAllByQuiz(qId);
+        const rawParts = await QuizPartModel.findAllByQuiz(qId);
+        const parts = rawParts.map((p) => ({
+          part_id: p.PartId,
+          part_title: p.PartTitle,
+          sort_order: p.SortOrder,
+        }));
         const response = { questions: incomplete.questions, parts, attempt_id: latestAttempt.AttemptId, ...quizInfo };
         const resObject = convertToObject(incomplete.questionsContent);
         for (const question of response.questions) {
