@@ -81,7 +81,7 @@ const QuizResults: React.FC<Props> = ({ questions, result }) => {
                   : 'Unanswered'}
                 {' | '}Correct:{' '}
                 {detail.answers
-                  .filter((a: any) => a.is_correct_choice === 1)
+                  .filter((a: any) => a.is_correct_choice)
                   .map(
                     (a: any) =>
                       q.content.find((c: any) => c.choice_id === a.choice_id)?.choice_text
