@@ -10,13 +10,18 @@ interface QuizResponse {
 
 const PracticePage: React.FC = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const [data, setData] = useState<QuizResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
+    if (!user) {
+      openAuthModal('login');
+      setError('Login required');
+      return;
+    }
     fetch(`${API_URL}quizzes/start/${id}`, {
       method: 'POST',
       headers: {
@@ -26,6 +31,10 @@ const PracticePage: React.FC = () => {
     })
       .then(res => {
         if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            openAuthModal('login');
+            throw new Error('unauthorized');
+          }
           throw new Error(res.statusText || 'Request failed');
         }
         return res.json();

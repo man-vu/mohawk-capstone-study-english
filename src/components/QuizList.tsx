@@ -9,7 +9,7 @@ interface QuizSummary {
 }
 
 const QuizList: React.FC = () => {
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const navigate = useNavigate();
@@ -54,7 +54,11 @@ const QuizList: React.FC = () => {
                 {quiz.description}
               </p>
               <button
-                onClick={() => navigate(`/practice/${quiz.quiz_id}`)}
+                onClick={() =>
+                  user
+                    ? navigate(`/practice/${quiz.quiz_id}`)
+                    : openAuthModal('login')
+                }
                 className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Start Quiz
