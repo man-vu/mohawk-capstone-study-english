@@ -101,20 +101,19 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
     return false;
   };
 
-  const partGroups = React.useMemo(
-    () =>
-      parts
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((p) => ({ id: p.part_id, title: p.part_title })),
-    [parts]
-  );
+  const partGroups = React.useMemo(() => {
+    if (!parts.length) return [{ id: -1, title: 'All Questions' }];
+    return parts
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((p) => ({ id: p.part_id, title: p.part_title }));
+  }, [parts]);
 
   const currentPartId = partGroups[currentPart]?.id ?? -1;
   const currentPartTitle = currentPartId !== -1 ? partMap[currentPartId] : undefined;
-  const questionsInPart = React.useMemo(
-    () => questions.filter((q) => (q.part_id ?? -1) === currentPartId),
-    [questions, currentPartId]
-  );
+  const questionsInPart = React.useMemo(() => {
+    if (partGroups.length === 1 && partGroups[0].id === -1) return questions;
+    return questions.filter((q) => (q.part_id ?? -1) === currentPartId);
+  }, [questions, currentPartId, partGroups]);
 
   const updateAnswer = (questionId: number, answerText: string) => {
     fetch(`${API_URL}questions/answer/${questionId}`, {

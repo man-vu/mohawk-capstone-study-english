@@ -9,6 +9,7 @@ const AttemptModel = require("../../models/UserAttemptModel.ts").default;
 const UserAnswerModel = require("../../models/UserAnswerModel.ts").default;
 const CorrectAnswerModel = require("../../models/CorrectAnswerModel.ts").default;
 const QuizPartModel = require("../../models/QuizPartModel.ts").default;
+const AppUserModel = require("../../models/AppUserModel.ts").default;
 const validator = require("../validators/validator");
 const { cleanObject } = require("../../misc/helper");
 
@@ -53,6 +54,10 @@ async function createNewAttempt({ questionIds, quizId, userId }) {
   const uId = Number(userId);
   if (Number.isNaN(qId) || Number.isNaN(uId)) {
     throw new Error('Invalid quiz or user id');
+  }
+  const user = await AppUserModel.findById(uId);
+  if (!user) {
+    throw new Error('User not found');
   }
   const attempt = await AttemptModel.create({
     StartTime: moment.utc().toDate(),
@@ -235,6 +240,9 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
+      if (error.message === 'User not found') {
+        return sendFailure(404, STRINGS.NO_SUCH_USER_EXISTS);
+      }
       return sendFailure(STRINGS.CANNOT_LOAD_LATEST_ATTEMPT);
     }
   },
