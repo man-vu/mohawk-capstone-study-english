@@ -9,6 +9,8 @@ import { useTheme } from './hooks/useTheme';
 import HomePage from './pages/HomePage';
 import TemplatesPage from './pages/TemplatesPage';
 import PracticePage from './pages/PracticePage';
+import VocabularyBuilderPage from './pages/VocabularyBuilderPage';
+import FlashcardsPage from './pages/FlashcardsPage';
 import PageTransition from './components/PageTransition';
 
 const App: React.FC = () => {
@@ -26,6 +28,8 @@ const App: React.FC = () => {
               <Route path="/" element={<PageTransition keyProp="home"><HomePage /></PageTransition>} />
               <Route path="/templates" element={<PageTransition keyProp="templates"><TemplatesPage /></PageTransition>} />
               <Route path="/practice/:id" element={<PageTransition keyProp="practice"><PracticePage /></PageTransition>} />
+              <Route path="/vocabulary" element={<PageTransition keyProp="vocabulary"><VocabularyBuilderPage /></PageTransition>} />
+              <Route path="/flashcards" element={<PageTransition keyProp="flashcards"><FlashcardsPage /></PageTransition>} />
             </Routes>
           </AnimatePresence>
           {!hideFooter && <Footer />}
