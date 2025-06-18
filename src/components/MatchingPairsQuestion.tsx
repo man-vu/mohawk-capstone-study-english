@@ -30,6 +30,14 @@ interface Props {
 const MatchingPairsQuestion: React.FC<Props> = ({ question, answers, onAnswer }) => {
   const prompts = question.content.filter((c: any) => c.prompt_order !== undefined) as PromptItem[];
   const choices = question.content.filter((c: any) => c.choice_order !== undefined) as ChoiceItem[];
+  const shuffledChoices = React.useMemo(() => {
+    const arr = [...choices];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [question.question_id]);
 
   const handleDropOnPrompt = (
     e: React.DragEvent<HTMLDivElement>,
@@ -55,7 +63,7 @@ const MatchingPairsQuestion: React.FC<Props> = ({ question, answers, onAnswer })
   };
 
   const usedChoices = Object.values(answers);
-  const unassignedChoices = choices.filter(
+  const unassignedChoices = shuffledChoices.filter(
     (c) => !usedChoices.includes(c.choice_order)
   );
 
@@ -101,7 +109,7 @@ const MatchingPairsQuestion: React.FC<Props> = ({ question, answers, onAnswer })
                         String(p.prompt_order)
                       );
                     }}
-                    className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center cursor-move"
+                    className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center cursor-move transition-transform duration-200 hover:scale-105"
                   >
                     <span className="font-medium text-blue-700 dark:text-blue-300 mr-2">
                       {String.fromCharCode(64 + (answers[p.prompt_order] || 0))}.
@@ -121,7 +129,7 @@ const MatchingPairsQuestion: React.FC<Props> = ({ question, answers, onAnswer })
                 key={choice.choice_order}
                 draggable
                 onDragStart={(e) => e.dataTransfer.setData('choice', String(choice.choice_order))}
-                className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 cursor-move"
+                className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 cursor-move transition-transform duration-200 hover:scale-105"
               >
                 <span className="font-medium text-blue-700 dark:text-blue-300 mr-2">{choice.choice_order}.</span>
                 {choice.right_text}

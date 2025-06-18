@@ -251,7 +251,7 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
   }
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-40">
       <div className="flex justify-between items-center">
         {currentPartTitle && (
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -297,7 +297,7 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
           </button>
         )}
       </div>
-      <div className="mt-8 sticky bottom-0 pt-4 bg-gray-50 dark:bg-gray-800">
+      <div className="fixed bottom-0 left-0 w-full pt-4 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur z-10">
         <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 space-y-4 lg:space-y-0 overflow-x-auto px-4 pb-4">
           {paletteGroups.map((group, gi) => (
             <div key={gi} className="shrink-0">
