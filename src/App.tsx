@@ -15,6 +15,9 @@ import AboutPage from './pages/AboutPage';
 import SpeakingPracticePage from './pages/SpeakingPracticePage';
 import PracticeTestsPage from './pages/PracticeTestsPage';
 import CoursesPage from './pages/CoursesPage';
+import WritingTestPage from './pages/WritingTestPage';
+import FullMockTestsPage from './pages/FullMockTestsPage';
+import VocabularyGames from './components/VocabularyGames';
 import PageTransition from './components/PageTransition';
 
 const App: React.FC = () => {
@@ -36,6 +39,9 @@ const App: React.FC = () => {
               <Route path="/vocabulary" element={<PageTransition keyProp="vocabulary"><VocabularyBuilderPage /></PageTransition>} />
               <Route path="/flashcards" element={<PageTransition keyProp="flashcards"><FlashcardsPage /></PageTransition>} />
               <Route path="/practice-tests" element={<PageTransition keyProp="practice-tests"><PracticeTestsPage /></PageTransition>} />
+              <Route path="/writing-test" element={<PageTransition keyProp="writing-test"><WritingTestPage /></PageTransition>} />
+              <Route path="/full-mock-tests" element={<PageTransition keyProp="full-mock-tests"><FullMockTestsPage /></PageTransition>} />
+              <Route path="/vocabulary-games" element={<PageTransition keyProp="vocabulary-games"><VocabularyGames /></PageTransition>} />
               <Route path="/courses" element={<PageTransition keyProp="courses"><CoursesPage /></PageTransition>} />
               <Route path="/study-plans" element={<PageTransition keyProp="study-plans"><StudyPlansPage /></PageTransition>} />
               <Route path="/about" element={<PageTransition keyProp="about"><AboutPage /></PageTransition>} />
