@@ -333,10 +333,16 @@ module.exports = {
     const endTime = moment(Date.now());
 
     try {
-      const correctRows = await CorrectAnswerModel.findAll(qId);
+      const [mcRows, gapRows, matchRows] = await Promise.all([
+        CorrectAnswerModel.findMultipleChoice(qId),
+        CorrectAnswerModel.findGapFilling(qId),
+        CorrectAnswerModel.findMatchingPairs(qId),
+      ]);
       const uaRecords = await UserAnswerModel.findAllByAttempt(qId, uId, aId);
 
-      const correctMap = convertToObject(cleanObject(correctRows));
+      const mcMap = convertToObject(cleanObject(mcRows));
+      const gapMap = convertToObject(cleanObject(gapRows));
+      const matchMap = convertToObject(cleanObject(matchRows));
       const userAnswers = uaRecords.map((ua) => ({
         question_id: ua.QuestionId,
         type_id: ua.Question.TypeId,
@@ -414,7 +420,10 @@ module.exports = {
       };
 
       for (const { question_id, type_id, answer_text } of userAnswers) {
-        const corrects = correctMap[question_id] || [];
+        let corrects: any[] = [];
+        if (type_id === 1) corrects = mcMap[question_id] || [];
+        else if (type_id === 2) corrects = gapMap[question_id] || [];
+        else if (type_id === 3) corrects = matchMap[question_id] || [];
         let evaluation;
         if (!answer_text) {
           evaluation = { result: 4, details: corrects };
@@ -449,7 +458,7 @@ module.exports = {
         markUpdates.push({ quizId: qId, userId: uId, attemptId: aId, questionId: question_id, markedResult: evaluation.result });
       }
 
-      const numQuestions = Object.keys(correctMap).length;
+      const numQuestions = userAnswers.length;
       const each = 100 / numQuestions;
       const grade = result.correct === numQuestions ? 100 : each * result.correct + (each / 2) * result.partial;
 
