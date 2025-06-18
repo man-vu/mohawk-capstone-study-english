@@ -57,8 +57,23 @@ const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
     updateAnswer(qid, text);
   };
 
-  const handleMatchAnswer = (qid: number, prompt: number, choice: number) => {
-    const newMap = { ...(answers[qid] || {}), [prompt]: choice };
+  const handleMatchAnswer = (
+    qid: number,
+    prompt: number | null,
+    choice: number,
+    fromPrompt?: number
+  ) => {
+    const prevMap = answers[qid] || {};
+    const newMap: Record<number, number> = { ...prevMap };
+    if (fromPrompt !== undefined) {
+      delete newMap[fromPrompt];
+    }
+    Object.keys(newMap).forEach((po) => {
+      if (newMap[Number(po)] === choice) delete newMap[Number(po)];
+    });
+    if (prompt !== null) {
+      newMap[prompt] = choice;
+    }
     setAnswers((prev) => ({
       ...prev,
       [qid]: newMap,
@@ -95,8 +110,8 @@ const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
           <MatchingPairsQuestion
             question={currentQuestion as any}
             answers={answers[currentQuestion.question_id] || {}}
-            onAnswer={(prompt, choice) =>
-              handleMatchAnswer(currentQuestion.question_id, prompt, choice)
+            onAnswer={(prompt, choice, from) =>
+              handleMatchAnswer(currentQuestion.question_id, prompt, choice, from)
             }
           />
         );

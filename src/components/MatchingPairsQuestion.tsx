@@ -20,22 +20,47 @@ interface MatchingQuestion {
 interface Props {
   question: MatchingQuestion;
   answers: Record<number, number>;
-  onAnswer: (promptOrder: number, choiceOrder: number) => void;
+  onAnswer: (
+    promptOrder: number | null,
+    choiceOrder: number,
+    fromPrompt?: number
+  ) => void;
 }
 
 const MatchingPairsQuestion: React.FC<Props> = ({ question, answers, onAnswer }) => {
   const prompts = question.content.filter((c: any) => c.prompt_order !== undefined) as PromptItem[];
   const choices = question.content.filter((c: any) => c.choice_order !== undefined) as ChoiceItem[];
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, prompt: number) => {
+  const handleDropOnPrompt = (
+    e: React.DragEvent<HTMLDivElement>,
+    prompt: number
+  ) => {
     e.preventDefault();
     const choice = Number(e.dataTransfer.getData('choice'));
+    const fromPromptStr = e.dataTransfer.getData('fromPrompt');
+    const fromPrompt = fromPromptStr ? Number(fromPromptStr) : undefined;
     if (!Number.isNaN(choice)) {
-      onAnswer(prompt, choice);
+      onAnswer(prompt, choice, fromPrompt);
+    }
+  };
+
+  const handleUnassignDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const choice = Number(e.dataTransfer.getData('choice'));
+    const fromPromptStr = e.dataTransfer.getData('fromPrompt');
+    const fromPrompt = fromPromptStr ? Number(fromPromptStr) : undefined;
+    if (!Number.isNaN(choice) && fromPrompt !== undefined) {
+      onAnswer(null, choice, fromPrompt);
     }
   };
 
   const usedChoices = Object.values(answers);
+  const unassignedChoices = choices.filter(
+    (c) => !usedChoices.includes(c.choice_order)
+  );
+
+  const getChoiceText = (order: number) =>
+    choices.find((c) => c.choice_order === order)?.right_text || '';
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -54,37 +79,54 @@ const MatchingPairsQuestion: React.FC<Props> = ({ question, answers, onAnswer })
               <div
                 key={p.prompt_order}
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDrop(e, p.prompt_order)}
-                className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 min-h-[56px] flex items-center justify-between"
+                onDrop={(e) => handleDropOnPrompt(e, p.prompt_order)}
+                className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 min-h-[56px]"
               >
-                <span className="font-medium text-purple-700 dark:text-purple-300 mr-2">{p.prompt_order}.</span>
-                <span className="flex-1">{p.left_text}</span>
-                {answers[p.prompt_order] && (
-                  <span className="ml-2 text-blue-600 dark:text-blue-300 text-sm">
-                    {String.fromCharCode(64 + answers[p.prompt_order])}
+                <div className="flex items-start">
+                  <span className="font-medium text-purple-700 dark:text-purple-300 mr-2">
+                    {p.prompt_order}.
                   </span>
+                  <span className="flex-1">{p.left_text}</span>
+                </div>
+                {answers[p.prompt_order] && (
+                  <div
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(
+                        'choice',
+                        String(answers[p.prompt_order])
+                      );
+                      e.dataTransfer.setData(
+                        'fromPrompt',
+                        String(p.prompt_order)
+                      );
+                    }}
+                    className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center cursor-move"
+                  >
+                    <span className="font-medium text-blue-700 dark:text-blue-300 mr-2">
+                      {String.fromCharCode(64 + (answers[p.prompt_order] || 0))}.
+                    </span>
+                    {getChoiceText(answers[p.prompt_order])}
+                  </div>
                 )}
               </div>
             ))}
           </div>
         </div>
-        <div>
+        <div onDragOver={(e) => e.preventDefault()} onDrop={handleUnassignDrop}>
           <h5 className="font-medium text-gray-900 dark:text-white mb-4">Right Column</h5>
           <div className="space-y-3">
-            {choices.map((choice) => {
-              const disabled = usedChoices.includes(choice.choice_order);
-              return (
-                <div
-                  key={choice.choice_order}
-                  draggable={!disabled}
-                  onDragStart={(e) => e.dataTransfer.setData('choice', String(choice.choice_order))}
-                  className={`p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 cursor-move ${disabled ? 'opacity-50' : ''}`}
-                >
-                  <span className="font-medium text-blue-700 dark:text-blue-300 mr-2">{choice.choice_order}.</span>
-                  {choice.right_text}
-                </div>
-              );
-            })}
+            {unassignedChoices.map((choice) => (
+              <div
+                key={choice.choice_order}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData('choice', String(choice.choice_order))}
+                className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 cursor-move"
+              >
+                <span className="font-medium text-blue-700 dark:text-blue-300 mr-2">{choice.choice_order}.</span>
+                {choice.right_text}
+              </div>
+            ))}
           </div>
         </div>
       </div>

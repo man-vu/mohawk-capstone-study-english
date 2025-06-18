@@ -13,6 +13,7 @@ const PracticePage: React.FC = () => {
   const { user } = useAuth();
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const [data, setData] = useState<QuizResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -23,7 +24,12 @@ const PracticePage: React.FC = () => {
         ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {})
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(res.statusText || 'Request failed');
+        }
+        return res.json();
+      })
       .then(result => {
         if (result.statusCode === 200) {
           setData(result.response);
@@ -31,11 +37,16 @@ const PracticePage: React.FC = () => {
       })
       .catch(err => {
         console.error('Failed to load quiz', err);
+        setError('Unable to load quiz. Please try again.');
       });
   }, [API_URL, id, user]);
 
   if (!data) {
-    return <div className="py-20 text-center">Loading...</div>;
+    return (
+      <div className="py-20 text-center">
+        {error || 'Loading...'}
+      </div>
+    );
   }
 
   return (
