@@ -321,193 +321,151 @@ module.exports = {
   /**
    * Function handles submissions from students either by clicking on submit or timeout 
    */
-  submitAndMark: async (data) => {
-    const qId = Number(data.quizId);
-    const uId = Number(data.userId);
-    const aId = Number(data.attemptId);
+  submitAndMark: async ({ quizId, userId, attemptId }) => {
+    const qId = Number(quizId);
+    const uId = Number(userId);
+    const aId = Number(attemptId);
 
     if (Number.isNaN(qId) || Number.isNaN(uId) || Number.isNaN(aId)) {
       return sendFailure(STRINGS.INVALID_QUIZ_ID);
     }
 
     const endTime = moment(Date.now());
+
     try {
-      const getCorrectAnswers = await CorrectAnswerModel.findAll(qId);
+      const correctRows = await CorrectAnswerModel.findAll(qId);
       const uaRecords = await UserAnswerModel.findAllByAttempt(qId, uId, aId);
+
+      const correctMap = convertToObject(cleanObject(correctRows));
       const userAnswers = uaRecords.map((ua) => ({
-        answer_text: ua.AnswerText,
         question_id: ua.QuestionId,
         type_id: ua.Question.TypeId,
+        answer_text: ua.AnswerText,
       }));
-      const response = { detailedAnswers: [], result: [], grade: null };
 
-      // 1 - correct, 2 - partially correct, 3 - incorrect, 4 - unanswered
       const result = { correct: 0, partial: 0, incorrect: 0, unanswered: 0 };
-      const correctAnswers = convertToObject(cleanObject(getCorrectAnswers));
-      const userAnswersModels = [];
-      let markedResult
+      const detailedAnswers: any[] = [];
+      const markUpdates: any[] = [];
 
-      for (const { answer_text, type_id, question_id } of userAnswers) {
-        const corrects = correctAnswers[question_id]
+      const evalMC = (text: string, corrects: any[]) => {
+        const selected = text.split(',').map((v) => Number(v));
+        const correctIds = corrects.filter((c) => c.is_correct_choice).map((c) => c.choice_id);
+        const details = corrects.map((c) => {
+          const chosen = selected.includes(c.choice_id);
+          return {
+            ...c,
+            user_answer: chosen ? 1 : 0,
+            marked: (chosen && c.is_correct_choice === 1) || (!chosen && c.is_correct_choice === 0),
+          };
+        });
+        if (!selected.length) return { result: 4, details };
+        const marks = selected.map((id) => correctIds.includes(id));
+        if (marks.length === correctIds.length && marks.every(Boolean)) return { result: 1, details };
+        if (marks.every((m) => !m)) return { result: 2, details };
+        return { result: 3, details };
+      };
 
-        if (answer_text === "") {
-          result.unanswered += 1;
-          markedResult = 4;
-
-          if (type_id === 1) {
-            response.detailedAnswers.push({ answers: corrects.map(c => ({ ...c, marked: 0 === c.is_correct_choice, user_answer: 0 })) });
-          } else if (type_id === 2) {
-            response.detailedAnswers.push({ answers: corrects });
-          } else if (type_id === 3) {
-            const map: Record<number, string[]> = {};
-            for (const c of corrects) {
-              const po = c.prompt_order ?? c.PromptOrder;
-              const co = c.choice_order ?? c.ChoiceOrder;
-              const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
-              if (isCorrect) {
-                if (!map[po]) map[po] = [];
-                map[po].push(String.fromCharCode(64 + co));
-              }
-            }
-            const orders = Object.keys(map).map(n => Number(n)).sort((a,b) => a - b);
-            response.detailedAnswers.push({
-              answers: orders.map(o => ({ type_id: 3, sequence_id: o, correct_answer: map[o].join('/') }))
-            });
-
+      const evalGap = (text: string, corrects: any[]) => {
+        const answers = text.split(',').map((a) => a.split('.'));
+        const details = corrects.map((c: any, idx: number) => {
+          const val = answers[idx] ? answers[idx][1] : '';
+          const expect = c.correct_answer.toLowerCase().trim();
+          let isCorrect = false;
+          if (expect.includes('/') || expect.includes('|')) {
+            const opts = (expect.includes('/') ? expect.split('/') : expect.split('|')).map((o) => o.trim());
+            isCorrect = opts.some((o) => val.toLowerCase().trim() === o);
+          } else {
+            isCorrect = val.toLowerCase().trim() === expect;
           }
-        } else {
-          response.detailedAnswers.push({})
-          const index = response.detailedAnswers.length - 1
+          return { ...c, user_answer: val, marked: isCorrect };
+        });
+        const marks = details.map((d) => d.marked);
+        if (marks.every(Boolean)) return { result: 1, details };
+        if (marks.every((m) => !m)) return { result: 2, details };
+        return { result: 3, details };
+      };
 
-          if (type_id === 1) {
-            const selectedOptions = answer_text.split(',').map(i => parseInt(i) ? parseInt(i) : i)
-            const marked = selectedOptions.map((o) => corrects[o - 1].is_correct_choice === 1)
-            
-            for (const correct of corrects) {
-              const isSelected = selectedOptions.includes(correct.choice_id) 
-              correct.user_answer = isSelected ? 1 : 0
-              if ((isSelected && correct.is_correct_choice === 1) || (!isSelected && correct.is_correct_choice === 0)) {
-                  correct.marked = true 
-              } else {
-                  correct.marked = false
-              }
-          }
-              
-
-            response.detailedAnswers[index].answers = corrects;
-            
-            if (marked.length === corrects.filter(c => c.is_correct_choice === 1).length && marked.every(m => m === true)) {
-              
-              markedResult = 1;
-              result.correct += 1
-            } else if (marked.every(m => m === false)) {
-              markedResult = 2
-              result.incorrect += 1
-            } else {
-              markedResult = 3
-              result.partial += 1
-            }
-          } else if (type_id === 2) {
-            const answers = answer_text.split(",").map((a) => a.split("."));
-            const marked = answers.map((item, i) => {
-              const string = corrects[i].correct_answer.toLowerCase().trim()
-              const string2 = item[1].toLowerCase().trim()
-              
-              if (string.includes('/') || string.includes('|'))  {
-                const correct_answers = (string.includes('/') ? string.split('/') : string.split('|')).map(a => a.trim())
-                return correct_answers.some(answer => string2 === answer)
-              } else {
-                return string2 === string
-              }
-            })
-
-            response.detailedAnswers[index].answers = corrects
-            
-            for (let i = 0; i < marked.length; i++) {
-              response.detailedAnswers[index].answers[i].user_answer = answers[i][1]
-              response.detailedAnswers[index].answers[i].marked = marked[i]
-            }
-
-            if (marked.every(m => m === true)) {
-              markedResult = 1;
-              result.correct += 1
-            } else if (marked.every(m => m === false)) {
-              markedResult = 2
-              result.incorrect += 1
-            } else {
-              markedResult = 3
-              result.partial += 1
-            }
-          } else if (type_id === 3) {
-            const map: Record<number, string[]> = {};
-            for (const c of corrects) {
-              const po = c.prompt_order ?? c.PromptOrder;
-              const co = c.choice_order ?? c.ChoiceOrder;
-              const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
-              if (isCorrect) {
-                if (!map[po]) map[po] = [];
-                map[po].push(String.fromCharCode(64 + co));
-              }
-            }
-            const orders = Object.keys(map).map(n => Number(n)).sort((a,b) => a - b);
-
-            const answers = answer_text.split(" ").map(a => a.split("."));
-            const marks: boolean[] = [];
-            response.detailedAnswers[index].answers = [];
-            for (let i = 0; i < orders.length; i++) {
-              const po = orders[i];
-              const userChoice = answers[i] ? answers[i][1] : '';
-              const correctLetters = map[po] || [];
-              const isCorrect = userChoice && correctLetters.includes(userChoice);
-              marks.push(isCorrect);
-              response.detailedAnswers[index].answers.push({
-                type_id: 3,
-                sequence_id: po,
-                correct_answer: correctLetters.join('/'),
-                user_answer: userChoice,
-                marked: isCorrect
-              });
-            }
-
-            if (marks.length === orders.length && marks.every(m => m)) {
-              markedResult = 1;
-              result.correct += 1;
-            } else if (marks.every(m => !m)) {
-              markedResult = 2;
-              result.incorrect += 1;
-            } else {
-              markedResult = 3;
-              result.partial += 1;
-            }
+      const evalMatch = (text: string, corrects: any[]) => {
+        const map: Record<number, string[]> = {};
+        for (const c of corrects) {
+          const po = c.prompt_order ?? c.PromptOrder;
+          const co = c.choice_order ?? c.ChoiceOrder;
+          const isCorrect = c.is_correct_choice === 1 || c.is_correct === 1 || c.is_correct_choice === true || c.is_correct === true;
+          if (isCorrect) {
+            if (!map[po]) map[po] = [];
+            map[po].push(String.fromCharCode(64 + co));
           }
         }
+        const orders = Object.keys(map).map((n) => Number(n)).sort((a, b) => a - b);
+        const pairs = text.split(' ').map((p) => p.split('.'));
+        const details: any[] = [];
+        const marks: boolean[] = [];
+        for (let i = 0; i < orders.length; i++) {
+          const po = orders[i];
+          const choice = pairs[i] ? pairs[i][1] : '';
+          const correctLetters = map[po] || [];
+          const ok = !!choice && correctLetters.includes(choice);
+          marks.push(ok);
+          details.push({ type_id: 3, sequence_id: po, correct_answer: correctLetters.join('/'), user_answer: choice, marked: ok });
+        }
+        if (marks.length === orders.length && marks.every(Boolean)) return { result: 1, details };
+        if (marks.every((m) => !m)) return { result: 2, details };
+        return { result: 3, details };
+      };
 
-        const ua = { quizId: qId, userId: uId, attemptId: aId, questionId: question_id, markedResult }
+      for (const { question_id, type_id, answer_text } of userAnswers) {
+        const corrects = correctMap[question_id] || [];
+        let evaluation;
+        if (!answer_text) {
+          evaluation = { result: 4, details: corrects };
+        } else if (type_id === 1) {
+          evaluation = evalMC(answer_text, corrects);
+        } else if (type_id === 2) {
+          evaluation = evalGap(answer_text, corrects);
+        } else if (type_id === 3) {
+          evaluation = evalMatch(answer_text, corrects);
+        } else {
+          evaluation = { result: 4, details: [] };
+        }
 
-        userAnswersModels.push(ua)
+        switch (evaluation.result) {
+          case 1:
+            result.correct += 1;
+            break;
+          case 2:
+            result.incorrect += 1;
+            break;
+          case 3:
+            result.partial += 1;
+            break;
+          case 4:
+            result.unanswered += 1;
+            break;
+          default:
+            break;
+        }
+
+        detailedAnswers.push({ answers: evaluation.details });
+        markUpdates.push({ quizId: qId, userId: uId, attemptId: aId, questionId: question_id, markedResult: evaluation.result });
       }
 
-      const numQuestions = Object.keys(correctAnswers).length;
-      const eachQuestionMark = 100 / numQuestions;
-      const grade =
-        result.correct === numQuestions
-          ? 100
-          : eachQuestionMark * result.correct + (eachQuestionMark / 2) * result.partial;
+      const numQuestions = Object.keys(correctMap).length;
+      const each = 100 / numQuestions;
+      const grade = result.correct === numQuestions ? 100 : each * result.correct + (each / 2) * result.partial;
 
-      await UserAnswerModel.markOne(userAnswersModels);
-      const attemptData = { EndTime: endTime.toDate(), Grade: grade };
-      await AttemptModel.closeOne(aId, attemptData);
+      await UserAnswerModel.markOne(markUpdates);
+      await AttemptModel.closeOne(aId, { EndTime: endTime.toDate(), Grade: grade });
       const thisAttempt = await AttemptModel.findOne(qId, uId, aId);
 
-      response.result = result;
-      response.result.total = numQuestions;
-      response.accuracy = grade;
-      response.quiz_id = qId;
-      response.attempt_id = aId;
-      response.userAnswers = userAnswers;
-      response.time_taken = endTime.diff(thisAttempt?.StartTime, 'seconds');
-
-      return sendSuccess(response);
+      return sendSuccess({
+        detailedAnswers,
+        result: { ...result, total: numQuestions },
+        accuracy: grade,
+        quiz_id: qId,
+        attempt_id: aId,
+        userAnswers,
+        time_taken: endTime.diff(thisAttempt?.StartTime, 'seconds'),
+      });
     } catch (error) {
       console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);

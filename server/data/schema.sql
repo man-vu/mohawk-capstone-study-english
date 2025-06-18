@@ -417,6 +417,16 @@ INSERT INTO dbo.MatchingChoice (QuestionId, RightText, ChoiceOrder) VALUES
     (5,'The Odyssey',2),
     (5,'Harry Potter',3);
 
+INSERT INTO dbo.MatchingAnswer (PromptId, ChoiceId) VALUES
+    (1,1),
+    (2,2),
+    (3,3),
+    (4,4),
+    (5,5),
+    (6,6),
+    (7,7),
+    (8,8);
+
 -- ========== QUIZ QUESTION ==========
 INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, SortOrder) VALUES
     (1,1,1),
