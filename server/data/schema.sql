@@ -282,6 +282,82 @@ CREATE TABLE dbo.UserActivity (
     CONSTRAINT FK_UserActivity_User FOREIGN KEY (UserId) REFERENCES dbo.AppUser(UserId)
 );
 
+-- ==================== NEW TABLES FOR VOCABULARY AND MOCK TESTS ====================
+
+CREATE TABLE dbo.VocabularyWord (
+    WordId INT IDENTITY PRIMARY KEY,
+    Word NVARCHAR(100) NOT NULL UNIQUE,
+    Definition NVARCHAR(500) NOT NULL,
+    Example NVARCHAR(500) NULL,
+    PartOfSpeech NVARCHAR(50) NULL,
+    Level NVARCHAR(20) NULL,
+    Category NVARCHAR(100) NULL,
+    Difficulty NVARCHAR(20) NULL
+);
+
+CREATE TABLE dbo.UserVocabularyProgress (
+    UserId INT NOT NULL,
+    WordId INT NOT NULL,
+    Mastery TINYINT NOT NULL DEFAULT 0,
+    LastReviewed DATE NULL,
+    CorrectStreak INT NOT NULL DEFAULT 0,
+    Attempts INT NOT NULL DEFAULT 0,
+    Memorized BIT NOT NULL DEFAULT 0,
+    CONSTRAINT PK_UserVocabularyProgress PRIMARY KEY (UserId, WordId),
+    CONSTRAINT FK_UserVocabularyProgress_User FOREIGN KEY (UserId) REFERENCES dbo.AppUser(UserId) ON DELETE CASCADE,
+    CONSTRAINT FK_UserVocabularyProgress_Word FOREIGN KEY (WordId) REFERENCES dbo.VocabularyWord(WordId) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.WordGroup (
+    GroupId INT IDENTITY PRIMARY KEY,
+    Theme NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(255) NULL
+);
+
+CREATE TABLE dbo.VocabularyWordGroup (
+    WordId INT NOT NULL,
+    GroupId INT NOT NULL,
+    PRIMARY KEY (WordId, GroupId),
+    CONSTRAINT FK_VocabularyWordGroup_Word FOREIGN KEY (WordId) REFERENCES dbo.VocabularyWord(WordId) ON DELETE CASCADE,
+    CONSTRAINT FK_VocabularyWordGroup_Group FOREIGN KEY (GroupId) REFERENCES dbo.WordGroup(GroupId) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.MockTest (
+    MockTestId INT IDENTITY PRIMARY KEY,
+    Title NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(1000) NULL,
+    TotalDuration INT NOT NULL, -- minutes
+    CreatedBy INT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT FK_MockTest_CreatedBy FOREIGN KEY (CreatedBy) REFERENCES dbo.AppUser(UserId)
+);
+
+CREATE TABLE dbo.MockTestSection (
+    SectionId INT IDENTITY PRIMARY KEY,
+    MockTestId INT NOT NULL,
+    QuizId INT NULL,
+    SkillId INT NOT NULL,
+    Duration INT NOT NULL,
+    TotalQuestions INT NOT NULL,
+    SortOrder INT NOT NULL,
+    CONSTRAINT FK_MockTestSection_MockTest FOREIGN KEY (MockTestId) REFERENCES dbo.MockTest(MockTestId) ON DELETE CASCADE,
+    CONSTRAINT FK_MockTestSection_Quiz FOREIGN KEY (QuizId) REFERENCES dbo.Quiz(QuizId),
+    CONSTRAINT FK_MockTestSection_Skill FOREIGN KEY (SkillId) REFERENCES dbo.QuizSkill(SkillId)
+);
+
+CREATE TABLE dbo.WritingAssessment (
+    AssessmentId INT IDENTITY PRIMARY KEY,
+    UserEssayAnswerId INT NOT NULL,
+    TaskResponseScore DECIMAL(5,2) NULL,
+    CoherenceCohesionScore DECIMAL(5,2) NULL,
+    LexicalResourcesScore DECIMAL(5,2) NULL,
+    GrammaticalAccuracyScore DECIMAL(5,2) NULL,
+    OverallBand DECIMAL(5,2) NULL,
+    EstimatedIELTSScore DECIMAL(5,2) NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT FK_WritingAssessment_Essay FOREIGN KEY (UserEssayAnswerId) REFERENCES dbo.UserEssayAnswer(UserAnswerId) ON DELETE CASCADE
+);
+
 -- ========== END OF TABLE DEFINITIONS ==========
 
 -- ========== START OF SEED DATA ==========

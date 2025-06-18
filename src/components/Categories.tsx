@@ -25,7 +25,7 @@ const Categories = () => {
       tests: '200+ Tasks',
       icon: '✍️',
       color: 'bg-purple-500',
-      link: '/practice/3'
+      link: '/writing-test'
     },
     {
       title: 'Speaking Practice',
@@ -41,7 +41,7 @@ const Categories = () => {
       tests: '50+ Tests',
       icon: '📋',
       color: 'bg-yellow-500',
-      link: '/practice/4'
+      link: '/full-mock-tests'
     },
     {
       title: 'Vocabulary Builder',
@@ -50,6 +50,14 @@ const Categories = () => {
       icon: '📚',
       color: 'bg-indigo-500',
       link: '/flashcards'
+    },
+    {
+      title: 'Vocabulary Games',
+      description: 'Fun games to help memorize IELTS vocabulary',
+      tests: '3+ Games',
+      icon: '🎮',
+      color: 'bg-pink-500',
+      link: '/vocabulary-games'
     }
   ];
 
