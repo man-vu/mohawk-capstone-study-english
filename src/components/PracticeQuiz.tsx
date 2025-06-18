@@ -20,20 +20,50 @@ interface Part {
   sort_order: number;
 }
 
+const formatTime = (secs: number) => {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
 interface Props {
   questions: Question[];
   parts: Part[];
   quizId: number;
   attemptId: number;
+  expiresAt: string;
 }
 
-const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId }) => {
+const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, expiresAt }) => {
   const { user } = useAuth();
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    return Math.max(Math.floor(diff / 1000), 0);
+  });
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  React.useEffect(() => {
+    if (timeLeft === 0 && !submitted) {
+      handleSubmit();
+    }
+  }, [timeLeft, submitted]);
 
   const partMap = React.useMemo(() => {
     const map: Record<number, string> = {};
@@ -42,6 +72,34 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId }) 
     });
     return map;
   }, [parts]);
+
+  const paletteGroups = React.useMemo(() => {
+    const groups = parts
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((p) => ({ id: p.part_id, title: p.part_title, indexes: [] as number[] }));
+    const other = { id: -1, title: 'Other', indexes: [] as number[] };
+    questions.forEach((q, idx) => {
+      const g = groups.find((gr) => gr.id === (q.part_id ?? -1));
+      if (g) g.indexes.push(idx);
+      else other.indexes.push(idx);
+    });
+    if (other.indexes.length) groups.push(other);
+    return groups;
+  }, [questions, parts]);
+
+  const isAnswered = (q: Question) => {
+    const ans = answers[q.question_id];
+    if (q.type_id === 1) {
+      return ans !== undefined && ans !== null;
+    }
+    if (q.type_id === 2) {
+      return ans && Object.values(ans).some((v: any) => v && v.trim() !== '');
+    }
+    if (q.type_id === 3) {
+      return ans && Object.keys(ans).length > 0;
+    }
+    return false;
+  };
 
   const currentQuestion = questions[current];
   const currentPartTitle = currentQuestion.part_id ? partMap[currentQuestion.part_id] : undefined;
@@ -170,11 +228,16 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId }) 
 
   return (
     <div className="space-y-8">
-      {currentPartTitle && (
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {currentPartTitle}
-        </h3>
-      )}
+      <div className="flex justify-between items-center">
+        {currentPartTitle && (
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {currentPartTitle}
+          </h3>
+        )}
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Time Left: {formatTime(timeLeft)}
+        </span>
+      </div>
       {renderQuestion()}
       <div className="mt-6 flex justify-between items-center">
         <button
@@ -206,6 +269,37 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId }) 
             Submit Quiz
           </button>
         )}
+      </div>
+      <div className="mt-8 space-y-4">
+        {paletteGroups.map((group, gi) => (
+          <div key={gi}>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+              {group.title}
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {group.indexes.map((idx) => {
+                const q = questions[idx];
+                const answered = isAnswered(q);
+                const isCurrent = idx === current;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrent(idx)}
+                    className={`w-8 h-8 rounded-full text-sm flex items-center justify-center font-medium border transition-colors ${
+                      isCurrent
+                        ? 'bg-purple-600 text-white border-purple-600'
+                        : answered
+                        ? 'bg-green-500 text-white border-green-500'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

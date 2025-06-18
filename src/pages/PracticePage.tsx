@@ -7,6 +7,7 @@ interface QuizResponse {
   questions: any[];
   parts: { part_id: number; part_title: string; sort_order: number }[];
   attempt_id: number;
+  expired_time: string;
 }
 
 const PracticePage: React.FC = () => {
@@ -62,7 +63,13 @@ const PracticePage: React.FC = () => {
   return (
       <div className="max-w-3xl mx-auto p-6 space-y-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quiz {id}</h2>
-        <PracticeQuiz questions={data.questions} parts={data.parts} quizId={Number(id)} attemptId={data.attempt_id} />
+        <PracticeQuiz
+          questions={data.questions}
+          parts={data.parts}
+          quizId={Number(id)}
+          attemptId={data.attempt_id}
+          expiresAt={data.expired_time}
+        />
       </div>
   );
 };
