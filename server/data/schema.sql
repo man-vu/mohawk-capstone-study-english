@@ -380,7 +380,9 @@ SET IDENTITY_INSERT dbo.Question ON;
 INSERT INTO dbo.Question (QuestionId, TypeId, InstructionId, IsActive, ParagraphTitle, QuestionText, CreatedAt) VALUES
     (1,1,1,1,NULL,'I felt an _______ with the writer from his descriptions of a world that seemed to have a great deal in common with my own.','2021-05-30 16:42:55'),
     (2,2,21,1,NULL,'The Eiffel Tower is located in ______ and was completed in ______.','2021-05-30 16:45:00'),
-    (3,3,36,1,NULL,'Match each country with its capital city.','2021-05-30 16:46:00');
+    (3,3,36,1,NULL,'Match each country with its capital city.','2021-05-30 16:46:00'),
+    (4,3,36,1,NULL,'Match each science field with its definition.','2021-05-30 16:47:00'),
+    (5,3,36,1,NULL,'Match each author with their famous work.','2021-05-30 16:48:00');
 SET IDENTITY_INSERT dbo.Question OFF;
 
 -- ========== QUESTION MULTIPLE CHOICE (sample only) ==========
@@ -398,16 +400,30 @@ INSERT INTO dbo.QuestionGapFilling (QuestionId, SequenceId, CorrectAnswer) VALUE
 -- ========== QUESTION MATCHING PAIRS ==========
 INSERT INTO dbo.MatchingPrompt (QuestionId, LeftText, PromptOrder) VALUES
     (3,'France',1),
-    (3,'Japan',2);
+    (3,'Japan',2),
+    (4,'Physics',1),
+    (4,'Chemistry',2),
+    (4,'Biology',3),
+    (5,'Shakespeare',1),
+    (5,'Homer',2),
+    (5,'J.K. Rowling',3);
 INSERT INTO dbo.MatchingChoice (QuestionId, RightText, ChoiceOrder) VALUES
     (3,'Paris',1),
-    (3,'Tokyo',2);
+    (3,'Tokyo',2),
+    (4,'Study of matter and energy',1),
+    (4,'Study of substances and their reactions',2),
+    (4,'Study of living organisms',3),
+    (5,'Hamlet',1),
+    (5,'The Odyssey',2),
+    (5,'Harry Potter',3);
 
 -- ========== QUIZ QUESTION ==========
 INSERT INTO dbo.QuizQuestion (QuizId, QuestionId, SortOrder) VALUES
     (1,1,1),
     (1,2,2),
-    (1,3,3);
+    (1,3,3),
+    (1,4,4),
+    (1,5,5);
 
 -- ========== USER ATTEMPT (sample only) ==========
 SET IDENTITY_INSERT dbo.UserAttempt ON;
