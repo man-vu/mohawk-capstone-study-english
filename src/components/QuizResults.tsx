@@ -92,8 +92,8 @@ const QuizResults: React.FC<Props> = ({ questions, result }) => {
             )}
             {q.type_id === 2 && (
               <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                {detail.answers.map((a: any) => (
-                  <p key={`${q.question_id}-${a.sequence_id}`}>
+                {detail.answers.map((a: any, index: number) => (
+                  <p key={`${q.question_id}-${a.sequence_id ?? index}`}>
                     Gap {a.sequence_id}:{' '}
                     {a.user_answer
                       ? `${a.user_answer} ${
@@ -106,8 +106,8 @@ const QuizResults: React.FC<Props> = ({ questions, result }) => {
             )}
             {q.type_id === 3 && (
               <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                {detail.answers.map((a: any) => (
-                  <p key={`${q.question_id}-${a.sequence_id}`}> 
+                {detail.answers.map((a: any, index: number) => (
+                  <p key={`${q.question_id}-${a.sequence_id ?? index}`}>
                     {promptText(q, a.sequence_id)}:{' '}
                     {a.user_answer
                       ? `${String.fromCharCode(64 + a.user_answer)} ${
