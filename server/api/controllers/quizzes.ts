@@ -144,7 +144,7 @@ module.exports = {
         const attemptId = await createNewAttempt({ questionIds, quizId: qId, userId: uId });
         const questionsWithAns = await QuestionModel.findManyByQuizId({ quizId: qId, userId: uId, attemptId });
         const quizInfo = await getCurrentQuizInfo(qId, uId, attemptId);
-        const response = { questions: questionsWithAns, ...quizInfo };
+        const response = { questions: questionsWithAns, attempt_id: attemptId, ...quizInfo };
         const resObject = convertToObject(questionsContent);
         for (const question of response.questions) {
           question.content = resObject[question.question_id];
@@ -154,7 +154,7 @@ module.exports = {
         const data = { latestAttempt, quizId: qId, userId: uId };
         const incomplete = await loadIncompleteAttempt(data);
         const quizInfo = await getCurrentQuizInfo(qId, uId, latestAttempt.AttemptId);
-        const response = { questions: incomplete.questions, ...quizInfo };
+        const response = { questions: incomplete.questions, attempt_id: latestAttempt.AttemptId, ...quizInfo };
         const resObject = convertToObject(incomplete.questionsContent);
         for (const question of response.questions) {
           if (question.type_id === 1) {

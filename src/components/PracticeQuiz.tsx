@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import MultipleChoiceQuestion from './MultipleChoiceQuestion';
 import GapFillingQuestion from './GapFillingQuestion';
 import MatchingPairsQuestion from './MatchingPairsQuestion';
+import { useAuth } from '../hooks/useAuth';
 
 interface Question {
   question_id: number;
@@ -13,17 +14,34 @@ interface Question {
 
 interface Props {
   questions: Question[];
+  quizId: number;
+  attemptId: number;
 }
 
-const PracticeQuiz: React.FC<Props> = ({ questions }) => {
+const PracticeQuiz: React.FC<Props> = ({ questions, quizId, attemptId }) => {
+  const { user } = useAuth();
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [result, setResult] = useState<any>(null);
 
   const currentQuestion = questions[current];
 
+  const updateAnswer = (questionId: number, answerText: string) => {
+    fetch(`${API_URL}questions/answer/${questionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+      },
+      body: JSON.stringify({ attemptId, quizId, answerText }),
+    }).catch((err) => console.error('update answer', err));
+  };
+
   const handleAnswer = (qid: number, value: any) => {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
+    updateAnswer(qid, String(value));
   };
 
   const handleGapAnswer = (qid: number, seq: number, value: string) => {
@@ -31,17 +49,25 @@ const PracticeQuiz: React.FC<Props> = ({ questions }) => {
       ...prev,
       [qid]: { ...(prev[qid] || {}), [seq]: value },
     }));
+    const obj = { ...(answers[qid] || {}), [seq]: value };
+    const text = Object.keys(obj)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((k) => `${k}.${obj[k]}`)
+      .join(',');
+    updateAnswer(qid, text);
   };
 
-  const handleMatchAnswer = (
-    qid: number,
-    choice: number,
-    prompt: number
-  ) => {
+  const handleMatchAnswer = (qid: number, prompt: number, choice: number) => {
+    const newMap = { ...(answers[qid] || {}), [prompt]: choice };
     setAnswers((prev) => ({
       ...prev,
-      [qid]: { ...(prev[qid] || {}), [choice]: prompt },
+      [qid]: newMap,
     }));
+    const text = Object.keys(newMap)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((po) => `${po}.${String.fromCharCode(64 + newMap[Number(po)])}`)
+      .join(' ');
+    updateAnswer(qid, text);
   };
 
   const renderQuestion = () => {
@@ -69,8 +95,8 @@ const PracticeQuiz: React.FC<Props> = ({ questions }) => {
           <MatchingPairsQuestion
             question={currentQuestion as any}
             answers={answers[currentQuestion.question_id] || {}}
-            onAnswer={(choice, prompt) =>
-              handleMatchAnswer(currentQuestion.question_id, choice, prompt)
+            onAnswer={(prompt, choice) =>
+              handleMatchAnswer(currentQuestion.question_id, prompt, choice)
             }
           />
         );
@@ -85,24 +111,40 @@ const PracticeQuiz: React.FC<Props> = ({ questions }) => {
   const handleNext = () => {
     if (current < questions.length - 1) setCurrent((c) => c + 1);
   };
-  const handleSubmit = () => setSubmitted(true);
+  const handleSubmit = () => {
+    fetch(`${API_URL}quizzes/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+      },
+      body: JSON.stringify({ quizId, attemptId }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.statusCode === 200) {
+          setResult(data.response);
+          setSubmitted(true);
+        }
+      })
+      .catch((err) => console.error('submit quiz', err));
+  };
 
-  if (submitted) {
+  if (submitted && result) {
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Results</h2>
-        {questions.map((q) => (
+        <p className="font-medium text-gray-900 dark:text-white">Score: {result.accuracy}%</p>
+        {questions.map((q, idx) => (
           <div
             key={q.question_id}
             className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
           >
             <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">{q.question}</p>
-            {answers[q.question_id] !== undefined ? (
+            {result.detailedAnswers[idx] && result.detailedAnswers[idx].answers && (
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Your answer: {JSON.stringify(answers[q.question_id])}
+                Correct: {result.detailedAnswers[idx].answers.map((a: any) => a.correct_answer || a.choice_text).join(', ')}
               </p>
-            ) : (
-              <p className="text-sm text-gray-700 dark:text-gray-300">No answer</p>
             )}
           </div>
         ))}
