@@ -118,6 +118,14 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
     return questions.filter((q) => (q.part_id ?? -1) === currentPartId);
   }, [questions, currentPartId, partGroups]);
 
+  const getCurrentQuestionIndex = () => {
+    return questions.findIndex(q => q.question_id === currentQuestion) + 1;
+  };
+
+  const getTotalQuestions = () => {
+    return questions.length;
+  };
+
   const updateAnswer = (questionId: number, answerText: string) => {
     fetch(`${API_URL}questions/answer/${questionId}`, {
       method: 'PUT',
@@ -252,22 +260,42 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
 
   return (
     <div className="space-y-8 pb-40">
-      <div className="flex justify-between items-center">
-        {currentPartTitle && (
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {currentPartTitle}
-          </h3>
-        )}
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Time Left: {formatTime(timeLeft)}
-        </span>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          {currentPartTitle && (
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {currentPartTitle}
+            </h3>
+          )}
+          <div className="bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full">
+            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              Question {getCurrentQuestionIndex()} of {getTotalQuestions()}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-full">
+            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+              ⏱️ {formatTime(timeLeft)}
+            </span>
+          </div>
+        </div>
       </div>
       <div className="space-y-8">
-        {questionsInPart.map((q) => (
-          <div key={q.question_id} id={`question-${q.question_id}`} className="space-y-4">
-            {renderQuestion(q)}
-          </div>
-        ))}
+        {questionsInPart.map((q, index) => {
+          const globalIndex = questions.findIndex(quest => quest.question_id === q.question_id) + 1;
+          return (
+            <div key={q.question_id} id={`question-${q.question_id}`} className="space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  {globalIndex}
+                </div>
+                <div className="h-px bg-gradient-to-r from-purple-200 to-blue-200 dark:from-purple-700 dark:to-blue-700 flex-1"></div>
+              </div>
+              {renderQuestion(q)}
+            </div>
+          );
+        })}
       </div>
       <div className="mt-6 flex justify-between items-center">
         <button
@@ -297,46 +325,69 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
           </button>
         )}
       </div>
-      <div className="fixed bottom-0 left-0 w-full pt-4 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur z-10">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 space-y-4 lg:space-y-0 overflow-x-auto px-4 pb-4">
-          {paletteGroups.map((group, gi) => (
-            <div key={gi} className="shrink-0">
-              <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                {group.title}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {group.indexes.map((idx) => {
-                  const q = questions[idx];
-                  const answered = isAnswered(q);
-                  const isCurrent = q.question_id === currentQuestion;
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      const partIdx = partGroups.findIndex((p) => p.id === (q.part_id ?? -1));
-                      if (partIdx >= 0) setCurrentPart(partIdx);
-                      setCurrentQuestion(q.question_id);
-                      setTimeout(() => {
-                        document.getElementById(`question-${q.question_id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 0);
-                    }}
-                    className={`w-8 h-8 rounded-full text-sm flex items-center justify-center font-medium border transition-colors ${
-                      isCurrent
-                        ? answered
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-purple-600 text-white border-purple-600'
-                        : answered
-                        ? 'bg-green-500 text-white border-green-500'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600'
-                    }`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
+      <div className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700 shadow-lg z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              Question Navigator
+            </h4>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-gray-600 dark:text-gray-400">Answered</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <span className="text-gray-600 dark:text-gray-400">Current</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                <span className="text-gray-600 dark:text-gray-400">Not answered</span>
               </div>
             </div>
-          ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paletteGroups.map((group, gi) => (
+              <div key={gi} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-gradient-to-b from-purple-500 to-blue-500 rounded-full"></div>
+                  {group.title}
+                </h5>
+                <div className="grid grid-cols-8 gap-2">
+                  {group.indexes.map((idx) => {
+                    const q = questions[idx];
+                    const answered = isAnswered(q);
+                    const isCurrent = q.question_id === currentQuestion;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const partIdx = partGroups.findIndex((p) => p.id === (q.part_id ?? -1));
+                          if (partIdx >= 0) setCurrentPart(partIdx);
+                          setCurrentQuestion(q.question_id);
+                          setTimeout(() => {
+                            document.getElementById(`question-${q.question_id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }, 0);
+                        }}
+                        className={`w-10 h-10 rounded-lg text-sm flex items-center justify-center font-semibold transition-all duration-200 hover:scale-105 ${
+                          isCurrent
+                            ? answered
+                              ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg ring-2 ring-green-300 dark:ring-green-500'
+                              : 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg ring-2 ring-purple-300 dark:ring-purple-500'
+                            : answered
+                            ? 'bg-gradient-to-br from-green-400 to-green-500 text-white shadow-md hover:shadow-lg'
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+                        }`}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

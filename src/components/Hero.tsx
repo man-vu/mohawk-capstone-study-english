@@ -22,7 +22,10 @@ const Hero: React.FC = () => {
             >
               Start Free Practice Test
             </button>
-            <button className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold transition-colors w-full sm:w-auto">
+            <button
+              onClick={() => navigate('/study-plans')}
+              className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold transition-colors w-full sm:w-auto"
+            >
               View Study Plans
             </button>
           </div>
