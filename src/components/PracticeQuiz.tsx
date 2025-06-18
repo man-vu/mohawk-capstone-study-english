@@ -38,6 +38,9 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
   const { user } = useAuth();
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
   const [currentPart, setCurrentPart] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<number>(
+    questions[0]?.question_id || 0
+  );
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -206,10 +209,22 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
   };
 
   const handlePrevPart = () => {
-    if (currentPart > 0) setCurrentPart((p) => p - 1);
+    if (currentPart > 0) {
+      const next = currentPart - 1;
+      setCurrentPart(next);
+      const partId = partGroups[next].id;
+      const first = questions.find((q) => (q.part_id ?? -1) === partId);
+      if (first) setCurrentQuestion(first.question_id);
+    }
   };
   const handleNextPart = () => {
-    if (currentPart < partGroups.length - 1) setCurrentPart((p) => p + 1);
+    if (currentPart < partGroups.length - 1) {
+      const next = currentPart + 1;
+      setCurrentPart(next);
+      const partId = partGroups[next].id;
+      const first = questions.find((q) => (q.part_id ?? -1) === partId);
+      if (first) setCurrentQuestion(first.question_id);
+    }
   };
   const handleSubmit = () => {
     fetch(`${API_URL}quizzes/submit`, {
@@ -282,23 +297,25 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
           </button>
         )}
       </div>
-      <div className="mt-8 space-y-4 sticky bottom-0 bg-white dark:bg-gray-900 pt-4">
-        {paletteGroups.map((group, gi) => (
-          <div key={gi}>
-            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-              {group.title}
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {group.indexes.map((idx) => {
-                const q = questions[idx];
-                const answered = isAnswered(q);
-                const isCurrent = partGroups[currentPart]?.id === (q.part_id ?? -1);
+      <div className="mt-8 sticky bottom-0 pt-4 bg-gray-50 dark:bg-gray-800">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 space-y-4 lg:space-y-0 overflow-x-auto px-4 pb-4">
+          {paletteGroups.map((group, gi) => (
+            <div key={gi} className="shrink-0">
+              <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                {group.title}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {group.indexes.map((idx) => {
+                  const q = questions[idx];
+                  const answered = isAnswered(q);
+                  const isCurrent = q.question_id === currentQuestion;
                 return (
                   <button
                     key={idx}
                     onClick={() => {
                       const partIdx = partGroups.findIndex((p) => p.id === (q.part_id ?? -1));
                       if (partIdx >= 0) setCurrentPart(partIdx);
+                      setCurrentQuestion(q.question_id);
                       setTimeout(() => {
                         document.getElementById(`question-${q.question_id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }, 0);
@@ -317,9 +334,10 @@ const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, ex
                   </button>
                 );
               })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
