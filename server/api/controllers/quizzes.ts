@@ -55,6 +55,7 @@ async function createNewAttempt({ questionIds, quizId, userId }) {
     throw new Error('Invalid quiz or user id');
   }
   const attempt = await AttemptModel.create({
+    StartTime: moment.utc().toDate(),
     Quiz: { connect: { QuizId: qId } },
     AppUser: { connect: { UserId: uId } },
   });
@@ -177,9 +178,9 @@ async function getCurrentQuizInfo (quizId, userId, attemptId) {
   const aId = Number(attemptId);
   const thisAttempt = await AttemptModel.findIncompleteAttempt(qId, uId, aId);
   if (thisAttempt) {
-    const expiredTime = moment(thisAttempt.StartTime).add(thisAttempt.Quiz.TimeAllowed, 'minutes');
-    const difference = moment().diff(expiredTime, 'seconds');
-    return { time_left: difference, expired_time: expiredTime };
+    const expiredTime = moment.utc(thisAttempt.StartTime).add(thisAttempt.Quiz.TimeAllowed, 'minutes');
+    const difference = expiredTime.diff(moment.utc(), 'seconds');
+    return { time_left: difference, expired_time: expiredTime.toISOString() };
   }
   return null;
 }
