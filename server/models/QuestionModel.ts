@@ -31,19 +31,37 @@ export class QuestionModel {
     return prisma.question.findMany();
   }
 
-  static async findManyByQuizId({ quizId, userId, attemptId }: { quizId: number; userId?: number; attemptId?: number }) {
-    if (attemptId && userId) {
-      const questions = await prisma.question.findMany({
-        where: { IsActive: true, QuizQuestion: { some: { QuizId: quizId } } },
-        include: {
-          QuestionInstruction: true,
-          QuestionType: true,
-          UserAnswer: { where: { AttemptId: attemptId } },
-          QuizQuestion: { where: { QuizId: quizId }, select: { PartId: true, SortOrder: true } },
+  static async findManyByQuizId({
+    quizId,
+    userId,
+    attemptId,
+  }: {
+    quizId: number;
+    userId?: number;
+    attemptId?: number;
+  }) {
+    const quizQuestions = await prisma.quizQuestion.findMany({
+      where: {
+        QuizId: quizId,
+        Question: { IsActive: true },
+      },
+      include: {
+        Question: {
+          include: {
+            QuestionInstruction: true,
+            QuestionType: true,
+            ...(attemptId && userId
+              ? { UserAnswer: { where: { AttemptId: attemptId } } }
+              : {}),
+          },
         },
-        orderBy: { QuizQuestion: { SortOrder: 'asc' } },
-      });
-      return questions.map((q) => ({
+      },
+      orderBy: { SortOrder: 'asc' },
+    });
+
+    return quizQuestions.map((qq) => {
+      const q = qq.Question;
+      return {
         question_id: q.QuestionId,
         type_id: q.TypeId,
         type_name: q.QuestionType.TypeName,
@@ -51,47 +69,31 @@ export class QuestionModel {
         paragraph_title: q.ParagraphTitle,
         question: q.QuestionText,
         instruction: q.QuestionInstruction.Instruction,
-        answer_text: q.UserAnswer[0]?.AnswerText ?? '',
-        part_id: q.QuizQuestion[0]?.PartId ?? null,
-      }));
-    }
-
-    const questions = await prisma.question.findMany({
-      where: { IsActive: true, QuizQuestion: { some: { QuizId: quizId } } },
-      include: {
-        QuestionInstruction: true,
-        QuestionType: true,
-        QuizQuestion: { where: { QuizId: quizId }, select: { PartId: true, SortOrder: true } },
-      },
-      orderBy: { QuizQuestion: { SortOrder: 'asc' } },
+        answer_text: attemptId && userId ? q.UserAnswer[0]?.AnswerText ?? '' : '',
+        part_id: qq.PartId,
+      };
     });
-    return questions.map((q) => ({
-      question_id: q.QuestionId,
-      type_id: q.TypeId,
-      type_name: q.QuestionType.TypeName,
-      is_active: q.IsActive,
-      paragraph_title: q.ParagraphTitle,
-      question: q.QuestionText,
-      instruction: q.QuestionInstruction.Instruction,
-      part_id: q.QuizQuestion[0]?.PartId ?? null,
-    }));
   }
 
   static async loadContent(quizId: number) {
-    const questions = await prisma.question.findMany({
-      where: { IsActive: true, QuizQuestion: { some: { QuizId: quizId } } },
+    const quizQuestions = await prisma.quizQuestion.findMany({
+      where: { QuizId: quizId, Question: { IsActive: true } },
       include: {
-        QuestionMultipleChoice: true,
-        QuestionGapFilling: true,
-        MatchingPrompt: true,
-        MatchingChoice: true,
-        QuizQuestion: { where: { QuizId: quizId }, select: { PartId: true, SortOrder: true } },
+        Question: {
+          include: {
+            QuestionMultipleChoice: true,
+            QuestionGapFilling: true,
+            MatchingPrompt: true,
+            MatchingChoice: true,
+          },
+        },
       },
-      orderBy: { QuizQuestion: { SortOrder: 'asc' } },
+      orderBy: { SortOrder: 'asc' },
     });
 
     const result: any[] = [];
-    for (const q of questions) {
+    for (const qq of quizQuestions) {
+      const q = qq.Question;
       q.QuestionMultipleChoice.forEach((c) =>
         result.push({
           question_id: q.QuestionId,
