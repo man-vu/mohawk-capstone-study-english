@@ -56,6 +56,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     accuracy: 0
   });
   const [feedback, setFeedback] = useState<string | null>(null);
+  const FEEDBACK_DISPLAY_TIME = 4000; // milliseconds
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
@@ -194,7 +195,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         setRoundNumber(prev => prev + 1);
         generateRound();
       }
-    }, 2000);
+    }, FEEDBACK_DISPLAY_TIME);
   };
 
   // Handle time up
@@ -209,7 +210,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         setRoundNumber(prev => prev + 1);
         generateRound();
       }
-    }, 2000);
+    }, FEEDBACK_DISPLAY_TIME);
   };
 
   // Complete game
