@@ -35,7 +35,7 @@ interface QuizSummary {
 const QuizList: React.FC = () => {
   const { user, openAuthModal } = useAuth();
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
   const navigate = useNavigate();
 
   // Skill icons mapping

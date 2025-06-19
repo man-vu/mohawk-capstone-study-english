@@ -69,119 +69,30 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
   const [gameMode, setGameMode] = useState<'study' | 'quiz' | 'memory'>('study');
   const [timer, setTimer] = useState(0);
 
-  // Sample flashcard data
-  const sampleFlashcards: FlashcardData[] = [
-    {
-      id: '1',
-      word: 'Ubiquitous',
-      definition: 'Present, appearing, or found everywhere',
-      example: 'Mobile phones are now ubiquitous in modern society.',
-      difficulty: 'hard',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '2',
-      word: 'Elaborate',
-      definition: 'Involving many carefully arranged parts or details; detailed',
-      example: 'The architect presented an elaborate design for the new building.',
-      difficulty: 'medium',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '3',
-      word: 'Coherent',
-      definition: 'Logical and consistent; forming a unified whole',
-      example: 'The essay presents a coherent argument about climate change.',
-      difficulty: 'medium',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '4',
-      word: 'Substantial',
-      definition: 'Of considerable importance, size, or worth',
-      example: 'There has been substantial progress in renewable energy technology.',
-      difficulty: 'easy',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '5',
-      word: 'Inevitable',
-      definition: 'Certain to happen; unavoidable',
-      example: 'Climate change makes extreme weather events inevitable.',
-      difficulty: 'medium',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '6',
-      word: 'Meticulous',
-      definition: 'Showing great attention to detail; very careful and precise',
-      example: 'The scientist conducted meticulous research before publishing the results.',
-      difficulty: 'hard',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '7',
-      word: 'Profound',
-      definition: 'Very great or intense; having deep insight or understanding',
-      example: 'The philosopher had a profound impact on modern thinking.',
-      difficulty: 'medium',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '8',
-      word: 'Ambiguous',
-      definition: 'Open to more than one interpretation; unclear or inexact',
-      example: 'The politician gave an ambiguous answer to avoid controversy.',
-      difficulty: 'easy',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '9',
-      word: 'Versatile',
-      definition: 'Able to adapt or be adapted to many different functions or activities',
-      example: 'She is a versatile athlete who excels in multiple sports.',
-      difficulty: 'easy',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    },
-    {
-      id: '10',
-      word: 'Perseverance',
-      definition: 'Persistence in doing something despite difficulty or delay in achieving success',
-      example: 'Through perseverance, she finally mastered the difficult piano piece.',
-      difficulty: 'medium',
-      category: 'Academic Vocabulary',
-      memorized: false,
-      attempts: 0,
-      correctStreak: 0
-    }
-  ];
+  const [sampleFlashcards, setSampleFlashcards] = useState<FlashcardData[]>([]);
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
+
+  useEffect(() => {
+    fetch(`${API_URL}vocabulary/words`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response) {
+          const mapped = data.response.map((w: any, idx: number) => ({
+            id: String(w.WordId || idx),
+            word: w.Word,
+            definition: w.Definition,
+            example: w.Example || '',
+            difficulty: (w.Difficulty || 'medium') as 'easy' | 'medium' | 'hard',
+            category: w.Category || 'General',
+            memorized: false,
+            attempts: 0,
+            correctStreak: 0,
+          }));
+          setSampleFlashcards(mapped);
+        }
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   // Timer effect
   useEffect(() => {
@@ -319,6 +230,42 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
   const togglePause = () => {
     setIsPaused(!isPaused);
   };
+
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isGameActive || isPaused || gameSession.sessionComplete) return;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          if (gameSession.showAnswer || gameMode !== 'study') {
+            nextCard();
+          } else {
+            toggleAnswer();
+          }
+          break;
+        case 'ArrowLeft':
+          previousCard();
+          break;
+        case ' ':
+          e.preventDefault();
+          toggleAnswer();
+          break;
+        case 'e':
+        case 'E':
+          if (gameMode === 'quiz' && gameSession.showAnswer) handleAnswerFeedback(true);
+          break;
+        case 'd':
+        case 'D':
+          if (gameMode === 'quiz' && gameSession.showAnswer) handleAnswerFeedback(false);
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGameActive, isPaused, gameSession, gameMode]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
