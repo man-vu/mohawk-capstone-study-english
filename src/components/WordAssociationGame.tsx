@@ -166,13 +166,15 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       const allMeanings = wordGroups.flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
       const targetWord = randomItem.text;
       const targetMeaning = randomItem.meaning as string;
-      const numDistractors = difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5;
-      const selectedDistractors = allMeanings
-        .filter(m => m !== targetMeaning)
+      const totalOptions = difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
+      const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
+      const selectedDistractors = availableDistractors
         .sort(() => Math.random() - 0.5)
-        .slice(0, numDistractors);
+        .slice(0, Math.min(totalOptions - 1, availableDistractors.length));
 
-      const allOptions = [targetMeaning, ...selectedDistractors].sort(() => Math.random() - 0.5);
+      const allOptions = [targetMeaning, ...selectedDistractors].sort(
+        () => Math.random() - 0.5
+      );
 
       const newRound: GameRound = {
         id: `round-${roundNum}`,
