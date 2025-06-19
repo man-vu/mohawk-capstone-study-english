@@ -578,10 +578,8 @@ INSERT INTO dbo.UserAnswer (UserAnswerId, AttemptId, QuestionId, AnswerText, IsC
 SET IDENTITY_INSERT dbo.UserAnswer OFF;
 
 -- ========== USER ESSAY ANSWER ==========
-SET IDENTITY_INSERT dbo.UserEssayAnswer ON;
 INSERT INTO dbo.UserEssayAnswer (UserAnswerId, EssayText, Mark, TeacherFeedback) VALUES
     (1, 'Sample essay answer text...', 90.00, 'Good job!');
-SET IDENTITY_INSERT dbo.UserEssayAnswer OFF;
 
 -- ========== USER FAVORITE ==========
 INSERT INTO dbo.UserFavorite (UserId, QuizId) VALUES (1,1);
