@@ -50,28 +50,38 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
   const [timer, setTimer] = useState(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
-  const [vocabularyPairs, setVocabularyPairs] = useState<{ [key: string]: { word: string; definition: string }[] }>({
-    easy: [],
-    medium: [],
-    hard: []
-  });
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
-
-  useEffect(() => {
-    fetch(`${API_URL}vocabulary/words`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.response) {
-          const groups = { easy: [], medium: [], hard: [] } as any;
-          data.response.forEach((w: any) => {
-            const level = (w.Difficulty || 'medium') as 'easy' | 'medium' | 'hard';
-            groups[level].push({ word: w.Word, definition: w.Definition });
-          });
-          setVocabularyPairs(groups);
-        }
-      })
-      .catch(() => {});
-  }, [API_URL]);
+  const vocabularyPairs: { [key: string]: { word: string; definition: string }[] } = {
+    easy: [
+      { word: 'dog', definition: 'A domesticated canine' },
+      { word: 'cat', definition: 'A domesticated feline' },
+      { word: 'apple', definition: 'A common fruit' },
+      { word: 'book', definition: 'Pages bound together for reading' },
+      { word: 'car', definition: 'A vehicle with four wheels' },
+      { word: 'sun', definition: 'The star at the center of our solar system' }
+    ],
+    medium: [
+      { word: 'bicycle', definition: 'A vehicle powered by pedals' },
+      { word: 'computer', definition: 'An electronic device for processing data' },
+      { word: 'mountain', definition: 'A very high hill' },
+      { word: 'ocean', definition: 'A large body of salt water' },
+      { word: 'teacher', definition: 'One who educates students' },
+      { word: 'library', definition: 'A place full of books' },
+      { word: 'airplane', definition: 'A flying vehicle with wings' },
+      { word: 'guitar', definition: 'A stringed musical instrument' }
+    ],
+    hard: [
+      { word: 'meticulous', definition: 'Showing great attention to detail' },
+      { word: 'unprecedented', definition: 'Never done or known before' },
+      { word: 'proliferate', definition: 'Increase rapidly in number' },
+      { word: 'ubiquitous', definition: 'Present everywhere' },
+      { word: 'ameliorate', definition: 'To make something better' },
+      { word: 'paradigm', definition: 'A typical example or model' },
+      { word: 'equanimity', definition: 'Mental calmness and composure' },
+      { word: 'fastidious', definition: 'Very attentive to detail' },
+      { word: 'belligerent', definition: 'Hostile and aggressive' },
+      { word: 'circumspect', definition: 'Wary and unwilling to take risks' }
+    ]
+  };
 
   // Timer effect
   useEffect(() => {

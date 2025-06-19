@@ -1,39 +1,28 @@
-# React + Vite Template
+# Matching Card Game
 
-A modern React template for web applications and games, featuring React 18, Vite, TailwindCSS, and Material UI.
+A minimal React + Vite project featuring a vocabulary matching card game. The game uses dummy data so no server or database is required.
 
 ## Project Structure
 
 ```
 ├── src/
-│   ├── App.jsx          # Main application component
-│   ├── main.jsx         # Application entry point
-│   └── index.css        # Global styles (Tailwind)
-├── public/              # Static assets
-├── index.html           # HTML template
-├── vite.config.js       # Vite configuration
-├── tailwind.config.js   # Tailwind configuration
-├── postcss.config.js    # PostCSS configuration
-└── eslint.config.js     # ESLint configuration
+│   ├── App.tsx               # Main application component
+│   ├── components/
+│   │   ├── MatchingCardsGame.tsx  # Game logic and UI
+│   │   └── ui/                     # Reusable UI elements
+│   ├── hooks/useTheme.ts     # Theme toggle hook
+│   ├── main.tsx              # Application entry
+│   └── index.css             # Global styles
+├── index.html                # HTML template
+├── vite.config.js            # Vite configuration
+├── tailwind.config.js        # Tailwind configuration
+├── postcss.config.js         # PostCSS configuration
+└── eslint.config.js          # ESLint configuration
 ```
 
-## Development Guidelines
+## Scripts
+- `npm install` — install dependencies
+- `npm run dev` — start the dev server
+- `npm run lint` — lint source files
 
-- Modify `index.html` and `src/App.jsx` as needed
-- Create new folders or files in `src/` directory as needed
-- Style components using TailwindCSS utility classes
-- Avoid modifying `src/main.jsx` and `src/index.css`
-- Only modify `vite.config.js` if absolutely necessary
-
-## Available Scripts
-- `pnpm install` - Install dependencies
-- `pnpm run dev` - Start development server
-- `pnpm run lint` - Lint source files
-
-## Tech Stack
-
-- React
-- Vite
-- TailwindCSS
-- ESLint
-- Javascript
+This template uses React, Vite and TailwindCSS.
