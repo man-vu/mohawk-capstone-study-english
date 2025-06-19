@@ -192,6 +192,18 @@ async function getCurrentQuizInfo (quizId, userId, attemptId) {
 
 module.exports = {
   /**
+   * Loads all quizzes with optional user info for home page
+   */
+  getQuizzes: async (userId?: number) => {
+    try {
+      const quizzes = await QuizModel.getHomeSummary(userId);
+      return sendSuccess(quizzes);
+    } catch (error) {
+      console.log(error);
+      return sendFailure(STRINGS.ERROR_OCCURRED);
+    }
+  },
+  /**
    * This function loads an incomplete attempt by student or creates a new attempt if they has completed their latest attempt or has never taken the quiz
    */
   startQuiz: async (quizId, userId) => {

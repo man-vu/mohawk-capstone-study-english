@@ -57,7 +57,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
               )}
             </button>
 
-            {user ? (
+            {user && user.firstName ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
                   Hello, {user.firstName}
@@ -117,7 +117,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
                   {theme === 'dark' ? '☀️' : '🌙'}
                 </button>
                 
-                {user ? (
+                {user && user.firstName ? (
                   <div className="flex flex-col space-y-2">
                     <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
                       Hello, {user.firstName}
