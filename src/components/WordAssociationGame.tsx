@@ -563,7 +563,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
               </div>
 
               {/* Word Options */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6 items-stretch">
                 {currentRound.allOptions.map((option, index) => (
                   <motion.div
                     key={option}
@@ -573,7 +573,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   >
                     <Button
                       variant={selectedWords.includes(option) ? "default" : "outline"}
-                      className={`w-full h-36 text-sm ${
+                      className={`w-full h-full py-4 text-sm whitespace-normal break-words ${
                         selectedWords.includes(option)
                           ? 'bg-purple-600 hover:bg-purple-700'
                           : 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
