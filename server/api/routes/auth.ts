@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/auth.ts");
 const authMiddleware = require("../middlewares/auth");
-const { sendSuccess } = require("../../config/res");
 
 /**
  * This route handles user registration
@@ -59,7 +58,8 @@ router.post("/forgotpassword", async (req, res) => {
  * Verify current auth token
  */
 router.get("/", authMiddleware, async (req, res) => {
-  res.status(200).json(sendSuccess({ id: req.user.id, isTeacher: req.user.isTeacher }));
+  const result = await authController.verify(Number(req.user.id));
+  res.json(result);
 });
 
 module.exports = router;

@@ -43,7 +43,13 @@ export const AuthProvider = ({ children }) => {
         });
 
         if (res.ok) {
-          setUser(parsed);
+          const data = await res.json();
+          if (data.statusCode === 200) {
+            setUser({ ...parsed, ...data.response, token });
+          } else {
+            localStorage.removeItem('user');
+            setUser(null);
+          }
         } else {
           localStorage.removeItem('user');
           setUser(null);
