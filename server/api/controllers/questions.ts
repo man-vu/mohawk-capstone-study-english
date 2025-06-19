@@ -1,14 +1,14 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const UserAnswerModel = require("../../new_models/UserAnswerModel.ts").default;
-const QuizQuestionModel = require("../../new_models/QuizQuestionModel.ts").default;
-const QuestionModel = require("../../new_models/QuestionModel.ts").default;
-const MCModel = require("../../new_models/QuestionMultipleChoiceModel.ts").default;
-const GModel = require("../../new_models/QuestionGapFillingModel.ts").default;
-const PromptModel = require("../../new_models/MatchingPromptModel.ts").default;
-const ChoiceModel = require("../../new_models/MatchingChoiceModel.ts").default;
-const AttemptModel = require("../../new_models/UserAttemptModel.ts").default;
-const InstructionModel = require("../../new_models/QuestionInstructionModel.ts").default;
+const UserAnswerModel = require("../../models/user/UserAnswerModel.ts").default;
+const QuizQuestionModel = require("../../models/quiz/QuizQuestionModel.ts").default;
+const QuestionModel = require("../../models/question/QuestionModel.ts").default;
+const MCModel = require("../../models/question/QuestionMultipleChoiceModel.ts").default;
+const GModel = require("../../models/question/QuestionGapFillingModel.ts").default;
+const PromptModel = require("../../models/question/MatchingPromptModel.ts").default;
+const ChoiceModel = require("../../models/question/MatchingChoiceModel.ts").default;
+const AttemptModel = require("../../models/user/UserAttemptModel.ts").default;
+const InstructionModel = require("../../models/question/QuestionInstructionModel.ts").default;
 const validator = require("../validators/validator");
 
 /**

@@ -1,30 +1,39 @@
-# capstone
+# React + Vite Template
 
-## Project setup
-```
-npm install
-```
+A modern React template for web applications and games, featuring React 18, Vite, TailwindCSS, and Material UI.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Project Structure
 
-### Compiles and minifies for production
 ```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
+├── src/
+│   ├── App.jsx          # Main application component
+│   ├── main.jsx         # Application entry point
+│   └── index.css        # Global styles (Tailwind)
+├── public/              # Static assets
+├── index.html           # HTML template
+├── vite.config.js       # Vite configuration
+├── tailwind.config.js   # Tailwind configuration
+├── postcss.config.js    # PostCSS configuration
+└── eslint.config.js     # ESLint configuration
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Development Guidelines
 
-### Prisma
-Generate Prisma client after editing the schema:
-```
-npm run prisma:generate
-```
+- Modify `index.html` and `src/App.jsx` as needed
+- Create new folders or files in `src/` directory as needed
+- Style components using TailwindCSS utility classes
+- Avoid modifying `src/main.jsx` and `src/index.css`
+- Only modify `vite.config.js` if absolutely necessary
+
+## Available Scripts
+- `pnpm install` - Install dependencies
+- `pnpm run dev` - Start development server
+- `pnpm run lint` - Lint source files
+
+## Tech Stack
+
+- React
+- Vite
+- TailwindCSS
+- ESLint
+- Javascript
