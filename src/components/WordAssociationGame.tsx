@@ -66,7 +66,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
   const [noWordsAvailable, setNoWordsAvailable] = useState(false);
-  const [mode, setMode] = useState<'vocabulary' | 'idioms' | 'phrasalVerbs'>('vocabulary');
+  const [mode, setMode] = useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
@@ -317,7 +317,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           <p className="text-gray-600 dark:text-gray-400">
             {mode === 'vocabulary'
               ? 'Find words related to the target word. Test your vocabulary knowledge and word connections!'
-              : mode === 'idioms'
+              : mode === 'idiom'
               ? 'Select the correct meaning for the displayed idiom.'
               : 'Select the correct meaning for the displayed phrasal verb.'}
           </p>
@@ -326,8 +326,8 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         <div className="flex justify-center gap-2 mb-6">
           {[
             { id: 'vocabulary', label: 'Vocabulary' },
-            { id: 'idioms', label: 'Idioms' },
-            { id: 'phrasalVerbs', label: 'Phrasal Verbs' }
+            { id: 'idiom', label: 'Idioms' },
+            { id: 'phrasal verb', label: 'Phrasal Verbs' }
           ].map(m => (
             <Button
               key={m.id}
@@ -514,7 +514,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           >
             <Card>
               <CardContent className="p-8 text-center">
-                <Pause className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Pause className="w-12 h-24 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                   Game Paused
                 </h3>
@@ -573,7 +573,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   >
                     <Button
                       variant={selectedWords.includes(option) ? "default" : "outline"}
-                      className={`w-full h-12 text-sm ${
+                      className={`w-full h-36 text-sm ${
                         selectedWords.includes(option)
                           ? 'bg-purple-600 hover:bg-purple-700'
                           : 'hover:bg-purple-50 dark:hover:bg-purple-900/20'

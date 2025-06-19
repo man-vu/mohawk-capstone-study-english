@@ -8,7 +8,7 @@ datasource db {
 }
 
 model AppLog {
-  LogId      Int      @id(map: "PK__AppLog__5E5486487F853E48") @default(autoincrement())
+  LogId      Int      @id(map: "PK__AppLog__5E5486484AC737F0") @default(autoincrement())
   LogLevel   String   @db.NVarChar(20)
   LogMessage String   @db.NVarChar(Max)
   UserId     Int?
@@ -18,33 +18,33 @@ model AppLog {
 }
 
 model AppUser {
-  UserId                 Int                      @id(map: "PK__AppUser__1788CC4C513FF3A8") @default(autoincrement())
-  Email                  String                   @unique(map: "UQ__AppUser__A9D105347688DD4D") @db.NVarChar(100)
-  PasswordHash           String?                  @db.NVarChar(200)
-  PasswordSalt           String?                  @db.NVarChar(200)
-  Gender                 String                   @default("U", map: "DF__AppUser__Gender__45F365D3") @db.Char(1)
-  RoleId                 Int
-  ProfilePictureId       Int?
-  CreatedAt              DateTime                 @default(dbgenerated("sysdatetime()"), map: "DF__AppUser__Created__46E78A0C")
-  FirstName              String?                  @db.NVarChar(45)
-  LastName               String?                  @db.NVarChar(45)
-  PasswordResetHash      String?                  @db.NVarChar(200)
-  PasswordResetSalt      String?                  @db.NVarChar(200)
-  PasswordResetExpiry    DateTime?
-  AppLog                 AppLog[]
-  MimeType               MimeType?                @relation(fields: [ProfilePictureId], references: [MimeId], onDelete: NoAction, onUpdate: NoAction, map: "FK_User_ProfilePic")
-  Role                   Role                     @relation(fields: [RoleId], references: [RoleId], onUpdate: NoAction, map: "FK_User_Role")
-  MockTest               MockTest[]
-  Quiz                   Quiz[]
-  UserActivity           UserActivity[]
-  UserAttempt            UserAttempt[]
-  UserFavorite           UserFavorite[]
-  UserRating             UserRating[]
+  UserId              Int                   @id(map: "PK__AppUser__1788CC4CD777C401") @default(autoincrement())
+  Email               String                @unique(map: "UQ__AppUser__A9D105349D5D48D5") @db.NVarChar(100)
+  PasswordHash        String?               @db.NVarChar(200)
+  PasswordSalt        String?               @db.NVarChar(200)
+  Gender              String                @default("U", map: "DF__AppUser__Gender__45F365D3") @db.Char(1)
+  RoleId              Int
+  ProfilePictureId    Int?
+  CreatedAt           DateTime              @default(dbgenerated("sysdatetime()"), map: "DF__AppUser__Created__46E78A0C")
+  FirstName           String?               @db.NVarChar(45)
+  LastName            String?               @db.NVarChar(45)
+  PasswordResetHash   String?               @db.NVarChar(200)
+  PasswordResetSalt   String?               @db.NVarChar(200)
+  PasswordResetExpiry DateTime?
+  AppLog              AppLog[]
+  MimeType            MimeType?             @relation(fields: [ProfilePictureId], references: [MimeId], onDelete: NoAction, onUpdate: NoAction, map: "FK_User_ProfilePic")
+  Role                Role                  @relation(fields: [RoleId], references: [RoleId], onUpdate: NoAction, map: "FK_User_Role")
+  MockTest            MockTest[]
+  Quiz                Quiz[]
+  UserActivity        UserActivity[]
+  UserAttempt         UserAttempt[]
+  UserFavorite        UserFavorite[]
   UserLexiconProgress UserLexiconProgress[]
+  UserRating          UserRating[]
 }
 
 model AuditTrail {
-  AuditId         Int      @id(map: "PK__AuditTra__A17F239847409CB0") @default(autoincrement())
+  AuditId         Int      @id(map: "PK__AuditTra__A17F2398A2F4C672") @default(autoincrement())
   TableName       String   @db.NVarChar(100)
   RecordId        Int
   Action          String   @db.NVarChar(20)
@@ -55,21 +55,152 @@ model AuditTrail {
   Context         String?  @db.NVarChar(200)
 }
 
+model Course {
+  CourseId             Int      @id(map: "PK__Course__C92D71A7D8E5E464") @default(autoincrement())
+  Title                String   @db.NVarChar(200)
+  Description          String?
+  Level                String?  @db.NVarChar(20)
+  Category             String?  @db.NVarChar(100)
+  Duration             String?  @db.NVarChar(50)
+  Skills               String?  @db.NVarChar(Max)
+  Features             String?  @db.NVarChar(Max)
+  PriceCurrent         Decimal? @db.Decimal(10, 2)
+  PriceOriginal        Decimal? @db.Decimal(10, 2)
+  InstructorName       String?  @db.NVarChar(100)
+  InstructorAvatar     String?  @db.NVarChar(255)
+  InstructorRating     Decimal? @db.Decimal(3, 1)
+  InstructorExperience String?  @db.NVarChar(100)
+  Students             Int?
+  Rating               Decimal? @db.Decimal(3, 1)
+  ReviewCount          Int?
+  Thumbnail            String?  @db.NVarChar(255)
+  IsPopular            Boolean  @default(false, map: "DF__Course__IsPopula__3E1D39E1")
+  IsBestseller         Boolean  @default(false, map: "DF__Course__IsBestse__3F115E1A")
+  CreatedAt            DateTime @default(dbgenerated("sysdatetime()"), map: "DF__Course__CreatedA__40058253")
+}
+
+model Lexicon {
+  LexiconId           Int                   @id(map: "PK__Lexicon__6AF5959116C08845") @default(autoincrement())
+  Word                String                @db.NVarChar(100)
+  Definition          String                @db.NVarChar(500)
+  Example             String?               @db.NVarChar(500)
+  PartOfSpeech        String?               @db.NVarChar(50)
+  Level               String?               @db.NVarChar(20)
+  Category            String?               @db.NVarChar(100)
+  Registers           String?               @db.NVarChar(50)
+  Difficulty          String?               @db.NVarChar(20)
+  Synonyms            String?               @db.NVarChar(500)
+  Antonyms            String?               @db.NVarChar(500)
+  RelatedLexicon      String?               @db.NVarChar(500)
+  CreatedAt           DateTime              @default(dbgenerated("sysdatetime()"), map: "DF__Lexicon__Created__208CD6FA")
+  TypeId              Int
+  LexiconType         LexiconType           @relation(fields: [TypeId], references: [TypeId], onUpdate: NoAction, map: "FK_Lexicon_LexiconType")
+  LexiconGroupMap     LexiconGroupMap[]
+  UserLexiconProgress UserLexiconProgress[]
+}
+
+model LexiconGroup {
+  GroupId         Int               @id(map: "PK__LexiconG__149AF36AF8A11DF8") @default(autoincrement())
+  Theme           String            @db.NVarChar(100)
+  Description     String?           @db.NVarChar(255)
+  LexiconGroupMap LexiconGroupMap[]
+}
+
+model LexiconGroupMap {
+  LexiconId    Int
+  GroupId      Int
+  LexiconGroup LexiconGroup @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, onUpdate: NoAction, map: "FK_LexiconGroupMap_Group")
+  Lexicon      Lexicon      @relation(fields: [LexiconId], references: [LexiconId], onDelete: Cascade, onUpdate: NoAction, map: "FK_LexiconGroupMap_Lexicon")
+
+  @@id([LexiconId, GroupId], map: "PK__LexiconG__DBBC3AA7F5C54EA5")
+}
+
+model LexiconType {
+  TypeId   Int       @id(map: "PK__LexiconT__516F03B54495C8A9") @default(autoincrement())
+  TypeName String    @unique(map: "UQ__LexiconT__D4E7DFA86BAFA779") @db.NVarChar(50)
+  Lexicon  Lexicon[]
+}
+
+model MatchingAnswer {
+  PromptId       Int
+  ChoiceId       Int
+  MatchingChoice MatchingChoice @relation(fields: [ChoiceId], references: [ChoiceId], onUpdate: NoAction, map: "FK_MatchingAnswer_Choice")
+  MatchingPrompt MatchingPrompt @relation(fields: [PromptId], references: [PromptId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingAnswer_Prompt")
+
+  @@id([PromptId, ChoiceId], map: "PK__Matching__3203F639EEE92AF4")
+}
+
+model MatchingChoice {
+  ChoiceId           Int                  @id(map: "PK__Matching__76F516A6C63C3108") @default(autoincrement())
+  QuestionId         Int
+  RightText          String               @db.NVarChar(255)
+  ChoiceOrder        Int
+  MatchingAnswer     MatchingAnswer[]
+  Question           Question             @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingChoice_Question")
+  MatchingUserAnswer MatchingUserAnswer[]
+}
+
+model MatchingPrompt {
+  PromptId           Int                  @id(map: "PK__Matching__456CA753870D3E6F") @default(autoincrement())
+  QuestionId         Int
+  LeftText           String               @db.NVarChar(255)
+  PromptOrder        Int
+  MatchingAnswer     MatchingAnswer[]
+  Question           Question             @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingPrompt_Question")
+  MatchingUserAnswer MatchingUserAnswer[]
+}
+
+model MatchingUserAnswer {
+  UserAnswerId     Int            @id(map: "PK__Matching__47CE237FA030B3BF") @default(autoincrement())
+  UserId           Int
+  QuestionId       Int
+  PromptId         Int
+  SelectedChoiceId Int
+  AnsweredAt       DateTime       @default(dbgenerated("sysdatetime()"), map: "DF__MatchingU__Answe__6C190EBB")
+  MatchingChoice   MatchingChoice @relation(fields: [SelectedChoiceId], references: [ChoiceId], onUpdate: NoAction, map: "FK_MatchingUserAnswer_Choice")
+  MatchingPrompt   MatchingPrompt @relation(fields: [PromptId], references: [PromptId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingUserAnswer_Prompt")
+  Question         Question       @relation(fields: [QuestionId], references: [QuestionId], onUpdate: NoAction, map: "FK_MatchingUserAnswer_Question")
+}
+
 model MimeType {
-  MimeId   Int       @id(map: "PK__MimeType__7AC456457D1C1980") @default(autoincrement())
-  ImageUrl String    @unique(map: "UQ__MimeType__372CE60D42F579BF") @db.NVarChar(255)
+  MimeId   Int       @id(map: "PK__MimeType__7AC4564599748850") @default(autoincrement())
+  ImageUrl String    @unique(map: "UQ__MimeType__372CE60D3CEF57E5") @db.NVarChar(255)
   ImageAlt String?   @db.NVarChar(255)
   AppUser  AppUser[]
 }
 
+model MockTest {
+  MockTestId      Int               @id(map: "PK__MockTest__069E78AB48A0DA30") @default(autoincrement())
+  Title           String            @db.NVarChar(200)
+  Description     String?
+  TotalDuration   Int
+  CreatedBy       Int?
+  CreatedAt       DateTime          @default(dbgenerated("sysdatetime()"), map: "DF__MockTest__Create__31B762FC")
+  AppUser         AppUser?          @relation(fields: [CreatedBy], references: [UserId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTest_CreatedBy")
+  MockTestSection MockTestSection[]
+}
+
+model MockTestSection {
+  SectionId      Int       @id(map: "PK__MockTest__80EF087216EC603D") @default(autoincrement())
+  MockTestId     Int
+  QuizId         Int?
+  SkillId        Int
+  Duration       Int
+  TotalQuestions Int
+  SortOrder      Int
+  MockTest       MockTest  @relation(fields: [MockTestId], references: [MockTestId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MockTestSection_MockTest")
+  Quiz           Quiz?     @relation(fields: [QuizId], references: [QuizId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTestSection_Quiz")
+  QuizSkill      QuizSkill @relation(fields: [SkillId], references: [SkillId], onUpdate: NoAction, map: "FK_MockTestSection_Skill")
+}
+
 model Permission {
-  PermissionId   Int              @id(map: "PK__Permissi__EFA6FB2F1D39E0AE") @default(autoincrement())
-  PermissionName String           @unique(map: "UQ__Permissi__0FFDA3577209E4F7") @db.NVarChar(100)
+  PermissionId   Int              @id(map: "PK__Permissi__EFA6FB2FC7C71EB9") @default(autoincrement())
+  PermissionName String           @unique(map: "UQ__Permissi__0FFDA357318D724D") @db.NVarChar(100)
   RolePermission RolePermission[]
 }
 
 model Question {
-  QuestionId             Int                      @id(map: "PK__Question__0DC06FAC19E42A9A") @default(autoincrement())
+  QuestionId             Int                      @id(map: "PK__Question__0DC06FACBB277A0E") @default(autoincrement())
   TypeId                 Int
   InstructionId          Int
   IsActive               Boolean                  @default(true, map: "DF__Question__IsActi__5CD6CB2B")
@@ -89,7 +220,7 @@ model Question {
 }
 
 model QuestionEssay {
-  QuestionId           Int      @id(map: "PK__Question__0DC06FAC52B490A3")
+  QuestionId           Int      @id(map: "PK__Question__0DC06FACB483531F")
   WordLimit            Int?
   SuggestedTimeMinutes Int?
   ModelAnswer          String?  @db.NVarChar(Max)
@@ -97,7 +228,7 @@ model QuestionEssay {
 }
 
 model QuestionGapFilling {
-  QGFId         Int      @id(map: "PK__Question__CBEA8A1643D2C8C8") @default(autoincrement())
+  QGFId         Int      @id(map: "PK__Question__CBEA8A169575EB0C") @default(autoincrement())
   QuestionId    Int
   SequenceId    Int
   CorrectAnswer String   @db.NVarChar(255)
@@ -105,13 +236,13 @@ model QuestionGapFilling {
 }
 
 model QuestionInstruction {
-  InstructionId Int        @id(map: "PK__Question__CE06947136D3B251") @default(autoincrement())
-  Instruction   String     @unique(map: "UQ__Question__EEDB4FE7A5525B91") @db.NVarChar(255)
+  InstructionId Int        @id(map: "PK__Question__CE06947198335FE8") @default(autoincrement())
+  Instruction   String     @unique(map: "UQ__Question__EEDB4FE734823E9F") @db.NVarChar(255)
   Question      Question[]
 }
 
 model QuestionMultipleChoice {
-  QMCId       Int      @id(map: "PK__Question__FD853F8A4DC7DFF3") @default(autoincrement())
+  QMCId       Int      @id(map: "PK__Question__FD853F8AC09A502B") @default(autoincrement())
   QuestionId  Int
   ChoiceText  String   @db.NVarChar(128)
   ChoiceOrder Int
@@ -120,13 +251,13 @@ model QuestionMultipleChoice {
 }
 
 model QuestionType {
-  TypeId   Int        @id(map: "PK__Question__516F03B510321169") @default(autoincrement())
-  TypeName String     @unique(map: "UQ__Question__D4E7DFA85F95F906") @db.NVarChar(100)
+  TypeId   Int        @id(map: "PK__Question__516F03B56D7E12A8") @default(autoincrement())
+  TypeName String     @unique(map: "UQ__Question__D4E7DFA8EB7A04E7") @db.NVarChar(100)
   Question Question[]
 }
 
 model Quiz {
-  QuizId          Int               @id(map: "PK__Quiz__8B42AE8EE1F6421B") @default(autoincrement())
+  QuizId          Int               @id(map: "PK__Quiz__8B42AE8E35DD5FB7") @default(autoincrement())
   Title           String            @db.NVarChar(100)
   SkillId         Int?
   Description     String?           @db.NVarChar(500)
@@ -145,7 +276,7 @@ model Quiz {
 }
 
 model QuizPart {
-  PartId       Int            @id(map: "PK__QuizPart__7C3F0D50298F25E5") @default(autoincrement())
+  PartId       Int            @id(map: "PK__QuizPart__7C3F0D509EC4F277") @default(autoincrement())
   QuizId       Int
   PartTitle    String         @db.NVarChar(100)
   SortOrder    Int
@@ -162,19 +293,19 @@ model QuizQuestion {
   Question   Question @relation(fields: [QuestionId], references: [QuestionId], onUpdate: NoAction, map: "FK_QuizQuestion_Question")
   Quiz       Quiz     @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QuizQuestion_Quiz")
 
-  @@id([QuizId, QuestionId], map: "PK__QuizQues__5B9EA87410932B5F")
+  @@id([QuizId, QuestionId], map: "PK__QuizQues__5B9EA8749512767E")
 }
 
 model QuizSkill {
-  SkillId          Int               @id(map: "PK__QuizSkil__DFA09187FDBFFCEB") @default(autoincrement())
+  SkillId          Int               @id(map: "PK__QuizSkil__DFA091877BBB8328") @default(autoincrement())
   SkillDescription String            @db.NVarChar(100)
   MockTestSection  MockTestSection[]
   Quiz             Quiz[]
 }
 
 model Role {
-  RoleId         Int              @id(map: "PK__Role__8AFACE1A5C52F533") @default(autoincrement())
-  RoleName       String           @unique(map: "UQ__Role__8A2B61600862BC0C") @db.NVarChar(100)
+  RoleId         Int              @id(map: "PK__Role__8AFACE1A76A61673") @default(autoincrement())
+  RoleName       String           @unique(map: "UQ__Role__8A2B6160C0D63208") @db.NVarChar(100)
   AppUser        AppUser[]
   RolePermission RolePermission[]
 }
@@ -190,7 +321,7 @@ model RolePermission {
 }
 
 model UserActivity {
-  ActivityId   Int      @id(map: "PK__UserActi__45F4A791668EEA39") @default(autoincrement())
+  ActivityId   Int      @id(map: "PK__UserActi__45F4A79181AC04EC") @default(autoincrement())
   UserId       Int
   ActivityType String   @db.NVarChar(50)
   TargetId     Int?
@@ -200,7 +331,7 @@ model UserActivity {
 }
 
 model UserAnswer {
-  UserAnswerId    Int              @id(map: "PK__UserAnsw__47CE237FF50D81B2") @default(autoincrement())
+  UserAnswerId    Int              @id(map: "PK__UserAnsw__47CE237FBA0B90BD") @default(autoincrement())
   AttemptId       Int
   QuestionId      Int
   AnswerText      String?          @db.NVarChar(1024)
@@ -211,7 +342,7 @@ model UserAnswer {
 }
 
 model UserAttempt {
-  AttemptId     Int          @id(map: "PK__UserAtte__891A68E60FED7B9D") @default(autoincrement())
+  AttemptId     Int          @id(map: "PK__UserAtte__891A68E6036F4905") @default(autoincrement())
   UserId        Int
   QuizId        Int
   StartTime     DateTime     @default(dbgenerated("sysdatetime()"), map: "DF__UserAttem__Start__00200768")
@@ -224,7 +355,7 @@ model UserAttempt {
 }
 
 model UserEssayAnswer {
-  UserAnswerId      Int                 @id(map: "PK__UserEssa__47CE237F96984BB7")
+  UserAnswerId      Int                 @id(map: "PK__UserEssa__47CE237FBAD62DC1")
   EssayText         String              @db.NVarChar(Max)
   Mark              Decimal?            @db.Decimal(5, 2)
   TeacherFeedback   String?             @db.NVarChar(Max)
@@ -238,7 +369,21 @@ model UserFavorite {
   Quiz    Quiz    @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserFavorite_Quiz")
   AppUser AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserFavorite_User")
 
-  @@id([UserId, QuizId], map: "PK__UserFavo__EF3CE6A448288524")
+  @@id([UserId, QuizId], map: "PK__UserFavo__EF3CE6A4F67FEB3F")
+}
+
+model UserLexiconProgress {
+  UserId        Int
+  LexiconId     Int
+  Mastery       Int       @default(0, map: "DF__UserLexic__Maste__2A164134") @db.TinyInt
+  LastReviewed  DateTime? @db.Date
+  CorrectStreak Int       @default(0, map: "DF__UserLexic__Corre__2B0A656D")
+  Attempts      Int       @default(0, map: "DF__UserLexic__Attem__2BFE89A6")
+  Memorized     Boolean   @default(false, map: "DF__UserLexic__Memor__2CF2ADDF")
+  AppUser       AppUser   @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserLexiconProgress_User")
+  Lexicon       Lexicon   @relation(fields: [LexiconId], references: [LexiconId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserLexiconProgress_Word")
+
+  @@id([UserId, LexiconId], map: "PK_UserLexiconProgress")
 }
 
 model UserRating {
@@ -248,102 +393,11 @@ model UserRating {
   Quiz        Quiz    @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserRating_Quiz")
   AppUser     AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserRating_User")
 
-  @@id([UserId, QuizId], map: "PK__UserRati__EF3CE6A42C77FB11")
+  @@id([UserId, QuizId], map: "PK__UserRati__EF3CE6A4D366033D")
 }
 
-model MatchingAnswer {
-  PromptId       Int
-  ChoiceId       Int
-  MatchingChoice MatchingChoice @relation(fields: [ChoiceId], references: [ChoiceId], onUpdate: NoAction, map: "FK_MatchingAnswer_Choice")
-  MatchingPrompt MatchingPrompt @relation(fields: [PromptId], references: [PromptId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingAnswer_Prompt")
-
-  @@id([PromptId, ChoiceId], map: "PK__Matching__3203F63999C50C3D")
-}
-
-model MatchingChoice {
-  ChoiceId           Int                  @id(map: "PK__Matching__76F516A6D655E345") @default(autoincrement())
-  QuestionId         Int
-  RightText          String               @db.NVarChar(255)
-  ChoiceOrder        Int
-  MatchingAnswer     MatchingAnswer[]
-  Question           Question             @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingChoice_Question")
-  MatchingUserAnswer MatchingUserAnswer[]
-}
-
-model MatchingPrompt {
-  PromptId           Int                  @id(map: "PK__Matching__456CA75383BF8D07") @default(autoincrement())
-  QuestionId         Int
-  LeftText           String               @db.NVarChar(255)
-  PromptOrder        Int
-  MatchingAnswer     MatchingAnswer[]
-  Question           Question             @relation(fields: [QuestionId], references: [QuestionId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingPrompt_Question")
-  MatchingUserAnswer MatchingUserAnswer[]
-}
-
-model MatchingUserAnswer {
-  UserAnswerId     Int            @id(map: "PK__Matching__47CE237FCC53AAFF") @default(autoincrement())
-  UserId           Int
-  QuestionId       Int
-  PromptId         Int
-  SelectedChoiceId Int
-  AnsweredAt       DateTime       @default(dbgenerated("sysdatetime()"), map: "DF__MatchingU__Answe__6C190EBB")
-  MatchingChoice   MatchingChoice @relation(fields: [SelectedChoiceId], references: [ChoiceId], onUpdate: NoAction, map: "FK_MatchingUserAnswer_Choice")
-  MatchingPrompt   MatchingPrompt @relation(fields: [PromptId], references: [PromptId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingUserAnswer_Prompt")
-  Question         Question       @relation(fields: [QuestionId], references: [QuestionId], onUpdate: NoAction, map: "FK_MatchingUserAnswer_Question")
-}
-
-model Course {
-  CourseId             Int      @id(map: "PK__Course__C92D71A75D328685") @default(autoincrement())
-  Title                String   @db.NVarChar(200)
-  Description          String?
-  Level                String?  @db.NVarChar(20)
-  Category             String?  @db.NVarChar(100)
-  Duration             String?  @db.NVarChar(50)
-  Skills               String?  @db.NVarChar(Max)
-  Features             String?  @db.NVarChar(Max)
-  PriceCurrent         Decimal? @db.Decimal(10, 2)
-  PriceOriginal        Decimal? @db.Decimal(10, 2)
-  InstructorName       String?  @db.NVarChar(100)
-  InstructorAvatar     String?  @db.NVarChar(255)
-  InstructorRating     Decimal? @db.Decimal(3, 1)
-  InstructorExperience String?  @db.NVarChar(100)
-  Students             Int?
-  Rating               Decimal? @db.Decimal(3, 1)
-  ReviewCount          Int?
-  Thumbnail            String?  @db.NVarChar(255)
-  IsPopular            Boolean  @default(false, map: "DF__Course__IsPopula__4B7734FF")
-  IsBestseller         Boolean  @default(false, map: "DF__Course__IsBestse__4C6B5938")
-  CreatedAt            DateTime @default(dbgenerated("sysdatetime()"), map: "DF__Course__CreatedA__4D5F7D71")
-}
-
-
-model MockTest {
-  MockTestId      Int               @id(map: "PK__MockTest__069E78AB4CEF80E0") @default(autoincrement())
-  Title           String            @db.NVarChar(200)
-  Description     String?
-  TotalDuration   Int
-  CreatedBy       Int?
-  CreatedAt       DateTime          @default(dbgenerated("sysdatetime()"), map: "DF__MockTest__Create__3F115E1A")
-  AppUser         AppUser?          @relation(fields: [CreatedBy], references: [UserId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTest_CreatedBy")
-  MockTestSection MockTestSection[]
-}
-
-model MockTestSection {
-  SectionId      Int       @id(map: "PK__MockTest__80EF0872C4C9D3F4") @default(autoincrement())
-  MockTestId     Int
-  QuizId         Int?
-  SkillId        Int
-  Duration       Int
-  TotalQuestions Int
-  SortOrder      Int
-  MockTest       MockTest  @relation(fields: [MockTestId], references: [MockTestId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MockTestSection_MockTest")
-  Quiz           Quiz?     @relation(fields: [QuizId], references: [QuizId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTestSection_Quiz")
-  QuizSkill      QuizSkill @relation(fields: [SkillId], references: [SkillId], onUpdate: NoAction, map: "FK_MockTestSection_Skill")
-}
-
-
-
-  AssessmentId             Int             @id(map: "PK__WritingA__3D2BF81E8AE45E95") @default(autoincrement())
+model WritingAssessment {
+  AssessmentId             Int             @id(map: "PK__WritingA__3D2BF81E464A2AF8") @default(autoincrement())
   UserEssayAnswerId        Int
   TaskResponseScore        Decimal?        @db.Decimal(5, 2)
   CoherenceCohesionScore   Decimal?        @db.Decimal(5, 2)
@@ -351,56 +405,6 @@ model MockTestSection {
   GrammaticalAccuracyScore Decimal?        @db.Decimal(5, 2)
   OverallBand              Decimal?        @db.Decimal(5, 2)
   EstimatedIELTSScore      Decimal?        @db.Decimal(5, 2)
-  CreatedAt                DateTime        @default(dbgenerated("sysdatetime()"), map: "DF__WritingAs__Creat__47A6A41B")
+  CreatedAt                DateTime        @default(dbgenerated("sysdatetime()"), map: "DF__WritingAs__Creat__3A4CA8FD")
   UserEssayAnswer          UserEssayAnswer @relation(fields: [UserEssayAnswerId], references: [UserAnswerId], onDelete: Cascade, onUpdate: NoAction, map: "FK_WritingAssessment_Essay")
-}
-
-model UserLexiconProgress {
-  UserId        Int
-  LexiconId     Int
-  Mastery       Int       @default(0, map: "DF__UserVocab__Maste__208CD6FA") @db.TinyInt
-  LastReviewed  DateTime? @db.Date
-  CorrectStreak Int       @default(0, map: "DF__UserVocab__Corre__2180FB33")
-  Attempts      Int       @default(0, map: "DF__UserVocab__Attem__22751F6C")
-  Memorized     Boolean   @default(false, map: "DF__UserVocab__Memor__236943A5")
-  AppUser       AppUser   @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserLexiconProgress_User")
-  Lexicon       Lexicon   @relation(fields: [LexiconId], references: [LexiconId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserLexiconProgress_Word")
-
-  @@id([UserId, LexiconId], map: "PK_UserLexiconProgress")
-}
-
-model Lexicon {
-  LexiconId   Int      @id(map: "PK_Lexicon") @default(autoincrement())
-  Word        String   @unique(map: "UQ_Lexicon_Word") @db.NVarChar(100)
-  Definition  String   @db.NVarChar(500)
-  Example     String?  @db.NVarChar(500)
-  PartOfSpeech String? @db.NVarChar(50)
-  Level       String?  @db.NVarChar(20)
-  Category    String?  @db.NVarChar(100)
-  Difficulty  String?  @db.NVarChar(20)
-  TypeId      Int
-  LexiconType LexiconType @relation(fields: [TypeId], references: [TypeId], onUpdate: NoAction, map: "FK_Lexicon_LexiconType")
-  LexiconGroupMap LexiconGroupMap[]
-}
-
-model LexiconType {
-  TypeId   Int      @id(map: "PK_LexiconType") @default(autoincrement())
-  TypeName String   @unique(map: "UQ_LexiconType_TypeName") @db.NVarChar(50)
-  Lexicon  Lexicon[]
-}
-
-model LexiconGroup {
-  GroupId         Int             @id(map: "PK_LexiconGroup") @default(autoincrement())
-  Theme           String          @db.NVarChar(100)
-  Description     String?         @db.NVarChar(255)
-  LexiconGroupMap LexiconGroupMap[]
-}
-
-model LexiconGroupMap {
-  LexiconId Int
-  GroupId   Int
-  Lexicon   Lexicon     @relation(fields: [LexiconId], references: [LexiconId], onDelete: Cascade, onUpdate: NoAction, map: "FK_LexiconGroupMap_Lexicon")
-  LexiconGroup LexiconGroup @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, onUpdate: NoAction, map: "FK_LexiconGroupMap_Group")
-
-  @@id([LexiconId, GroupId], map: "PK_LexiconGroupMap")
 }
