@@ -30,7 +30,7 @@ export class LexiconGroupModel {
         LexiconGroupMap: {
           include: { Lexicon: { include: { LexiconType: true } } },
           where: type
-            ? { Lexicon: { LexiconType: { TypeName: { equals: type, mode: 'insensitive' } } } }
+            ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
             : undefined,
         },
       },
