@@ -58,7 +58,7 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}lexicon/words?type=vocabulary`)
+    fetch(`${API_URL}lexicon/words?type=vocabulary&limit=50`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {

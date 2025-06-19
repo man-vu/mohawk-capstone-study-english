@@ -4,8 +4,9 @@ const lexiconController = require("../controllers/lexicon.ts");
 const authMiddleware = require("../middlewares/auth");
 
 router.get("/words", async (req, res) => {
-  const { type } = req.query;
-  const result = await lexiconController.getWords(type as string | undefined);
+  const { type, limit } = req.query as { type?: string; limit?: string };
+  const parsedLimit = limit ? Number(limit) : undefined;
+  const result = await lexiconController.getWords(type, parsedLimit);
   res.json(result);
 });
 
