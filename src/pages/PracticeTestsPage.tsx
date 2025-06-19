@@ -38,7 +38,7 @@ const PracticeTestsPage: React.FC = () => {
   const [showInStock, setShowInStock] = useState(false);
   const { user } = useAuth();
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
 
   useEffect(() => {
     fetchQuizzes();
@@ -50,7 +50,8 @@ const PracticeTestsPage: React.FC = () => {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/quizzes${user ? `?user_id=${user.id}` : ''}`);
+      const query = user?.id ? `?user_id=${user.id}` : '';
+      const response = await fetch(`${API_URL}quizzes${query}`);
       if (response.ok) {
         const data = await response.json();
         setQuizzes(data);

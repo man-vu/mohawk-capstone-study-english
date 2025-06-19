@@ -41,9 +41,38 @@ const CoursesPage: React.FC = () => {
   useEffect(() => {
     fetch(`${API_URL}courses`)
       .then(res => res.json())
-      .then(data => setCourses(data.response || []))
+      .then(data => {
+        const rawCourses = data.response || [];
+        const mapped: Course[] = rawCourses.map((c: any) => ({
+          id: String(c.CourseId ?? c.id ?? ''),
+          title: c.Title ?? c.title ?? '',
+          description: c.Description ?? c.description ?? '',
+          instructor: {
+            name: c.InstructorName ?? '',
+            avatar: c.InstructorAvatar ?? '',
+            rating: c.InstructorRating ?? 0,
+            experience: c.InstructorExperience ?? '',
+          },
+          duration: c.Duration ?? '',
+          students: c.Students ?? 0,
+          rating: c.Rating ?? 0,
+          reviewCount: c.ReviewCount ?? 0,
+          price: {
+            current: c.PriceCurrent ?? 0,
+            original: c.PriceOriginal ?? undefined,
+          },
+          level: (c.Level as 'Beginner' | 'Intermediate' | 'Advanced') ?? 'Beginner',
+          category: c.Category ?? '',
+          skills: typeof c.Skills === 'string' ? c.Skills.split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean) : c.skills ?? [],
+          features: typeof c.Features === 'string' ? c.Features.split(';').map((s: string) => s.trim()).filter(Boolean) : c.features ?? [],
+          thumbnail: c.Thumbnail ?? '',
+          isPopular: !!c.IsPopular,
+          isBestseller: !!c.IsBestseller,
+        }));
+        setCourses(mapped);
+      })
       .catch(() => {});
-  }, []);
+  }, [API_URL]);
 
   const categories = ['All', 'Complete Prep', 'Writing', 'Speaking', 'Reading', 'Listening'];
   const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
@@ -66,7 +95,7 @@ const CoursesPage: React.FC = () => {
           ))}
         </div>
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {rating} ({count.toLocaleString()})
+          {rating} ({(count ?? 0).toLocaleString()})
         </span>
       </div>
     );
@@ -200,7 +229,7 @@ const CoursesPage: React.FC = () => {
                   <div className="text-center">
                     <div className="flex items-center justify-center space-x-1 text-gray-600 dark:text-gray-300">
                       <Users className="w-4 h-4" />
-                      <span className="text-sm font-medium">{course.students.toLocaleString()}</span>
+                      <span className="text-sm font-medium">{(course.students ?? 0).toLocaleString()}</span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Students</p>
                   </div>
