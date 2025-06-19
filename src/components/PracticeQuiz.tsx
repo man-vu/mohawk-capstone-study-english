@@ -36,7 +36,7 @@ interface Props {
 
 const PracticeQuiz: React.FC<Props> = ({ questions, parts, quizId, attemptId, expiresAt }) => {
   const { user } = useAuth();
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
   const [currentPart, setCurrentPart] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState<number>(
     questions[0]?.question_id || 0

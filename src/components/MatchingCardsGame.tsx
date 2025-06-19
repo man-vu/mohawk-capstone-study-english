@@ -50,39 +50,28 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
   const [timer, setTimer] = useState(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
-  // Vocabulary pairs for different difficulty levels
-  const vocabularyPairs = {
-    easy: [
-      { word: 'Happy', definition: 'Feeling or showing pleasure or contentment' },
-      { word: 'Fast', definition: 'Moving or capable of moving at high speed' },
-      { word: 'Big', definition: 'Of considerable size or extent' },
-      { word: 'Smart', definition: 'Having intelligence or mental alertness' },
-      { word: 'Cold', definition: 'Having a low temperature' },
-      { word: 'Bright', definition: 'Giving out or reflecting much light' }
-    ],
-    medium: [
-      { word: 'Elaborate', definition: 'Involving many carefully arranged parts or details' },
-      { word: 'Substantial', definition: 'Of considerable importance, size, or worth' },
-      { word: 'Coherent', definition: 'Logical and consistent' },
-      { word: 'Inevitable', definition: 'Certain to happen; unavoidable' },
-      { word: 'Profound', definition: 'Very great or intense' },
-      { word: 'Versatile', definition: 'Able to adapt or be adapted to many functions' },
-      { word: 'Meticulous', definition: 'Showing great attention to detail; very careful' },
-      { word: 'Ambiguous', definition: 'Open to more than one interpretation; unclear' }
-    ],
-    hard: [
-      { word: 'Ubiquitous', definition: 'Present, appearing, or found everywhere' },
-      { word: 'Ephemeral', definition: 'Lasting for a very short time' },
-      { word: 'Magnanimous', definition: 'Very generous or forgiving' },
-      { word: 'Perspicacious', definition: 'Having keen insight or discernment' },
-      { word: 'Surreptitious', definition: 'Kept secret, done stealthily' },
-      { word: 'Inexorable', definition: 'Impossible to stop or prevent' },
-      { word: 'Equivocal', definition: 'Open to multiple interpretations; ambiguous' },
-      { word: 'Recalcitrant', definition: 'Having an obstinately uncooperative attitude' },
-      { word: 'Parsimonious', definition: 'Extremely frugal; unwilling to spend' },
-      { word: 'Ostentatious', definition: 'Characterized by vulgar display of wealth' }
-    ]
-  };
+  const [vocabularyPairs, setVocabularyPairs] = useState<{ [key: string]: { word: string; definition: string }[] }>({
+    easy: [],
+    medium: [],
+    hard: []
+  });
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
+
+  useEffect(() => {
+    fetch(`${API_URL}vocabulary/words`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response) {
+          const groups = { easy: [], medium: [], hard: [] } as any;
+          data.response.forEach((w: any) => {
+            const level = (w.Difficulty || 'medium') as 'easy' | 'medium' | 'hard';
+            groups[level].push({ word: w.Word, definition: w.Definition });
+          });
+          setVocabularyPairs(groups);
+        }
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   // Timer effect
   useEffect(() => {

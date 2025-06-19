@@ -36,142 +36,43 @@ const CoursesPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
 
-  // Mock course data
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
+
   useEffect(() => {
-    const mockCourses: Course[] = [
-      {
-        id: '1',
-        title: 'Complete IELTS Preparation Course',
-        description: 'Master all four IELTS skills with comprehensive practice tests and expert guidance.',
-        instructor: {
-          name: 'Dr. Sarah Johnson',
-          avatar: '/assets/images/instructor1.jpg',
-          rating: 4.9,
-          experience: '10+ years teaching IELTS'
-        },
-        duration: '12 weeks',
-        students: 15420,
-        rating: 4.8,
-        reviewCount: 2340,
-        price: { current: 199, original: 299 },
-        level: 'Intermediate',
-        category: 'Complete Prep',
-        skills: ['Listening', 'Reading', 'Writing', 'Speaking'],
-        features: ['Live Classes', '100+ Practice Tests', 'Personal Feedback', 'Certificate'],
-        thumbnail: '/assets/images/course1.jpg',
-        isPopular: true,
-        isBestseller: true
-      },
-      {
-        id: '2',
-        title: 'IELTS Writing Mastery',
-        description: 'Perfect your IELTS writing skills with proven techniques and personalized feedback.',
-        instructor: {
-          name: 'Prof. Michael Chen',
-          avatar: '/assets/images/instructor2.jpg',
-          rating: 4.7,
-          experience: '8 years IELTS specialist'
-        },
-        duration: '6 weeks',
-        students: 8930,
-        rating: 4.6,
-        reviewCount: 1120,
-        price: { current: 89, original: 129 },
-        level: 'Intermediate',
-        category: 'Writing',
-        skills: ['Task 1', 'Task 2', 'Grammar', 'Vocabulary'],
-        features: ['Essay Reviews', 'Templates', 'Band 9 Examples'],
-        thumbnail: '/assets/images/course2.jpg',
-        isPopular: true
-      },
-      {
-        id: '3',
-        title: 'IELTS Speaking Confidence',
-        description: 'Build confidence and fluency in IELTS speaking with interactive practice sessions.',
-        instructor: {
-          name: 'Emma Thompson',
-          avatar: '/assets/images/instructor3.jpg',
-          rating: 4.8,
-          experience: '6 years conversation expert'
-        },
-        duration: '4 weeks',
-        students: 6750,
-        rating: 4.7,
-        reviewCount: 890,
-        price: { current: 69, original: 99 },
-        level: 'Beginner',
-        category: 'Speaking',
-        skills: ['Pronunciation', 'Fluency', 'Part 1-3 Strategies'],
-        features: ['1-on-1 Sessions', 'Mock Tests', 'Accent Training'],
-        thumbnail: '/assets/images/course3.jpg'
-      },
-      {
-        id: '4',
-        title: 'IELTS Reading Strategies',
-        description: 'Learn time-saving reading techniques and improve your comprehension skills.',
-        instructor: {
-          name: 'Dr. James Wilson',
-          avatar: '/assets/images/instructor4.jpg',
-          rating: 4.5,
-          experience: '12 years academic English'
-        },
-        duration: '5 weeks',
-        students: 4320,
-        rating: 4.4,
-        reviewCount: 560,
-        price: { current: 79 },
-        level: 'Intermediate',
-        category: 'Reading',
-        skills: ['Skimming', 'Scanning', 'Academic Texts'],
-        features: ['Speed Reading', '50+ Practice Tests', 'Vocabulary Builder'],
-        thumbnail: '/assets/images/course4.jpg'
-      },
-      {
-        id: '5',
-        title: 'IELTS Listening Excellence',
-        description: 'Sharpen your listening skills with diverse accents and challenging materials.',
-        instructor: {
-          name: 'Lisa Rodriguez',
-          avatar: '/assets/images/instructor5.jpg',
-          rating: 4.6,
-          experience: '7 years listening specialist'
-        },
-        duration: '4 weeks',
-        students: 5680,
-        rating: 4.5,
-        reviewCount: 720,
-        price: { current: 59, original: 89 },
-        level: 'Beginner',
-        category: 'Listening',
-        skills: ['Note-taking', 'Accent Recognition', 'Question Types'],
-        features: ['Audio Library', 'Dictation Practice', 'Progress Tracking'],
-        thumbnail: '/assets/images/course5.jpg'
-      },
-      {
-        id: '6',
-        title: 'IELTS Band 9 Intensive',
-        description: 'Advanced course for high achievers targeting Band 8-9 scores.',
-        instructor: {
-          name: 'Dr. Robert Kim',
-          avatar: '/assets/images/instructor6.jpg',
-          rating: 4.9,
-          experience: '15 years IELTS examiner'
-        },
-        duration: '8 weeks',
-        students: 2840,
-        rating: 4.9,
-        reviewCount: 450,
-        price: { current: 299, original: 399 },
-        level: 'Advanced',
-        category: 'Complete Prep',
-        skills: ['Advanced Strategies', 'Time Management', 'Error Analysis'],
-        features: ['Examiner Insights', 'Premium Materials', 'Score Guarantee'],
-        thumbnail: '/assets/images/course6.jpg',
-        isBestseller: true
-      }
-    ];
-    setCourses(mockCourses);
-  }, []);
+    fetch(`${API_URL}courses`)
+      .then(res => res.json())
+      .then(data => {
+        const rawCourses = data.response || [];
+        const mapped: Course[] = rawCourses.map((c: any) => ({
+          id: String(c.CourseId ?? c.id ?? ''),
+          title: c.Title ?? c.title ?? '',
+          description: c.Description ?? c.description ?? '',
+          instructor: {
+            name: c.InstructorName ?? '',
+            avatar: c.InstructorAvatar ?? '',
+            rating: c.InstructorRating ?? 0,
+            experience: c.InstructorExperience ?? '',
+          },
+          duration: c.Duration ?? '',
+          students: c.Students ?? 0,
+          rating: c.Rating ?? 0,
+          reviewCount: c.ReviewCount ?? 0,
+          price: {
+            current: c.PriceCurrent ?? 0,
+            original: c.PriceOriginal ?? undefined,
+          },
+          level: (c.Level as 'Beginner' | 'Intermediate' | 'Advanced') ?? 'Beginner',
+          category: c.Category ?? '',
+          skills: typeof c.Skills === 'string' ? c.Skills.split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean) : c.skills ?? [],
+          features: typeof c.Features === 'string' ? c.Features.split(';').map((s: string) => s.trim()).filter(Boolean) : c.features ?? [],
+          thumbnail: c.Thumbnail ?? '',
+          isPopular: !!c.IsPopular,
+          isBestseller: !!c.IsBestseller,
+        }));
+        setCourses(mapped);
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   const categories = ['All', 'Complete Prep', 'Writing', 'Speaking', 'Reading', 'Listening'];
   const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
@@ -194,7 +95,7 @@ const CoursesPage: React.FC = () => {
           ))}
         </div>
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {rating} ({count.toLocaleString()})
+          {rating} ({(count ?? 0).toLocaleString()})
         </span>
       </div>
     );
@@ -328,7 +229,7 @@ const CoursesPage: React.FC = () => {
                   <div className="text-center">
                     <div className="flex items-center justify-center space-x-1 text-gray-600 dark:text-gray-300">
                       <Users className="w-4 h-4" />
-                      <span className="text-sm font-medium">{course.students.toLocaleString()}</span>
+                      <span className="text-sm font-medium">{(course.students ?? 0).toLocaleString()}</span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Students</p>
                   </div>

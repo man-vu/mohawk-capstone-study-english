@@ -28,6 +28,9 @@ const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
             <Link to="/practice-tests" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 text-sm font-medium transition-colors">
               Practice Tests
             </Link>
+            <Link to="/vocabulary-games" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 text-sm font-medium transition-colors">
+              Vocabulary Games
+            </Link>
             <Link to="/courses" className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 text-sm font-medium transition-colors">
               Courses
             </Link>
@@ -54,7 +57,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
               )}
             </button>
 
-            {user ? (
+            {user && user.firstName ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
                   Hello, {user.firstName}
@@ -102,6 +105,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
               <Link to="/practice-tests" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Practice Tests</Link>
+              <Link to="/vocabulary-games" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Vocabulary Games</Link>
               <Link to="/courses" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Courses</Link>
               <Link to="/study-plans" className="block px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">Study Plans</Link>
               <div className="flex items-center space-x-4 px-3 py-2">
@@ -113,7 +117,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, toggleTheme }) => {
                   {theme === 'dark' ? '☀️' : '🌙'}
                 </button>
                 
-                {user ? (
+                {user && user.firstName ? (
                   <div className="flex flex-col space-y-2">
                     <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
                       Hello, {user.firstName}

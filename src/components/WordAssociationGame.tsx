@@ -58,45 +58,19 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
-  // Word groups for different themes
-  const wordGroups: WordGroup[] = [
-    {
-      id: 'education',
-      theme: 'Education',
-      words: ['student', 'teacher', 'classroom', 'homework', 'examination', 'graduation', 'knowledge', 'learning'],
-      description: 'Words related to education and academic life'
-    },
-    {
-      id: 'environment',
-      theme: 'Environment',
-      words: ['pollution', 'recycling', 'conservation', 'renewable', 'ecosystem', 'biodiversity', 'sustainability', 'climate'],
-      description: 'Words related to environmental issues'
-    },
-    {
-      id: 'technology',
-      theme: 'Technology',
-      words: ['innovation', 'digital', 'artificial', 'automation', 'connectivity', 'cybersecurity', 'database', 'algorithm'],
-      description: 'Words related to modern technology'
-    },
-    {
-      id: 'business',
-      theme: 'Business',
-      words: ['entrepreneur', 'investment', 'marketing', 'strategy', 'competition', 'profit', 'economy', 'corporation'],
-      description: 'Words related to business and economics'
-    },
-    {
-      id: 'health',
-      theme: 'Health',
-      words: ['nutrition', 'exercise', 'wellness', 'diagnosis', 'treatment', 'prevention', 'immunity', 'therapy'],
-      description: 'Words related to health and medicine'
-    },
-    {
-      id: 'travel',
-      theme: 'Travel',
-      words: ['destination', 'journey', 'accommodation', 'transportation', 'culture', 'adventure', 'exploration', 'tourism'],
-      description: 'Words related to travel and exploration'
-    }
-  ];
+  const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
+
+  useEffect(() => {
+    fetch(`${API_URL}vocabulary/groups`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response) {
+          setWordGroups(data.response);
+        }
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   // Distractor words (unrelated to any theme)
   const distractorWords = [

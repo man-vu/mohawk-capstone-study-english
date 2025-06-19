@@ -43,7 +43,13 @@ export const AuthProvider = ({ children }) => {
         });
 
         if (res.ok) {
-          setUser(parsed);
+          const data = await res.json();
+          if (data.statusCode === 200) {
+            setUser({ ...parsed, ...data.response, token });
+          } else {
+            localStorage.removeItem('user');
+            setUser(null);
+          }
         } else {
           localStorage.removeItem('user');
           setUser(null);
@@ -71,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   // Function to handle user login
   const login = async (email, password) => {
