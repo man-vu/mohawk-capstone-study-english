@@ -22,6 +22,9 @@ const quizRoutes = require("./api/routes/quizzes.ts");
 const teacherRoutes = require("./api/routes/teacher.ts");
 const statisticsRoutes = require("./api/routes/statistics.ts");
 const questionsRoutes = require("./api/routes/questions.ts");
+const vocabularyRoutes = require("./api/routes/vocabulary.ts");
+const mockTestRoutes = require("./api/routes/mockTests.ts");
+const writingRoutes = require("./api/routes/writing.ts");
 
 /**
  * Set CORS policy in development environment to prevent CORS blocking
@@ -60,6 +63,9 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/statistics", statisticsRoutes);
 app.use("/api/questions", questionsRoutes);
+app.use("/api/vocabulary", vocabularyRoutes);
+app.use("/api/mock-tests", mockTestRoutes);
+app.use("/api/writing", writingRoutes);
 
 if (process.env.NODE_ENV === "production") {
   // In production, port number is automatically assigned by the hosting provider 

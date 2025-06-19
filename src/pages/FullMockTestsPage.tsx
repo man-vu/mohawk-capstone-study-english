@@ -55,113 +55,39 @@ const FullMockTestsPage: React.FC = () => {
   const [timer, setTimer] = useState(0);
   const [isActive, setIsActive] = useState(false);
 
-  // Sample mock tests data
-  const mockTests: MockTestSession[] = [
-    {
-      id: 'academic-1',
-      title: 'IELTS Academic Full Mock Test #1',
-      description: 'Complete IELTS Academic test covering all four skills: Listening, Reading, Writing, and Speaking',
-      totalDuration: 185, // 3 hours 5 minutes
-      currentSection: 0,
-      isStarted: false,
-      isCompleted: false,
-      isPaused: false,
-      sections: [
-        {
-          id: 'listening',
-          name: 'Listening',
-          icon: Headphones,
-          duration: 40,
-          totalQuestions: 40,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        },
-        {
-          id: 'reading',
-          name: 'Reading',
-          icon: BookOpen,
-          duration: 60,
-          totalQuestions: 40,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        },
-        {
-          id: 'writing',
-          name: 'Writing',
-          icon: PenTool,
-          duration: 60,
-          totalQuestions: 2,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        },
-        {
-          id: 'speaking',
-          name: 'Speaking',
-          icon: Mic,
-          duration: 15,
-          totalQuestions: 3,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
+  const [mockTests, setMockTests] = useState<MockTestSession[]>([]);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/mock-tests`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response) {
+          const tests = data.response.map((t: any) => ({
+            id: String(t.MockTestId),
+            title: t.Title,
+            description: t.Description,
+            totalDuration: t.TotalDuration,
+            currentSection: 0,
+            isStarted: false,
+            isCompleted: false,
+            isPaused: false,
+            sections: t.MockTestSection.map((s: any) => ({
+              id: String(s.SectionId),
+              name: s.Quiz ? s.Quiz.Title : 'Section',
+              icon: s.SkillId === 1 ? Headphones : s.SkillId === 2 ? BookOpen : s.SkillId === 3 ? PenTool : Mic,
+              duration: s.Duration,
+              totalQuestions: s.TotalQuestions,
+              completed: false,
+              timeSpent: 0,
+              status: 'not-started' as const,
+            }))
+          }));
+          setMockTests(tests);
         }
-      ]
-    },
-    {
-      id: 'general-1',
-      title: 'IELTS General Training Full Mock Test #1',
-      description: 'Complete IELTS General Training test with practical, everyday English tasks',
-      totalDuration: 185,
-      currentSection: 0,
-      isStarted: false,
-      isCompleted: false,
-      isPaused: false,
-      sections: [
-        {
-          id: 'listening',
-          name: 'Listening',
-          icon: Headphones,
-          duration: 40,
-          totalQuestions: 40,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        },
-        {
-          id: 'reading',
-          name: 'Reading',
-          icon: BookOpen,
-          duration: 60,
-          totalQuestions: 40,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        },
-        {
-          id: 'writing',
-          name: 'Writing',
-          icon: PenTool,
-          duration: 60,
-          totalQuestions: 2,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        },
-        {
-          id: 'speaking',
-          name: 'Speaking',
-          icon: Mic,
-          duration: 15,
-          totalQuestions: 3,
-          completed: false,
-          timeSpent: 0,
-          status: 'not-started'
-        }
-      ]
-    }
-  ];
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   // Timer effect
   useEffect(() => {

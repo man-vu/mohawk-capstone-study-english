@@ -286,3 +286,85 @@ model MatchingUserAnswer {
   MatchingPrompt   MatchingPrompt @relation(fields: [PromptId], references: [PromptId], onDelete: Cascade, onUpdate: NoAction, map: "FK_MatchingUserAnswer_Prompt")
   Question         Question       @relation(fields: [QuestionId], references: [QuestionId], onUpdate: NoAction, map: "FK_MatchingUserAnswer_Question")
 }
+
+// ==================== NEW MODELS FOR VOCABULARY AND MOCK TESTS ====================
+
+model VocabularyWord {
+  WordId      Int      @id(map: "PK_VocabularyWord") @default(autoincrement())
+  Word        String   @unique(map: "UQ_VocabularyWord_Word") @db.NVarChar(100)
+  Definition  String   @db.NVarChar(500)
+  Example     String?  @db.NVarChar(500)
+  PartOfSpeech String? @db.NVarChar(50)
+  Level       String?  @db.NVarChar(20)
+  Category    String?  @db.NVarChar(100)
+  Difficulty  String?  @db.NVarChar(20)
+  UserVocabularyProgress UserVocabularyProgress[]
+  VocabularyWordGroup   VocabularyWordGroup[]
+}
+
+model WordGroup {
+  GroupId     Int     @id(map: "PK_WordGroup") @default(autoincrement())
+  Theme       String  @db.NVarChar(100)
+  Description String? @db.NVarChar(255)
+  VocabularyWordGroup VocabularyWordGroup[]
+}
+
+model VocabularyWordGroup {
+  WordId  Int
+  GroupId Int
+  VocabularyWord VocabularyWord @relation(fields: [WordId], references: [WordId], onDelete: Cascade, map: "FK_VocabularyWordGroup_Word")
+  WordGroup     WordGroup     @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, map: "FK_VocabularyWordGroup_Group")
+
+  @@id([WordId, GroupId], map: "PK_VocabularyWordGroup")
+}
+
+model UserVocabularyProgress {
+  UserId       Int
+  WordId       Int
+  Mastery      Int      @default(0) @db.TinyInt
+  LastReviewed DateTime?
+  CorrectStreak Int     @default(0)
+  Attempts      Int     @default(0)
+  Memorized     Boolean @default(false)
+  AppUser       AppUser @relation(fields: [UserId], references: [UserId], onDelete: Cascade, map: "FK_UserVocabularyProgress_User")
+  VocabularyWord VocabularyWord @relation(fields: [WordId], references: [WordId], onDelete: Cascade, map: "FK_UserVocabularyProgress_Word")
+
+  @@id([UserId, WordId], map: "PK_UserVocabularyProgress")
+}
+
+model MockTest {
+  MockTestId    Int      @id(map: "PK_MockTest") @default(autoincrement())
+  Title         String   @db.NVarChar(200)
+  Description   String?  @db.NVarChar(1000)
+  TotalDuration Int
+  CreatedBy     Int?
+  CreatedAt     DateTime @default(dbgenerated("sysdatetime()"))
+  AppUser       AppUser? @relation(fields: [CreatedBy], references: [UserId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTest_CreatedBy")
+  MockTestSection MockTestSection[]
+}
+
+model MockTestSection {
+  SectionId     Int     @id(map: "PK_MockTestSection") @default(autoincrement())
+  MockTestId    Int
+  QuizId        Int?
+  SkillId       Int
+  Duration      Int
+  TotalQuestions Int
+  SortOrder     Int
+  MockTest      MockTest  @relation(fields: [MockTestId], references: [MockTestId], onDelete: Cascade, map: "FK_MockTestSection_MockTest")
+  Quiz          Quiz?     @relation(fields: [QuizId], references: [QuizId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTestSection_Quiz")
+  QuizSkill     QuizSkill @relation(fields: [SkillId], references: [SkillId], onDelete: NoAction, onUpdate: NoAction, map: "FK_MockTestSection_Skill")
+}
+
+model WritingAssessment {
+  AssessmentId            Int      @id(map: "PK_WritingAssessment") @default(autoincrement())
+  UserEssayAnswerId       Int
+  TaskResponseScore       Decimal?  @db.Decimal(5, 2)
+  CoherenceCohesionScore  Decimal?  @db.Decimal(5, 2)
+  LexicalResourcesScore   Decimal?  @db.Decimal(5, 2)
+  GrammaticalAccuracyScore Decimal? @db.Decimal(5, 2)
+  OverallBand             Decimal?  @db.Decimal(5, 2)
+  EstimatedIELTSScore     Decimal?  @db.Decimal(5, 2)
+  CreatedAt               DateTime  @default(dbgenerated("sysdatetime()"))
+  UserEssayAnswer         UserEssayAnswer @relation(fields: [UserEssayAnswerId], references: [UserAnswerId], onDelete: Cascade, map: "FK_WritingAssessment_Essay")
+}
