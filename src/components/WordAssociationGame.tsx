@@ -65,6 +65,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
+  const [noWordsAvailable, setNoWordsAvailable] = useState(false);
   const [mode, setMode] = useState<'vocabulary' | 'idioms' | 'phrasalVerbs'>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
@@ -74,16 +75,25 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       .then(res => res.json())
       .then(data => {
         if (data.response) {
-          const groups = data.response.map((g: any) => ({
-            ...g,
-            words: g.words.map((w: any) =>
-              typeof w === 'string' ? { text: w } : { text: w.expression, meaning: w.meaning }
-            ),
-          }));
+          const groups = data.response
+            .map((g: any) => ({
+              ...g,
+              words: g.words.map((w: any) =>
+                typeof w === 'string' ? { text: w } : { text: w.expression, meaning: w.meaning }
+              ),
+            }))
+            .filter((g: any) => g.words.length > 0);
           setWordGroups(groups);
+          setNoWordsAvailable(groups.length === 0);
+        } else {
+          setWordGroups([]);
+          setNoWordsAvailable(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setWordGroups([]);
+        setNoWordsAvailable(true);
+      });
   }, [API_URL, mode]);
 
   // Distractor words (unrelated to any theme)
@@ -117,7 +127,14 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   // Generate a new round
   const generateRound = (roundNum: number = roundNumber) => {
-    const randomGroup = wordGroups[Math.floor(Math.random() * wordGroups.length)];
+    const validGroups = wordGroups.filter(g => g.words.length > 0);
+    if (validGroups.length === 0) {
+      setIsGameActive(false);
+      setNoWordsAvailable(true);
+      return;
+    }
+
+    const randomGroup = validGroups[Math.floor(Math.random() * validGroups.length)];
     const randomItem = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
 
     if (mode === 'vocabulary') {
@@ -177,6 +194,13 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   // Start game
   const startGame = (selectedDifficulty: 'easy' | 'medium' | 'hard') => {
+    if (wordGroups.filter(g => g.words.length > 0).length === 0) {
+      setNoWordsAvailable(true);
+      return;
+    }
+
+    setNoWordsAvailable(false);
+
     setDifficulty(selectedDifficulty);
     setIsGameActive(true);
     setIsGameComplete(false);
@@ -317,7 +341,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           {(['easy', 'medium', 'hard'] as const).map((level) => (
-            <Card 
+            <Card
               key={level}
               className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
               onClick={() => startGame(level)}
@@ -342,13 +366,18 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   {level === 'medium' && '30s per round • 10 words to choose from'}
                   {level === 'hard' && '20s per round • 13 words to choose from'}
                 </div>
-                <Button className="w-full">
+                <Button className="w-full" disabled={noWordsAvailable}>
                   <Play className="w-4 h-4 mr-2" />
                   Start Game
                 </Button>
               </CardContent>
             </Card>
           ))}
+          {noWordsAvailable && (
+            <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
+              No words available for this mode.
+            </div>
+          )}
         </div>
 
         <div className="text-center">
