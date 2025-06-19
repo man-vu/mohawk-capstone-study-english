@@ -31,7 +31,9 @@ export class LexiconModel {
   }
 
   static findAll(type?: string) {
-    return prisma.lexicon.findMany({ where: type ? { LexiconType: type } : {} });
+    return prisma.lexicon.findMany({
+      where: type ? { LexiconType: { equals: type, mode: 'insensitive' } } : {},
+    });
   }
 }
 export default LexiconModel;

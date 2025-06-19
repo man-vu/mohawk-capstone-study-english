@@ -29,7 +29,9 @@ export class LexiconGroupModel {
       include: {
         LexiconGroupMap: {
           include: { Lexicon: true },
-          where: type ? { Lexicon: { LexiconType: type } } : undefined,
+          where: type
+            ? { Lexicon: { LexiconType: { equals: type, mode: 'insensitive' } } }
+            : undefined,
         },
       },
     });
