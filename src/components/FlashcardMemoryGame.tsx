@@ -67,13 +67,15 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
   const [isPaused, setIsPaused] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'mixed'>('mixed');
   const [gameMode, setGameMode] = useState<'study' | 'quiz' | 'memory'>('study');
+  const [lexiconType, setLexiconType] =
+    useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
   const [timer, setTimer] = useState(0);
 
   const [sampleFlashcards, setSampleFlashcards] = useState<FlashcardData[]>([]);
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}lexicon/words?type=vocabulary`)
+    fetch(`${API_URL}lexicon/words?type=${encodeURIComponent(lexiconType)}&limit=100`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
@@ -92,7 +94,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
         }
       })
       .catch(() => {});
-  }, [API_URL]);
+  }, [API_URL, lexiconType]);
 
   // Timer effect
   useEffect(() => {
@@ -285,8 +287,30 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
             Flashcard Memory Game
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Master vocabulary through interactive flashcards with spaced repetition and memory challenges
+            Master vocabulary, idioms, or phrasal verbs through interactive flashcards with spaced repetition and memory challenges
           </p>
+        </div>
+
+        {/* Word Type Selection */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
+            Choose Word Type
+          </h3>
+          <div className="flex justify-center gap-2">
+            {[
+              { id: 'vocabulary', label: 'Vocabulary' },
+              { id: 'idiom', label: 'Idioms' },
+              { id: 'phrasal verb', label: 'Phrasal Verbs' }
+            ].map(t => (
+              <Button
+                key={t.id}
+                variant={lexiconType === t.id ? 'default' : 'outline'}
+                onClick={() => setLexiconType(t.id as any)}
+              >
+                {t.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Game Mode Selection */}

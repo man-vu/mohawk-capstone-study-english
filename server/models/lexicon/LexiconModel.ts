@@ -40,5 +40,17 @@ export class LexiconModel {
       where: type ? { LexiconType: { TypeName: { equals: type } } } : {},
     });
   }
+
+  static async findRandom(limit: number, type?: string) {
+    const typeFilter = type
+      ? `WHERE lt.TypeName = '${type}'`
+      : '';
+    const query = `SELECT TOP (${limit}) l.*, lt.TypeName
+      FROM Lexicon l
+      JOIN LexiconType lt ON l.TypeId = lt.TypeId
+      ${typeFilter}
+      ORDER BY NEWID()`;
+    return prisma.$queryRawUnsafe(query);
+  }
 }
 export default LexiconModel;

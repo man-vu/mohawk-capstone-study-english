@@ -5,9 +5,11 @@ const LexiconGroupModel = require("../../models/lexicon/LexiconGroupModel.ts").d
 const UserLexiconProgressModel = require("../../models/lexicon/UserLexiconProgressModel.ts").default;
 
 module.exports = {
-  getWords: async (type) => {
+  getWords: async (type, limit) => {
     try {
-      const words = await LexiconModel.findAll(type);
+      const words = limit
+        ? await LexiconModel.findRandom(limit, type)
+        : await LexiconModel.findAll(type);
       const formatted = words.map(w => ({
         ...w,
         LexiconType: w.LexiconType.TypeName,
