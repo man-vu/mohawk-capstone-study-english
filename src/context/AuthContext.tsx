@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   // Function to handle user login
   const login = async (email, password) => {

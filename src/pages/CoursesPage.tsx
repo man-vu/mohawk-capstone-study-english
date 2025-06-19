@@ -36,7 +36,7 @@ const CoursesPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
 
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
     fetch(`${API_URL}courses`)

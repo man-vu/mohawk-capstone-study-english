@@ -38,7 +38,7 @@ const PracticeTestsPage: React.FC = () => {
   const [showInStock, setShowInStock] = useState(false);
   const { user } = useAuth();
 
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
     fetchQuizzes();
@@ -54,7 +54,7 @@ const PracticeTestsPage: React.FC = () => {
       const response = await fetch(`${API_URL}quizzes${query}`);
       if (response.ok) {
         const data = await response.json();
-        setQuizzes(data);
+        setQuizzes(Array.isArray(data) ? data : data.response || []);
       }
     } catch (error) {
       console.error('Error fetching quizzes:', error);

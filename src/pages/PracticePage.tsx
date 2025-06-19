@@ -13,7 +13,7 @@ interface QuizResponse {
 const PracticePage: React.FC = () => {
   const { id } = useParams();
   const { user, openAuthModal } = useAuth();
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
   const [data, setData] = useState<QuizResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
