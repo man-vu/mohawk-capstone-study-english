@@ -1,8 +1,8 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const VocabularyWordModel = require("../../models/VocabularyWordModel.ts").default;
-const WordGroupModel = require("../../models/WordGroupModel.ts").default;
-const UserVocabularyProgressModel = require("../../models/UserVocabularyProgressModel.ts").default;
+const VocabularyWordModel = require("../../models/vocabulary/VocabularyWordModel.ts").default;
+const WordGroupModel = require("../../models/vocabulary/WordGroupModel.ts").default;
+const UserVocabularyProgressModel = require("../../models/vocabulary/UserVocabularyProgressModel.ts").default;
 
 module.exports = {
   getWords: async () => {

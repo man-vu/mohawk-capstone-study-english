@@ -1,6 +1,6 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const MockTestModel = require("../../models/MockTestModel.ts").default;
+const MockTestModel = require("../../models/mockTests/MockTestModel.ts").default;
 
 module.exports = {
   getTests: async () => {

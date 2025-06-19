@@ -1,4 +1,4 @@
-import prisma from '../prismaClient';
+import prisma from '../../prismaClient';
 import type { Prisma } from '@prisma/client';
 
 export interface VocabularyWordGroup {

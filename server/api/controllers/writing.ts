@@ -1,6 +1,6 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const WritingAssessmentModel = require("../../models/WritingAssessmentModel.ts").default;
+const WritingAssessmentModel = require("../../models/writing/WritingAssessmentModel.ts").default;
 
 module.exports = {
   createAssessment: async (data) => {
