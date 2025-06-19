@@ -10,7 +10,10 @@ module.exports = {
         id: g.GroupId,
         theme: g.Theme,
         description: g.Description,
-        words: g.PhrasalVerbGroupMap.map((p) => p.PhrasalVerb.Verb),
+        words: g.PhrasalVerbGroupMap.map((p) => ({
+          expression: p.PhrasalVerb.Verb,
+          meaning: p.PhrasalVerb.Meaning,
+        })),
       }));
       return sendSuccess(formatted);
     } catch (error) {

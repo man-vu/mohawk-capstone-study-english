@@ -10,7 +10,10 @@ module.exports = {
         id: g.GroupId,
         theme: g.Theme,
         description: g.Description,
-        words: g.IdiomGroupMap.map((i) => i.Idiom.Expression),
+        words: g.IdiomGroupMap.map((i) => ({
+          expression: i.Idiom.Expression,
+          meaning: i.Idiom.Meaning,
+        })),
       }));
       return sendSuccess(formatted);
     } catch (error) {
