@@ -65,25 +65,35 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
-  const [mode, setMode] = useState<'vocabulary' | 'idioms' | 'phrasalVerbs'>('vocabulary');
+  const [noWordsAvailable, setNoWordsAvailable] = useState(false);
+  const [mode, setMode] = useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    const path = mode === 'phrasalVerbs' ? 'phrasal-verbs' : mode;
-    fetch(`${API_URL}${path}/groups`)
+    const type = mode;
+    fetch(`${API_URL}lexicon/groups?type=${type}`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
-          const groups = data.response.map((g: any) => ({
-            ...g,
-            words: g.words.map((w: any) =>
-              typeof w === 'string' ? { text: w } : { text: w.expression, meaning: w.meaning }
-            ),
-          }));
+          const groups = data.response
+            .map((g: any) => ({
+              ...g,
+              words: g.words.map((w: any) =>
+                typeof w === 'string' ? { text: w } : { text: w.expression, meaning: w.meaning }
+              ),
+            }))
+            .filter((g: any) => g.words.length > 0);
           setWordGroups(groups);
+          setNoWordsAvailable(groups.length === 0);
+        } else {
+          setWordGroups([]);
+          setNoWordsAvailable(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setWordGroups([]);
+        setNoWordsAvailable(true);
+      });
   }, [API_URL, mode]);
 
   // Distractor words (unrelated to any theme)
@@ -117,7 +127,14 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   // Generate a new round
   const generateRound = (roundNum: number = roundNumber) => {
-    const randomGroup = wordGroups[Math.floor(Math.random() * wordGroups.length)];
+    const validGroups = wordGroups.filter(g => g.words.length > 0);
+    if (validGroups.length === 0) {
+      setIsGameActive(false);
+      setNoWordsAvailable(true);
+      return;
+    }
+
+    const randomGroup = validGroups[Math.floor(Math.random() * validGroups.length)];
     const randomItem = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
 
     if (mode === 'vocabulary') {
@@ -177,6 +194,13 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   // Start game
   const startGame = (selectedDifficulty: 'easy' | 'medium' | 'hard') => {
+    if (wordGroups.filter(g => g.words.length > 0).length === 0) {
+      setNoWordsAvailable(true);
+      return;
+    }
+
+    setNoWordsAvailable(false);
+
     setDifficulty(selectedDifficulty);
     setIsGameActive(true);
     setIsGameComplete(false);
@@ -293,7 +317,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           <p className="text-gray-600 dark:text-gray-400">
             {mode === 'vocabulary'
               ? 'Find words related to the target word. Test your vocabulary knowledge and word connections!'
-              : mode === 'idioms'
+              : mode === 'idiom'
               ? 'Select the correct meaning for the displayed idiom.'
               : 'Select the correct meaning for the displayed phrasal verb.'}
           </p>
@@ -302,8 +326,8 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         <div className="flex justify-center gap-2 mb-6">
           {[
             { id: 'vocabulary', label: 'Vocabulary' },
-            { id: 'idioms', label: 'Idioms' },
-            { id: 'phrasalVerbs', label: 'Phrasal Verbs' }
+            { id: 'idiom', label: 'Idioms' },
+            { id: 'phrasal verb', label: 'Phrasal Verbs' }
           ].map(m => (
             <Button
               key={m.id}
@@ -317,7 +341,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           {(['easy', 'medium', 'hard'] as const).map((level) => (
-            <Card 
+            <Card
               key={level}
               className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
               onClick={() => startGame(level)}
@@ -342,13 +366,18 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   {level === 'medium' && '30s per round • 10 words to choose from'}
                   {level === 'hard' && '20s per round • 13 words to choose from'}
                 </div>
-                <Button className="w-full">
+                <Button className="w-full" disabled={noWordsAvailable}>
                   <Play className="w-4 h-4 mr-2" />
                   Start Game
                 </Button>
               </CardContent>
             </Card>
           ))}
+          {noWordsAvailable && (
+            <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
+              No words available for this mode.
+            </div>
+          )}
         </div>
 
         <div className="text-center">
@@ -485,7 +514,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           >
             <Card>
               <CardContent className="p-8 text-center">
-                <Pause className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Pause className="w-12 h-24 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                   Game Paused
                 </h3>
@@ -544,7 +573,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   >
                     <Button
                       variant={selectedWords.includes(option) ? "default" : "outline"}
-                      className={`w-full h-12 text-sm ${
+                      className={`w-full h-36 text-sm ${
                         selectedWords.includes(option)
                           ? 'bg-purple-600 hover:bg-purple-700'
                           : 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
