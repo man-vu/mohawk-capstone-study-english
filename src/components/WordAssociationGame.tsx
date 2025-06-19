@@ -20,16 +20,22 @@ import {
   Zap
 } from 'lucide-react';
 
+interface WordItem {
+  text: string;
+  meaning?: string;
+}
+
 interface WordGroup {
   id: string;
   theme: string;
-  words: string[];
+  words: WordItem[];
   description: string;
 }
 
 interface GameRound {
   id: string;
   targetWord: string;
+  targetMeaning?: string;
   relatedWords: string[];
   distractors: string[];
   allOptions: string[];
@@ -59,18 +65,26 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
+  const [mode, setMode] = useState<'vocabulary' | 'idioms' | 'phrasalVerbs'>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}vocabulary/groups`)
+    const path = mode === 'phrasalVerbs' ? 'phrasal-verbs' : mode;
+    fetch(`${API_URL}${path}/groups`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
-          setWordGroups(data.response);
+          const groups = data.response.map((g: any) => ({
+            ...g,
+            words: g.words.map((w: any) =>
+              typeof w === 'string' ? { text: w } : { text: w.expression, meaning: w.meaning }
+            ),
+          }));
+          setWordGroups(groups);
         }
       })
       .catch(() => {});
-  }, [API_URL]);
+  }, [API_URL, mode]);
 
   // Distractor words (unrelated to any theme)
   const distractorWords = [
@@ -102,35 +116,60 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   }, [isGameActive, isPaused, isGameComplete, timeLeft]);
 
   // Generate a new round
-  const generateRound = () => {
+  const generateRound = (roundNum: number = roundNumber) => {
     const randomGroup = wordGroups[Math.floor(Math.random() * wordGroups.length)];
-    const targetWord = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
-    
-    // Select related words (excluding target word)
-    const relatedWords = randomGroup.words
-      .filter(word => word !== targetWord)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
+    const randomItem = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
 
-    // Select distractor words
-    const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
-    const selectedDistractors = distractorWords
-      .sort(() => Math.random() - 0.5)
-      .slice(0, numDistractors);
+    if (mode === 'vocabulary') {
+      const targetWord = randomItem.text;
+      const relatedWords = randomGroup.words
+        .filter(w => w.text !== targetWord)
+        .map(w => w.text)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
 
-    // Combine and shuffle all options
-    const allOptions = [...relatedWords, ...selectedDistractors].sort(() => Math.random() - 0.5);
+      const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+      const selectedDistractors = distractorWords
+        .sort(() => Math.random() - 0.5)
+        .slice(0, numDistractors);
 
-    const newRound: GameRound = {
-      id: `round-${roundNumber}`,
-      targetWord,
-      relatedWords,
-      distractors: selectedDistractors,
-      allOptions,
-      theme: randomGroup.theme
-    };
+      const allOptions = [...relatedWords, ...selectedDistractors].sort(() => Math.random() - 0.5);
 
-    setCurrentRound(newRound);
+      const newRound: GameRound = {
+        id: `round-${roundNum}`,
+        targetWord,
+        relatedWords,
+        distractors: selectedDistractors,
+        allOptions,
+        theme: randomGroup.theme,
+      };
+
+      setCurrentRound(newRound);
+    } else {
+      const allMeanings = wordGroups.flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
+      const targetWord = randomItem.text;
+      const targetMeaning = randomItem.meaning as string;
+      const numDistractors = difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5;
+      const selectedDistractors = allMeanings
+        .filter(m => m !== targetMeaning)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, numDistractors);
+
+      const allOptions = [targetMeaning, ...selectedDistractors].sort(() => Math.random() - 0.5);
+
+      const newRound: GameRound = {
+        id: `round-${roundNum}`,
+        targetWord,
+        targetMeaning,
+        relatedWords: [targetMeaning],
+        distractors: selectedDistractors,
+        allOptions,
+        theme: randomGroup.theme,
+      };
+
+      setCurrentRound(newRound);
+    }
+
     setSelectedWords([]);
     setFeedback(null);
     setTimeLeft(difficulty === 'easy' ? 45 : difficulty === 'medium' ? 30 : 20);
@@ -144,7 +183,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setRoundNumber(1);
     setScore(0);
     setGameStats({ correctAnswers: 0, totalTime: 0, accuracy: 0 });
-    generateRound();
+    generateRound(1);
   };
 
   // Handle word selection
@@ -185,14 +224,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       setFeedback(`Try harder next time. +${totalRoundScore} points`);
     }
 
-    setTimeout(() => {
-      if (roundNumber >= totalRounds) {
-        completeGame();
-      } else {
-        setRoundNumber(prev => prev + 1);
-        generateRound();
-      }
-    }, 2000);
+    // Wait for user to close feedback
   };
 
   // Handle time up
@@ -200,14 +232,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     if (!currentRound) return;
     
     setFeedback('Time\'s up!');
-    setTimeout(() => {
-      if (roundNumber >= totalRounds) {
-        completeGame();
-      } else {
-        setRoundNumber(prev => prev + 1);
-        generateRound();
-      }
-    }, 2000);
+    // Wait for user to close feedback
   };
 
   // Complete game
@@ -237,6 +262,23 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setIsPaused(!isPaused);
   };
 
+  const advanceRound = () => {
+    if (roundNumber >= totalRounds) {
+      completeGame();
+    } else {
+      setRoundNumber(prev => {
+        const next = prev + 1;
+        generateRound(next);
+        return next;
+      });
+    }
+  };
+
+  const closeFeedback = () => {
+    setFeedback(null);
+    advanceRound();
+  };
+
   // Game setup screen
   if (!isGameActive && !isGameComplete) {
     return (
@@ -249,8 +291,28 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
             Word Association Game
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Find words related to the target word. Test your vocabulary knowledge and word connections!
+            {mode === 'vocabulary'
+              ? 'Find words related to the target word. Test your vocabulary knowledge and word connections!'
+              : mode === 'idioms'
+              ? 'Select the correct meaning for the displayed idiom.'
+              : 'Select the correct meaning for the displayed phrasal verb.'}
           </p>
+        </div>
+
+        <div className="flex justify-center gap-2 mb-6">
+          {[
+            { id: 'vocabulary', label: 'Vocabulary' },
+            { id: 'idioms', label: 'Idioms' },
+            { id: 'phrasalVerbs', label: 'Phrasal Verbs' }
+          ].map(m => (
+            <Button
+              key={m.id}
+              variant={mode === m.id ? 'default' : 'outline'}
+              onClick={() => setMode(m.id as any)}
+            >
+              {m.label}
+            </Button>
+          ))}
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
@@ -444,7 +506,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
             <CardHeader>
               <div className="text-center">
                 <CardTitle className="text-2xl mb-2">
-                  Find words related to:
+                  {mode === 'vocabulary' ? 'Find words related to:' : 'What is the meaning of:'}
                 </CardTitle>
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                   {currentRound.targetWord.toUpperCase()}
@@ -459,34 +521,38 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <Lightbulb className="w-4 h-4 text-yellow-500" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Select {currentRound.relatedWords.length} related words
+                    {mode === 'vocabulary'
+                      ? `Select ${currentRound.relatedWords.length} related words`
+                      : 'Select the correct meaning'}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  Selected: {selectedWords.length} / {currentRound.relatedWords.length}
-                </div>
+                {mode === 'vocabulary' && (
+                  <div className="text-xs text-gray-500">
+                    Selected: {selectedWords.length} / {currentRound.relatedWords.length}
+                  </div>
+                )}
               </div>
 
               {/* Word Options */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-                {currentRound.allOptions.map((word, index) => (
+                {currentRound.allOptions.map((option, index) => (
                   <motion.div
-                    key={word}
+                    key={option}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                   >
                     <Button
-                      variant={selectedWords.includes(word) ? "default" : "outline"}
+                      variant={selectedWords.includes(option) ? "default" : "outline"}
                       className={`w-full h-12 text-sm ${
-                        selectedWords.includes(word) 
-                          ? 'bg-purple-600 hover:bg-purple-700' 
+                        selectedWords.includes(option)
+                          ? 'bg-purple-600 hover:bg-purple-700'
                           : 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
                       }`}
-                      onClick={() => handleWordSelect(word)}
+                      onClick={() => handleWordSelect(option)}
                       disabled={isPaused}
                     >
-                      {word}
+                      {option}
                     </Button>
                   </motion.div>
                 ))}
@@ -515,8 +581,9 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                onClick={closeFeedback}
               >
-                <Card>
+                <Card onClick={e => e.stopPropagation()}>
                   <CardContent className="p-8 text-center">
                     <div className="mb-4">
                       {feedback.includes('Perfect') && <Trophy className="w-12 h-12 text-yellow-500 mx-auto" />}
