@@ -14,22 +14,56 @@ export const AuthProvider = ({ children }) => {
   // State to determine which form to show (login or register)
   const [authModalView, setAuthModalView] = useState('login'); // 'login' or 'register'
   
-  // Effect to check if user is already logged in (from localStorage)
+  // Effect to check if user is already logged in and verify token
   useEffect(() => {
-    const checkLoggedInUser = () => {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error("Failed to parse user data:", error);
-          localStorage.removeItem('user');
-        }
-      }
-      setIsLoading(false);
+    const getCookie = (name: string) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
     };
-    
-    checkLoggedInUser();
+
+    const verifySession = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (!storedUser) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(storedUser);
+        const token = parsed.token || getCookie('token');
+        if (!token) {
+          localStorage.removeItem('user');
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_URL}auth`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.statusCode === 200) {
+            setUser({ ...parsed, ...data.response, token });
+          } else {
+            localStorage.removeItem('user');
+            setUser(null);
+          }
+        } else {
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('verify session failed', err);
+        localStorage.removeItem('user');
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifySession();
   }, []);
 
   // Function to open auth modal with specific view
@@ -43,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT || '/api/';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   // Function to handle user login
   const login = async (email, password) => {

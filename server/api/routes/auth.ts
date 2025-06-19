@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/auth.ts");
+const authMiddleware = require("../middlewares/auth");
 
 /**
  * This route handles user registration
@@ -51,6 +52,14 @@ router.post("/forgotpassword", async (req, res) => {
   const passwordReset = await authController.passwordReset({ email });
 
   res.status(200).json(passwordReset);
+});
+
+/**
+ * Verify current auth token
+ */
+router.get("/", authMiddleware, async (req, res) => {
+  const result = await authController.verify(Number(req.user.id));
+  res.json(result);
 });
 
 module.exports = router;

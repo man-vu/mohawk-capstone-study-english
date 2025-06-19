@@ -1,7 +1,7 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const StatisticsModel = require("../../new_models/StatisticsModel.ts").default;
-const AppUserModel = require("../../new_models/AppUserModel.ts").default;
+const StatisticsModel = require("../../models/logs/StatisticsModel.ts").default;
+const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
 const moment = require("moment");
 
 /**

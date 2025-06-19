@@ -11,8 +11,8 @@ const {
   validateRoleId,
   validateName,
 } = require("../validators/validator");
-const AppUserModel = require("../../new_models/AppUserModel.ts").default;
-const MimeTypeModel = require("../../new_models/MimeTypeModel.ts").default;
+const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
+const MimeTypeModel = require("../../models/media/MimeTypeModel.ts").default;
 const {
   sendPasswordReset,
 } = require("../../services/email_notification/passwordReset");
@@ -226,6 +226,28 @@ module.exports = {
       }
     } else {
       return sendFailure(STRINGS.PLEASE_CHECK_YOUR_EMAIL);
+    }
+  },
+
+  verify: async (userId) => {
+    try {
+      const user = await AppUserModel.findById(userId);
+      if (!user) return sendFailure(404, STRINGS.NO_SUCH_USER_EXISTS);
+      const avatarId = user.ProfilePictureId;
+      const mime = avatarId ? await MimeTypeModel.findOne(avatarId) : null;
+      const avatarUrl = mime && mime.ImageUrl !== 'default-profile-picture.png'
+        ? mime.ImageUrl
+        : getAvatarUrl(user.FirstName);
+      return sendSuccess({
+        firstName: user.FirstName,
+        lastName: user.LastName,
+        email: user.Email,
+        isTeacher: user.RoleId === 1,
+        avatarUrl,
+      });
+    } catch (error) {
+      console.log(error);
+      return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
 };
