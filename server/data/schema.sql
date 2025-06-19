@@ -358,6 +358,30 @@ CREATE TABLE dbo.WritingAssessment (
     CONSTRAINT FK_WritingAssessment_Essay FOREIGN KEY (UserEssayAnswerId) REFERENCES dbo.UserEssayAnswer(UserAnswerId) ON DELETE CASCADE
 );
 
+CREATE TABLE dbo.Course (
+    CourseId INT IDENTITY PRIMARY KEY,
+    Title NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(1000) NULL,
+    Level NVARCHAR(20) NULL,
+    Category NVARCHAR(100) NULL,
+    Duration NVARCHAR(50) NULL,
+    Skills NVARCHAR(MAX) NULL,
+    Features NVARCHAR(MAX) NULL,
+    PriceCurrent DECIMAL(10,2) NULL,
+    PriceOriginal DECIMAL(10,2) NULL,
+    InstructorName NVARCHAR(100) NULL,
+    InstructorAvatar NVARCHAR(255) NULL,
+    InstructorRating DECIMAL(3,1) NULL,
+    InstructorExperience NVARCHAR(100) NULL,
+    Students INT NULL,
+    Rating DECIMAL(3,1) NULL,
+    ReviewCount INT NULL,
+    Thumbnail NVARCHAR(255) NULL,
+    IsPopular BIT NOT NULL DEFAULT 0,
+    IsBestseller BIT NOT NULL DEFAULT 0,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+
 -- ========== END OF TABLE DEFINITIONS ==========
 
 -- ========== START OF SEED DATA ==========
@@ -713,6 +737,14 @@ SET IDENTITY_INSERT dbo.WritingAssessment ON;
 INSERT INTO dbo.WritingAssessment (AssessmentId, UserEssayAnswerId, TaskResponseScore, CoherenceCohesionScore, LexicalResourcesScore, GrammaticalAccuracyScore, OverallBand, EstimatedIELTSScore, CreatedAt) VALUES
     (1, 1, 6.5, 6.0, 6.5, 6.0, 6.5, 6.5, '2025-06-18 00:00:00');
 SET IDENTITY_INSERT dbo.WritingAssessment OFF;
+
+-- ========== COURSE ==========
+SET IDENTITY_INSERT dbo.Course ON;
+INSERT INTO dbo.Course (CourseId, Title, Description, Level, Category, Duration, Skills, Features, PriceCurrent, PriceOriginal, InstructorName, InstructorAvatar, InstructorRating, InstructorExperience, Students, Rating, ReviewCount, Thumbnail, IsPopular, IsBestseller, CreatedAt) VALUES
+    (1, 'Complete IELTS Preparation Course', 'Master all four IELTS skills with comprehensive practice tests and expert guidance.', 'Intermediate', 'Complete Prep', '12 weeks', 'Listening,Reading,Writing,Speaking', 'Live Classes;100+ Practice Tests;Personal Feedback;Certificate', 199, 299, 'Dr. Sarah Johnson', '/assets/images/instructor1.jpg', 4.9, '10+ years teaching IELTS', 15420, 4.8, 2340, '/assets/images/course1.jpg', 1, 1, '2025-06-18 00:00:00'),
+    (2, 'IELTS Writing Mastery', 'Perfect your IELTS writing skills with proven techniques and personalized feedback.', 'Intermediate', 'Writing', '6 weeks', 'Task 1;Task 2;Grammar;Vocabulary', 'Essay Reviews;Templates;Band 9 Examples', 89, 129, 'Prof. Michael Chen', '/assets/images/instructor2.jpg', 4.7, '8 years IELTS specialist', 8930, 4.6, 1120, '/assets/images/course2.jpg', 1, 0, '2025-06-18 00:00:00'),
+    (3, 'IELTS Speaking Confidence', 'Build confidence and fluency in IELTS speaking with interactive practice sessions.', 'Beginner', 'Speaking', '4 weeks', 'Pronunciation;Fluency;Part 1-3 Strategies', '1-on-1 Sessions;Mock Tests;Accent Training', 69, 99, 'Emma Thompson', '/assets/images/instructor3.jpg', 4.8, '6 years conversation expert', 6750, 4.7, 890, '/assets/images/course3.jpg', 0, 0, '2025-06-18 00:00:00');
+SET IDENTITY_INSERT dbo.Course OFF;
 
 -- ========== AUDIT TRAIL, APP LOG, USER ACTIVITY ==========
 -- (You can seed these as needed, or leave empty for now.)

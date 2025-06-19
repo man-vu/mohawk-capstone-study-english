@@ -1,7 +1,7 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const AppUserModel = require("../../models/AppUserModel.ts").default;
-const MimeTypeModel = require("../../models/MimeTypeModel.ts").default;
+const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
+const MimeTypeModel = require("../../models/media/MimeTypeModel.ts").default;
 
 module.exports = {
   /**

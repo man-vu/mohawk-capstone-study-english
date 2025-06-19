@@ -25,6 +25,7 @@ const questionsRoutes = require("./api/routes/questions.ts");
 const vocabularyRoutes = require("./api/routes/vocabulary.ts");
 const mockTestRoutes = require("./api/routes/mockTests.ts");
 const writingRoutes = require("./api/routes/writing.ts");
+const courseRoutes = require("./api/routes/courses.ts");
 
 /**
  * Set CORS policy in development environment to prevent CORS blocking
@@ -64,6 +65,7 @@ app.use("/api/teacher", teacherRoutes);
 app.use("/api/statistics", statisticsRoutes);
 app.use("/api/questions", questionsRoutes);
 app.use("/api/vocabulary", vocabularyRoutes);
+app.use("/api/courses", courseRoutes);
 app.use("/api/mock-tests", mockTestRoutes);
 app.use("/api/writing", writingRoutes);
 
