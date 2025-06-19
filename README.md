@@ -1,13 +1,15 @@
-# React + Vite Template
+# Simple Matching Card Game
 
-A modern React template for web applications and games, featuring React 18, Vite, TailwindCSS, and Material UI.
+This project is a minimal React + Vite app that renders a small card matching game using only dummy emoji data. It does not require any backend services or database connections.
 
 ## Project Structure
 
 ```
 ├── src/
-│   ├── App.jsx          # Main application component
-│   ├── main.jsx         # Application entry point
+│   ├── App.tsx          # Main application component
+│   ├── pages/
+│   │   └── SimpleMatchingGame.tsx # Game logic
+│   ├── main.tsx         # Application entry point
 │   └── index.css        # Global styles (Tailwind)
 ├── public/              # Static assets
 ├── index.html           # HTML template
@@ -19,10 +21,10 @@ A modern React template for web applications and games, featuring React 18, Vite
 
 ## Development Guidelines
 
-- Modify `index.html` and `src/App.jsx` as needed
+- Modify `index.html` and `src/App.tsx` as needed
 - Create new folders or files in `src/` directory as needed
 - Style components using TailwindCSS utility classes
-- Avoid modifying `src/main.jsx` and `src/index.css`
+- Avoid modifying `src/main.tsx` and `src/index.css`
 - Only modify `vite.config.js` if absolutely necessary
 
 ## Available Scripts
