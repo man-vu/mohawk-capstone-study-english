@@ -231,6 +231,42 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
     setIsPaused(!isPaused);
   };
 
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isGameActive || isPaused || gameSession.sessionComplete) return;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          if (gameSession.showAnswer || gameMode !== 'study') {
+            nextCard();
+          } else {
+            toggleAnswer();
+          }
+          break;
+        case 'ArrowLeft':
+          previousCard();
+          break;
+        case ' ':
+          e.preventDefault();
+          toggleAnswer();
+          break;
+        case 'e':
+        case 'E':
+          if (gameMode === 'quiz' && gameSession.showAnswer) handleAnswerFeedback(true);
+          break;
+        case 'd':
+        case 'D':
+          if (gameMode === 'quiz' && gameSession.showAnswer) handleAnswerFeedback(false);
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGameActive, isPaused, gameSession, gameMode]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
