@@ -126,7 +126,7 @@ const EnhancedQuizResults: React.FC<Props> = ({
           )}
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
             <p className="text-xl font-bold">{totalQuestions}</p>
@@ -142,6 +142,10 @@ const EnhancedQuizResults: React.FC<Props> = ({
           <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg text-center">
             <p className="text-sm text-yellow-600 dark:text-yellow-400">Partial</p>
             <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">{partiallyCorrect}</p>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg text-center">
+            <p className="text-sm text-blue-600 dark:text-blue-400">Unanswered</p>
+            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{unanswered}</p>
           </div>
         </div>
         

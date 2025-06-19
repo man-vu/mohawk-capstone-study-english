@@ -282,6 +282,106 @@ CREATE TABLE dbo.UserActivity (
     CONSTRAINT FK_UserActivity_User FOREIGN KEY (UserId) REFERENCES dbo.AppUser(UserId)
 );
 
+-- ==================== NEW TABLES FOR VOCABULARY AND MOCK TESTS ====================
+
+CREATE TABLE dbo.VocabularyWord (
+    WordId INT IDENTITY PRIMARY KEY,
+    Word NVARCHAR(100) NOT NULL UNIQUE,
+    Definition NVARCHAR(500) NOT NULL,
+    Example NVARCHAR(500) NULL,
+    PartOfSpeech NVARCHAR(50) NULL,
+    Level NVARCHAR(20) NULL,
+    Category NVARCHAR(100) NULL,
+    Difficulty NVARCHAR(20) NULL
+);
+
+CREATE TABLE dbo.UserVocabularyProgress (
+    UserId INT NOT NULL,
+    WordId INT NOT NULL,
+    Mastery TINYINT NOT NULL DEFAULT 0,
+    LastReviewed DATE NULL,
+    CorrectStreak INT NOT NULL DEFAULT 0,
+    Attempts INT NOT NULL DEFAULT 0,
+    Memorized BIT NOT NULL DEFAULT 0,
+    CONSTRAINT PK_UserVocabularyProgress PRIMARY KEY (UserId, WordId),
+    CONSTRAINT FK_UserVocabularyProgress_User FOREIGN KEY (UserId) REFERENCES dbo.AppUser(UserId) ON DELETE CASCADE,
+    CONSTRAINT FK_UserVocabularyProgress_Word FOREIGN KEY (WordId) REFERENCES dbo.VocabularyWord(WordId) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.WordGroup (
+    GroupId INT IDENTITY PRIMARY KEY,
+    Theme NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(255) NULL
+);
+
+CREATE TABLE dbo.VocabularyWordGroup (
+    WordId INT NOT NULL,
+    GroupId INT NOT NULL,
+    PRIMARY KEY (WordId, GroupId),
+    CONSTRAINT FK_VocabularyWordGroup_Word FOREIGN KEY (WordId) REFERENCES dbo.VocabularyWord(WordId) ON DELETE CASCADE,
+    CONSTRAINT FK_VocabularyWordGroup_Group FOREIGN KEY (GroupId) REFERENCES dbo.WordGroup(GroupId) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.MockTest (
+    MockTestId INT IDENTITY PRIMARY KEY,
+    Title NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(1000) NULL,
+    TotalDuration INT NOT NULL, -- minutes
+    CreatedBy INT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT FK_MockTest_CreatedBy FOREIGN KEY (CreatedBy) REFERENCES dbo.AppUser(UserId)
+);
+
+CREATE TABLE dbo.MockTestSection (
+    SectionId INT IDENTITY PRIMARY KEY,
+    MockTestId INT NOT NULL,
+    QuizId INT NULL,
+    SkillId INT NOT NULL,
+    Duration INT NOT NULL,
+    TotalQuestions INT NOT NULL,
+    SortOrder INT NOT NULL,
+    CONSTRAINT FK_MockTestSection_MockTest FOREIGN KEY (MockTestId) REFERENCES dbo.MockTest(MockTestId) ON DELETE CASCADE,
+    CONSTRAINT FK_MockTestSection_Quiz FOREIGN KEY (QuizId) REFERENCES dbo.Quiz(QuizId),
+    CONSTRAINT FK_MockTestSection_Skill FOREIGN KEY (SkillId) REFERENCES dbo.QuizSkill(SkillId)
+);
+
+CREATE TABLE dbo.WritingAssessment (
+    AssessmentId INT IDENTITY PRIMARY KEY,
+    UserEssayAnswerId INT NOT NULL,
+    TaskResponseScore DECIMAL(5,2) NULL,
+    CoherenceCohesionScore DECIMAL(5,2) NULL,
+    LexicalResourcesScore DECIMAL(5,2) NULL,
+    GrammaticalAccuracyScore DECIMAL(5,2) NULL,
+    OverallBand DECIMAL(5,2) NULL,
+    EstimatedIELTSScore DECIMAL(5,2) NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT FK_WritingAssessment_Essay FOREIGN KEY (UserEssayAnswerId) REFERENCES dbo.UserEssayAnswer(UserAnswerId) ON DELETE CASCADE
+);
+
+CREATE TABLE dbo.Course (
+    CourseId INT IDENTITY PRIMARY KEY,
+    Title NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(1000) NULL,
+    Level NVARCHAR(20) NULL,
+    Category NVARCHAR(100) NULL,
+    Duration NVARCHAR(50) NULL,
+    Skills NVARCHAR(MAX) NULL,
+    Features NVARCHAR(MAX) NULL,
+    PriceCurrent DECIMAL(10,2) NULL,
+    PriceOriginal DECIMAL(10,2) NULL,
+    InstructorName NVARCHAR(100) NULL,
+    InstructorAvatar NVARCHAR(255) NULL,
+    InstructorRating DECIMAL(3,1) NULL,
+    InstructorExperience NVARCHAR(100) NULL,
+    Students INT NULL,
+    Rating DECIMAL(3,1) NULL,
+    ReviewCount INT NULL,
+    Thumbnail NVARCHAR(255) NULL,
+    IsPopular BIT NOT NULL DEFAULT 0,
+    IsBestseller BIT NOT NULL DEFAULT 0,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+
 -- ========== END OF TABLE DEFINITIONS ==========
 
 -- ========== START OF SEED DATA ==========
@@ -477,15 +577,172 @@ INSERT INTO dbo.UserAnswer (UserAnswerId, AttemptId, QuestionId, AnswerText, IsC
     (1,1,1,'identification',1);
 SET IDENTITY_INSERT dbo.UserAnswer OFF;
 
--- ========== USER ESSAY ANSWER (none for sample) ==========
--- INSERT INTO dbo.UserEssayAnswer (UserAnswerId, EssayText, Mark, TeacherFeedback) VALUES
---    (1, 'Sample essay answer text...', 90.00, 'Good job!');
+-- ========== USER ESSAY ANSWER ==========
+INSERT INTO dbo.UserEssayAnswer (UserAnswerId, EssayText, Mark, TeacherFeedback) VALUES
+    (1, 'Sample essay answer text...', 90.00, 'Good job!');
 
 -- ========== USER FAVORITE ==========
 INSERT INTO dbo.UserFavorite (UserId, QuizId) VALUES (1,1);
 
 -- ========== USER RATING ==========
 INSERT INTO dbo.UserRating (UserId, QuizId, RatingGiven) VALUES (1,1,5);
+
+-- ========== VOCABULARY WORDS ==========
+SET IDENTITY_INSERT dbo.VocabularyWord ON;
+INSERT INTO dbo.VocabularyWord (WordId, Word, Definition, Example, PartOfSpeech, Level, Category, Difficulty) VALUES
+    (1, 'abandon', 'to leave behind or give up completely', 'He decided to abandon the plan.', 'verb', 'B2', 'general', 'medium'),
+    (2, 'benevolent', 'well meaning and kindly', 'A benevolent smile spread across her face.', 'adjective', 'C1', 'behavior', 'hard'),
+    (3, 'candid', 'truthful and straightforward; frank', 'She gave a candid interview.', 'adjective', 'C1', 'communication', 'medium');
+SET IDENTITY_INSERT dbo.VocabularyWord OFF;
+-- Additional vocabulary for matching card game
+SET IDENTITY_INSERT dbo.VocabularyWord ON;
+INSERT INTO dbo.VocabularyWord (WordId, Word, Definition, Example, PartOfSpeech, Level, Category, Difficulty) VALUES
+    (4, 'Happy', 'Feeling or showing pleasure or contentment', NULL, NULL, NULL, 'game', 'easy'),
+    (5, 'Fast', 'Moving or capable of moving at high speed', NULL, NULL, NULL, 'game', 'easy'),
+    (6, 'Big', 'Of considerable size or extent', NULL, NULL, NULL, 'game', 'easy'),
+    (7, 'Smart', 'Having intelligence or mental alertness', NULL, NULL, NULL, 'game', 'easy'),
+    (8, 'Cold', 'Having a low temperature', NULL, NULL, NULL, 'game', 'easy'),
+    (9, 'Bright', 'Giving out or reflecting much light', NULL, NULL, NULL, 'game', 'easy'),
+    (10, 'Elaborate', 'Involving many carefully arranged parts or details', NULL, NULL, NULL, 'game', 'medium'),
+    (11, 'Substantial', 'Of considerable importance, size, or worth', NULL, NULL, NULL, 'game', 'medium'),
+    (12, 'Coherent', 'Logical and consistent', NULL, NULL, NULL, 'game', 'medium'),
+    (13, 'Inevitable', 'Certain to happen; unavoidable', NULL, NULL, NULL, 'game', 'medium'),
+    (14, 'Profound', 'Very great or intense', NULL, NULL, NULL, 'game', 'medium'),
+    (15, 'Versatile', 'Able to adapt or be adapted to many functions', NULL, NULL, NULL, 'game', 'medium'),
+    (16, 'Meticulous', 'Showing great attention to detail; very careful', NULL, NULL, NULL, 'game', 'medium'),
+    (17, 'Ambiguous', 'Open to more than one interpretation; unclear', NULL, NULL, NULL, 'game', 'medium'),
+    (18, 'Ubiquitous', 'Present, appearing, or found everywhere', NULL, NULL, NULL, 'game', 'hard'),
+    (19, 'Ephemeral', 'Lasting for a very short time', NULL, NULL, NULL, 'game', 'hard'),
+    (20, 'Magnanimous', 'Very generous or forgiving', NULL, NULL, NULL, 'game', 'hard'),
+    (21, 'Perspicacious', 'Having keen insight or discernment', NULL, NULL, NULL, 'game', 'hard'),
+    (22, 'Surreptitious', 'Kept secret, done stealthily', NULL, NULL, NULL, 'game', 'hard'),
+    (23, 'Inexorable', 'Impossible to stop or prevent', NULL, NULL, NULL, 'game', 'hard'),
+    (24, 'Equivocal', 'Open to multiple interpretations; ambiguous', NULL, NULL, NULL, 'game', 'hard'),
+    (25, 'Recalcitrant', 'Having an obstinately uncooperative attitude', NULL, NULL, NULL, 'game', 'hard'),
+    (26, 'Parsimonious', 'Extremely frugal; unwilling to spend', NULL, NULL, NULL, 'game', 'hard'),
+    (27, 'Ostentatious', 'Characterized by vulgar display of wealth', NULL, NULL, NULL, 'game', 'hard');
+SET IDENTITY_INSERT dbo.VocabularyWord OFF;
+
+-- ========== WORD GROUP ==========
+SET IDENTITY_INSERT dbo.WordGroup ON;
+INSERT INTO dbo.WordGroup (GroupId, Theme, Description) VALUES
+    (1, 'Technology', 'Terms related to modern technology'),
+    (2, 'Education', 'Words commonly seen in education topics'),
+    (3, 'Environment', 'Words related to environmental issues'),
+    (4, 'Business', 'Words related to business and economics'),
+    (5, 'Health', 'Words related to health and medicine'),
+    (6, 'Travel', 'Words related to travel and exploration');
+SET IDENTITY_INSERT dbo.WordGroup OFF;
+
+-- Vocabulary words for word association game
+SET IDENTITY_INSERT dbo.VocabularyWord ON;
+INSERT INTO dbo.VocabularyWord (WordId, Word, Definition, Example, PartOfSpeech, Level, Category, Difficulty) VALUES
+    (28, 'student', 'a person who is studying at a school or college', NULL, NULL, NULL, 'education', 'medium'),
+    (29, 'teacher', 'a person who teaches, especially in a school', NULL, NULL, NULL, 'education', 'medium'),
+    (30, 'classroom', 'a room where students are taught', NULL, NULL, NULL, 'education', 'medium'),
+    (31, 'homework', 'schoolwork assigned to be done outside class', NULL, NULL, NULL, 'education', 'medium'),
+    (32, 'examination', 'a formal test of knowledge or ability', NULL, NULL, NULL, 'education', 'medium'),
+    (33, 'graduation', 'completion of studies at a school or college', NULL, NULL, NULL, 'education', 'medium'),
+    (34, 'knowledge', 'facts and information acquired through learning', NULL, NULL, NULL, 'education', 'medium'),
+    (35, 'learning', 'the process of gaining knowledge or skill', NULL, NULL, NULL, 'education', 'medium'),
+    (36, 'pollution', 'the presence of harmful substances in the environment', NULL, NULL, NULL, 'environment', 'medium'),
+    (37, 'recycling', 'the process of converting waste into reusable material', NULL, NULL, NULL, 'environment', 'medium'),
+    (38, 'conservation', 'protection of natural resources', NULL, NULL, NULL, 'environment', 'medium'),
+    (39, 'renewable', 'able to be replenished naturally', NULL, NULL, NULL, 'environment', 'medium'),
+    (40, 'ecosystem', 'a community of organisms and their environment', NULL, NULL, NULL, 'environment', 'medium'),
+    (41, 'biodiversity', 'the variety of plant and animal life', NULL, NULL, NULL, 'environment', 'medium'),
+    (42, 'sustainability', 'avoiding the depletion of natural resources', NULL, NULL, NULL, 'environment', 'medium'),
+    (43, 'climate', 'the weather conditions of a region', NULL, NULL, NULL, 'environment', 'medium'),
+    (44, 'innovation', 'a new method, idea, or product', NULL, NULL, NULL, 'technology', 'medium'),
+    (45, 'digital', 'involving computer technology', NULL, NULL, NULL, 'technology', 'medium'),
+    (46, 'artificial', 'made by humans rather than natural', NULL, NULL, NULL, 'technology', 'medium'),
+    (47, 'automation', 'use of machines to perform tasks automatically', NULL, NULL, NULL, 'technology', 'medium'),
+    (48, 'connectivity', 'the state of being connected or linked', NULL, NULL, NULL, 'technology', 'medium'),
+    (49, 'cybersecurity', 'protection of computer systems from attack', NULL, NULL, NULL, 'technology', 'medium'),
+    (50, 'database', 'an organized collection of data', NULL, NULL, NULL, 'technology', 'medium'),
+    (51, 'algorithm', 'a set of rules to solve a problem', NULL, NULL, NULL, 'technology', 'medium'),
+    (52, 'entrepreneur', 'a person who starts a business taking on risk', NULL, NULL, NULL, 'business', 'medium'),
+    (53, 'investment', 'the action of investing money for profit', NULL, NULL, NULL, 'business', 'medium'),
+    (54, 'marketing', 'the activities of promoting products', NULL, NULL, NULL, 'business', 'medium'),
+    (55, 'strategy', 'a plan of action designed to achieve a goal', NULL, NULL, NULL, 'business', 'medium'),
+    (56, 'competition', 'rivalry between businesses or individuals', NULL, NULL, NULL, 'business', 'medium'),
+    (57, 'profit', 'financial gain after expenses', NULL, NULL, NULL, 'business', 'medium'),
+    (58, 'economy', 'the system of production and consumption', NULL, NULL, NULL, 'business', 'medium'),
+    (59, 'corporation', 'a large company or group of companies', NULL, NULL, NULL, 'business', 'medium'),
+    (60, 'nutrition', 'the process of obtaining food necessary for health', NULL, NULL, NULL, 'health', 'medium'),
+    (61, 'exercise', 'physical activity to improve fitness', NULL, NULL, NULL, 'health', 'medium'),
+    (62, 'wellness', 'state of being in good health', NULL, NULL, NULL, 'health', 'medium'),
+    (63, 'diagnosis', 'identification of an illness', NULL, NULL, NULL, 'health', 'medium'),
+    (64, 'treatment', 'medical care given to a patient', NULL, NULL, NULL, 'health', 'medium'),
+    (65, 'prevention', 'the action of stopping something from happening', NULL, NULL, NULL, 'health', 'medium'),
+    (66, 'immunity', 'the ability to resist disease', NULL, NULL, NULL, 'health', 'medium'),
+    (67, 'therapy', 'treatment intended to relieve or heal', NULL, NULL, NULL, 'health', 'medium'),
+    (68, 'destination', 'the place to which someone is going', NULL, NULL, NULL, 'travel', 'medium'),
+    (69, 'journey', 'an act of traveling from one place to another', NULL, NULL, NULL, 'travel', 'medium'),
+    (70, 'accommodation', 'a place to stay or live', NULL, NULL, NULL, 'travel', 'medium'),
+    (71, 'transportation', 'means of traveling from place to place', NULL, NULL, NULL, 'travel', 'medium'),
+    (72, 'culture', 'customs and social behavior of a society', NULL, NULL, NULL, 'travel', 'medium'),
+    (73, 'adventure', 'an unusual and exciting experience', NULL, NULL, NULL, 'travel', 'medium'),
+    (74, 'exploration', 'the act of traveling to discover', NULL, NULL, NULL, 'travel', 'medium'),
+    (75, 'tourism', 'the business of attracting visitors', NULL, NULL, NULL, 'travel', 'medium');
+SET IDENTITY_INSERT dbo.VocabularyWord OFF;
+
+
+-- ========== VOCABULARY WORD GROUP ==========
+INSERT INTO dbo.VocabularyWordGroup (WordId, GroupId) VALUES
+    (1, 2),
+    (2, 1),
+    (3, 2),
+    (28,2),(29,2),(30,2),(31,2),(32,2),(33,2),(34,2),(35,2),
+    (36,3),(37,3),(38,3),(39,3),(40,3),(41,3),(42,3),(43,3),
+    (44,1),(45,1),(46,1),(47,1),(48,1),(49,1),(50,1),(51,1),
+    (52,4),(53,4),(54,4),(55,4),(56,4),(57,4),(58,4),(59,4),
+    (60,5),(61,5),(62,5),(63,5),(64,5),(65,5),(66,5),(67,5),
+    (68,6),(69,6),(70,6),(71,6),(72,6),(73,6),(74,6),(75,6);
+-- ========== USER VOCABULARY PROGRESS ==========
+INSERT INTO dbo.UserVocabularyProgress (UserId, WordId, Mastery, LastReviewed, CorrectStreak, Attempts, Memorized) VALUES
+    (1, 1, 1, '2025-06-10', 1, 1, 0),
+    (1, 2, 0, NULL, 0, 0, 0),
+    (2, 3, 2, '2025-06-11', 2, 3, 1);
+
+-- ========== MOCK TEST ==========
+SET IDENTITY_INSERT dbo.MockTest ON;
+INSERT INTO dbo.MockTest (MockTestId, Title, Description, TotalDuration, CreatedBy, CreatedAt) VALUES
+    (1, 'IELTS Mock Test 1', 'Sample IELTS test with four sections', 180, 1, '2025-06-18 00:00:00'),
+    (2, 'IELTS Academic Full Mock Test #1', 'Complete IELTS Academic test covering all four skills: Listening, Reading, Writing, and Speaking', 185, 1, '2025-06-18 00:00:00'),
+    (3, 'IELTS General Training Full Mock Test #1', 'Complete IELTS General Training test with practical, everyday English tasks', 185, 1, '2025-06-18 00:00:00');
+SET IDENTITY_INSERT dbo.MockTest OFF;
+
+-- ========== MOCK TEST SECTION ==========
+SET IDENTITY_INSERT dbo.MockTestSection ON;
+INSERT INTO dbo.MockTestSection (SectionId, MockTestId, QuizId, SkillId, Duration, TotalQuestions, SortOrder) VALUES
+    (1, 1, 1, 1, 30, 7, 1),
+    (2, 1, 5, 2, 60, 7, 2),
+    (3, 1, 15, 3, 60, 1, 3),
+    (4, 1, 13, 4, 30, 1, 4),
+    (5, 2, 1, 1, 40, 40, 1),
+    (6, 2, 5, 2, 60, 40, 2),
+    (7, 2, 15, 3, 60, 2, 3),
+    (8, 2, 13, 4, 15, 3, 4),
+    (9, 3, 1, 1, 40, 40, 1),
+    (10, 3, 5, 2, 60, 40, 2),
+    (11, 3, 15, 3, 60, 2, 3),
+    (12, 3, 13, 4, 15, 3, 4);
+SET IDENTITY_INSERT dbo.MockTestSection OFF;
+
+-- ========== WRITING ASSESSMENT ==========
+SET IDENTITY_INSERT dbo.WritingAssessment ON;
+INSERT INTO dbo.WritingAssessment (AssessmentId, UserEssayAnswerId, TaskResponseScore, CoherenceCohesionScore, LexicalResourcesScore, GrammaticalAccuracyScore, OverallBand, EstimatedIELTSScore, CreatedAt) VALUES
+    (1, 1, 6.5, 6.0, 6.5, 6.0, 6.5, 6.5, '2025-06-18 00:00:00');
+SET IDENTITY_INSERT dbo.WritingAssessment OFF;
+
+-- ========== COURSE ==========
+SET IDENTITY_INSERT dbo.Course ON;
+INSERT INTO dbo.Course (CourseId, Title, Description, Level, Category, Duration, Skills, Features, PriceCurrent, PriceOriginal, InstructorName, InstructorAvatar, InstructorRating, InstructorExperience, Students, Rating, ReviewCount, Thumbnail, IsPopular, IsBestseller, CreatedAt) VALUES
+    (1, 'Complete IELTS Preparation Course', 'Master all four IELTS skills with comprehensive practice tests and expert guidance.', 'Intermediate', 'Complete Prep', '12 weeks', 'Listening,Reading,Writing,Speaking', 'Live Classes;100+ Practice Tests;Personal Feedback;Certificate', 199, 299, 'Dr. Sarah Johnson', '/assets/images/instructor1.jpg', 4.9, '10+ years teaching IELTS', 15420, 4.8, 2340, '/assets/images/course1.jpg', 1, 1, '2025-06-18 00:00:00'),
+    (2, 'IELTS Writing Mastery', 'Perfect your IELTS writing skills with proven techniques and personalized feedback.', 'Intermediate', 'Writing', '6 weeks', 'Task 1;Task 2;Grammar;Vocabulary', 'Essay Reviews;Templates;Band 9 Examples', 89, 129, 'Prof. Michael Chen', '/assets/images/instructor2.jpg', 4.7, '8 years IELTS specialist', 8930, 4.6, 1120, '/assets/images/course2.jpg', 1, 0, '2025-06-18 00:00:00'),
+    (3, 'IELTS Speaking Confidence', 'Build confidence and fluency in IELTS speaking with interactive practice sessions.', 'Beginner', 'Speaking', '4 weeks', 'Pronunciation;Fluency;Part 1-3 Strategies', '1-on-1 Sessions;Mock Tests;Accent Training', 69, 99, 'Emma Thompson', '/assets/images/instructor3.jpg', 4.8, '6 years conversation expert', 6750, 4.7, 890, '/assets/images/course3.jpg', 0, 0, '2025-06-18 00:00:00');
+SET IDENTITY_INSERT dbo.Course OFF;
 
 -- ========== AUDIT TRAIL, APP LOG, USER ACTIVITY ==========
 -- (You can seed these as needed, or leave empty for now.)
