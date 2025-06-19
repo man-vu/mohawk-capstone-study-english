@@ -322,6 +322,52 @@ CREATE TABLE dbo.VocabularyWordGroup (
     CONSTRAINT FK_VocabularyWordGroup_Group FOREIGN KEY (GroupId) REFERENCES dbo.WordGroup(GroupId) ON DELETE CASCADE
 );
 
+-- Tables for Idioms
+CREATE TABLE dbo.Idiom (
+    IdiomId INT IDENTITY PRIMARY KEY,
+    Expression NVARCHAR(200) NOT NULL UNIQUE,
+    Meaning NVARCHAR(500) NOT NULL,
+    Example NVARCHAR(500) NULL,
+    Difficulty NVARCHAR(20) NULL
+);
+
+CREATE TABLE dbo.IdiomGroup (
+    GroupId INT IDENTITY PRIMARY KEY,
+    Theme NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(255) NULL
+);
+
+CREATE TABLE dbo.IdiomGroupMap (
+    IdiomId INT NOT NULL,
+    GroupId INT NOT NULL,
+    PRIMARY KEY (IdiomId, GroupId),
+    CONSTRAINT FK_IdiomGroupMap_Idiom FOREIGN KEY (IdiomId) REFERENCES dbo.Idiom(IdiomId) ON DELETE CASCADE,
+    CONSTRAINT FK_IdiomGroupMap_Group FOREIGN KEY (GroupId) REFERENCES dbo.IdiomGroup(GroupId) ON DELETE CASCADE
+);
+
+-- Tables for Phrasal Verbs
+CREATE TABLE dbo.PhrasalVerb (
+    VerbId INT IDENTITY PRIMARY KEY,
+    Verb NVARCHAR(200) NOT NULL UNIQUE,
+    Meaning NVARCHAR(500) NOT NULL,
+    Example NVARCHAR(500) NULL,
+    Difficulty NVARCHAR(20) NULL
+);
+
+CREATE TABLE dbo.PhrasalVerbGroup (
+    GroupId INT IDENTITY PRIMARY KEY,
+    Theme NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(255) NULL
+);
+
+CREATE TABLE dbo.PhrasalVerbGroupMap (
+    VerbId INT NOT NULL,
+    GroupId INT NOT NULL,
+    PRIMARY KEY (VerbId, GroupId),
+    CONSTRAINT FK_PhrasalVerbGroupMap_Verb FOREIGN KEY (VerbId) REFERENCES dbo.PhrasalVerb(VerbId) ON DELETE CASCADE,
+    CONSTRAINT FK_PhrasalVerbGroupMap_Group FOREIGN KEY (GroupId) REFERENCES dbo.PhrasalVerbGroup(GroupId) ON DELETE CASCADE
+);
+
 CREATE TABLE dbo.MockTest (
     MockTestId INT IDENTITY PRIMARY KEY,
     Title NVARCHAR(200) NOT NULL,
@@ -699,6 +745,88 @@ INSERT INTO dbo.VocabularyWordGroup (WordId, GroupId) VALUES
     (52,4),(53,4),(54,4),(55,4),(56,4),(57,4),(58,4),(59,4),
     (60,5),(61,5),(62,5),(63,5),(64,5),(65,5),(66,5),(67,5),
     (68,6),(69,6),(70,6),(71,6),(72,6),(73,6),(74,6),(75,6);
+
+-- Idiom groups and idioms for word association game
+SET IDENTITY_INSERT dbo.Idiom ON;
+INSERT INTO dbo.Idiom (IdiomId, Expression, Meaning, Example, Difficulty) VALUES
+    (1,'break the ice','make people feel relaxed','He told a joke to break the ice.', 'easy'),
+    (2,'hit the sack','go to bed','I\'m going to hit the sack.', 'easy'),
+    (3,'spill the beans','reveal a secret','She spilled the beans about the plan.', 'easy'),
+    (4,'let the cat out of the bag','accidentally reveal a secret','He let the cat out of the bag.', 'easy'),
+    (5,'under the weather','feeling ill','She was under the weather yesterday.', 'easy'),
+    (6,'piece of cake','very easy','The exam was a piece of cake.', 'easy'),
+    (7,'once in a blue moon','very rarely','We go there once in a blue moon.', 'medium'),
+    (8,'beat around the bush','avoid the main topic','Don\'t beat around the bush.', 'medium'),
+    (9,'hit the nail on the head','describe exactly what is causing a situation','You hit the nail on the head.', 'medium'),
+    (10,'back to square one','start over','If it fails, we\'re back to square one.', 'medium'),
+    (11,'the ball is in your court','it is your decision','The ball is in your court now.', 'medium'),
+    (12,'throw in the towel','give up','He threw in the towel after two attempts.', 'medium'),
+    (13,'go the extra mile','do more than required','She always goes the extra mile.', 'hard'),
+    (14,'by the book','strictly according to the rules','He runs the office by the book.', 'hard'),
+    (15,'call it a day','stop working','Let\'s call it a day.', 'hard'),
+    (16,'pull your weight','do your share of work','Everyone must pull their weight.', 'hard'),
+    (17,'around the clock','all day and night','They worked around the clock.', 'hard'),
+    (18,'in the long run','over a long period','It saves money in the long run.', 'medium'),
+    (19,'in the nick of time','just before it is too late','We arrived in the nick of time.', 'medium'),
+    (20,'ahead of time','earlier than expected','Finish the task ahead of time.', 'medium'),
+    (21,'bide your time','wait patiently','She is biding her time.', 'hard'),
+    (22,'behind the times','old-fashioned','His views are behind the times.', 'hard'),
+    (23,'pressed for time','in a hurry','I\'m pressed for time today.', 'medium'),
+    (24,'take your time','do slowly','Take your time with the assignment.', 'easy');
+SET IDENTITY_INSERT dbo.Idiom OFF;
+
+SET IDENTITY_INSERT dbo.IdiomGroup ON;
+INSERT INTO dbo.IdiomGroup (GroupId, Theme, Description) VALUES
+    (1,'Everyday Idioms','Common daily expressions'),
+    (2,'Success Idioms','Idioms about success and failure'),
+    (3,'Time Idioms','Idioms related to time');
+SET IDENTITY_INSERT dbo.IdiomGroup OFF;
+
+INSERT INTO dbo.IdiomGroupMap (IdiomId, GroupId) VALUES
+    (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),
+    (9,2),(10,2),(11,2),(12,2),(13,2),(14,2),(15,2),(16,2),
+    (17,3),(18,3),(19,3),(20,3),(21,3),(22,3),(23,3),(24,3);
+
+-- Phrasal verb groups and verbs for word association game
+SET IDENTITY_INSERT dbo.PhrasalVerb ON;
+INSERT INTO dbo.PhrasalVerb (VerbId, Verb, Meaning, Example, Difficulty) VALUES
+    (1,'get up','rise from bed','I get up at seven.', 'easy'),
+    (2,'pick up','collect','Please pick up the kids.', 'easy'),
+    (3,'look after','take care of','She looks after her brother.', 'easy'),
+    (4,'carry on','continue','Carry on with your work.', 'easy'),
+    (5,'hang out','spend time relaxing','They hang out at the mall.', 'easy'),
+    (6,'turn off','stop a device','Turn off the lights.', 'easy'),
+    (7,'put away','store','Put away your clothes.', 'easy'),
+    (8,'give up','stop trying','Never give up.', 'easy'),
+    (9,'check in','register at a hotel or airport','We checked in early.', 'medium'),
+    (10,'take off','leave the ground','The plane took off.', 'medium'),
+    (11,'set out','begin a journey','They set out at dawn.', 'medium'),
+    (12,'get away','go on vacation','We hope to get away this weekend.', 'medium'),
+    (13,'stop over','stay somewhere temporarily','We stopped over in Dubai.', 'medium'),
+    (14,'look around','explore','We looked around the city.', 'medium'),
+    (15,'hurry up','do something faster','Hurry up or we\'ll be late.', 'medium'),
+    (16,'take in','absorb or understand','It was hard to take in the news.', 'medium'),
+    (17,'set up','arrange or establish','They set up a new company.', 'hard'),
+    (18,'run by','get approval from','Run it by the manager first.', 'hard'),
+    (19,'take over','assume control','The firm was taken over.', 'hard'),
+    (20,'go through','examine carefully','Let\'s go through the details.', 'hard'),
+    (21,'draw up','prepare a document','They drew up a contract.', 'hard'),
+    (22,'branch out','expand into new areas','The company branched out overseas.', 'hard'),
+    (23,'cut back','reduce','We need to cut back expenses.', 'hard'),
+    (24,'close down','cease operations','The shop closed down.', 'hard');
+SET IDENTITY_INSERT dbo.PhrasalVerb OFF;
+
+SET IDENTITY_INSERT dbo.PhrasalVerbGroup ON;
+INSERT INTO dbo.PhrasalVerbGroup (GroupId, Theme, Description) VALUES
+    (1,'Daily Life','Common everyday phrasal verbs'),
+    (2,'Travel','Phrasal verbs used when traveling'),
+    (3,'Business','Business related phrasal verbs');
+SET IDENTITY_INSERT dbo.PhrasalVerbGroup OFF;
+
+INSERT INTO dbo.PhrasalVerbGroupMap (VerbId, GroupId) VALUES
+    (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),
+    (9,2),(10,2),(11,2),(12,2),(13,2),(14,2),(15,2),(16,2),
+    (17,3),(18,3),(19,3),(20,3),(21,3),(22,3),(23,3),(24,3);
 -- ========== USER VOCABULARY PROGRESS ==========
 INSERT INTO dbo.UserVocabularyProgress (UserId, WordId, Mastery, LastReviewed, CorrectStreak, Attempts, Memorized) VALUES
     (1, 1, 1, '2025-06-10', 1, 1, 0),

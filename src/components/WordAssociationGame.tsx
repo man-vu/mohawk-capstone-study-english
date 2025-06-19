@@ -59,10 +59,12 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
+  const [mode, setMode] = useState<'vocabulary' | 'idioms' | 'phrasalVerbs'>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}vocabulary/groups`)
+    const path = mode === 'phrasalVerbs' ? 'phrasal-verbs' : mode;
+    fetch(`${API_URL}${path}/groups`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
@@ -70,7 +72,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         }
       })
       .catch(() => {});
-  }, [API_URL]);
+  }, [API_URL, mode]);
 
   // Distractor words (unrelated to any theme)
   const distractorWords = [
@@ -251,6 +253,22 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           <p className="text-gray-600 dark:text-gray-400">
             Find words related to the target word. Test your vocabulary knowledge and word connections!
           </p>
+        </div>
+
+        <div className="flex justify-center gap-2 mb-6">
+          {[
+            { id: 'vocabulary', label: 'Vocabulary' },
+            { id: 'idioms', label: 'Idioms' },
+            { id: 'phrasalVerbs', label: 'Phrasal Verbs' }
+          ].map(m => (
+            <Button
+              key={m.id}
+              variant={mode === m.id ? 'default' : 'outline'}
+              onClick={() => setMode(m.id as any)}
+            >
+              {m.label}
+            </Button>
+          ))}
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
