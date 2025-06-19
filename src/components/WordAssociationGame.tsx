@@ -69,8 +69,8 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    const path = mode === 'phrasalVerbs' ? 'phrasal-verbs' : mode;
-    fetch(`${API_URL}${path}/groups`)
+    const type = mode;
+    fetch(`${API_URL}lexicon/groups?type=${type}`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {

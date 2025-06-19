@@ -1,27 +1,31 @@
 const { sendSuccess, sendFailure } = require("../../config/res");
 const STRINGS = require("../../config/strings");
-const VocabularyWordModel = require("../../models/vocabulary/VocabularyWordModel.ts").default;
-const WordGroupModel = require("../../models/vocabulary/WordGroupModel.ts").default;
-const UserVocabularyProgressModel = require("../../models/vocabulary/UserVocabularyProgressModel.ts").default;
+const LexiconModel = require("../../models/lexicon/LexiconModel.ts").default;
+const LexiconGroupModel = require("../../models/lexicon/LexiconGroupModel.ts").default;
+const UserLexiconProgressModel = require("../../models/lexicon/UserLexiconProgressModel.ts").default;
 
 module.exports = {
-  getWords: async () => {
+  getWords: async (type) => {
     try {
-      const words = await VocabularyWordModel.findAll();
+      const words = await LexiconModel.findAll(type);
       return sendSuccess(words);
     } catch (error) {
       console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
-  getGroups: async () => {
+  getGroups: async (type) => {
     try {
-      const groups = await WordGroupModel.findAllWithWords();
+      const groups = await LexiconGroupModel.findAllWithWords(type);
       const formatted = groups.map((g) => ({
         id: g.GroupId,
         theme: g.Theme,
         description: g.Description,
-        words: g.VocabularyWordGroup.map((v) => v.VocabularyWord.Word),
+        words: g.LexiconGroupMap.map((m) => ({
+          expression: m.Lexicon.Word,
+          meaning: m.Lexicon.Definition,
+          type: m.Lexicon.LexiconType,
+        })),
       }));
       return sendSuccess(formatted);
     } catch (error) {
@@ -31,25 +35,25 @@ module.exports = {
   },
   getUserProgress: async (userId) => {
     try {
-      const progress = await UserVocabularyProgressModel.findByUser(userId);
+      const progress = await UserLexiconProgressModel.findByUser(userId);
       return sendSuccess(progress);
     } catch (error) {
       console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
-  updateProgress: async ({ userId, wordId, mastery, memorized }) => {
+  updateProgress: async ({ userId, lexiconId, mastery, memorized }) => {
     try {
       const data = {
         UserId: userId,
-        WordId: wordId,
+        LexiconId: lexiconId,
         Mastery: mastery,
         Memorized: memorized,
         Attempts: 1,
         CorrectStreak: mastery > 0 ? 1 : 0,
         LastReviewed: new Date()
       };
-      await UserVocabularyProgressModel.upsert(userId, wordId, data);
+      await UserLexiconProgressModel.upsert(userId, lexiconId, data);
       return sendSuccess(null);
     } catch (error) {
       console.log(error);

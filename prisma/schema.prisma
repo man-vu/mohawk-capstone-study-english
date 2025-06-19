@@ -40,7 +40,7 @@ model AppUser {
   UserAttempt            UserAttempt[]
   UserFavorite           UserFavorite[]
   UserRating             UserRating[]
-  UserVocabularyProgress UserVocabularyProgress[]
+  UserLexiconProgress UserLexiconProgress[]
 }
 
 model AuditTrail {
@@ -316,30 +316,6 @@ model Course {
   CreatedAt            DateTime @default(dbgenerated("sysdatetime()"), map: "DF__Course__CreatedA__4D5F7D71")
 }
 
-model Idiom {
-  IdiomId       Int             @id(map: "PK__Idiom__8438CC6B202F34EC") @default(autoincrement())
-  Expression    String          @unique(map: "UQ__Idiom__2A84EAF03DDFD87C") @db.NVarChar(200)
-  Meaning       String          @db.NVarChar(500)
-  Example       String?         @db.NVarChar(500)
-  Difficulty    String?         @db.NVarChar(20)
-  IdiomGroupMap IdiomGroupMap[]
-}
-
-model IdiomGroup {
-  GroupId       Int             @id(map: "PK__IdiomGro__149AF36A3CA7224A") @default(autoincrement())
-  Theme         String          @db.NVarChar(100)
-  Description   String?         @db.NVarChar(255)
-  IdiomGroupMap IdiomGroupMap[]
-}
-
-model IdiomGroupMap {
-  IdiomId    Int
-  GroupId    Int
-  IdiomGroup IdiomGroup @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, onUpdate: NoAction, map: "FK_IdiomGroupMap_Group")
-  Idiom      Idiom      @relation(fields: [IdiomId], references: [IdiomId], onDelete: Cascade, onUpdate: NoAction, map: "FK_IdiomGroupMap_Idiom")
-
-  @@id([IdiomId, GroupId], map: "PK__IdiomGro__3571635D466FD4A4")
-}
 
 model MockTest {
   MockTestId      Int               @id(map: "PK__MockTest__069E78AB4CEF80E0") @default(autoincrement())
@@ -365,75 +341,8 @@ model MockTestSection {
   QuizSkill      QuizSkill @relation(fields: [SkillId], references: [SkillId], onUpdate: NoAction, map: "FK_MockTestSection_Skill")
 }
 
-model PhrasalVerb {
-  VerbId              Int                   @id(map: "PK__PhrasalV__B776A5AE1595CC2B") @default(autoincrement())
-  Verb                String                @unique(map: "UQ__PhrasalV__B1C5FCE209D34954") @db.NVarChar(200)
-  Meaning             String                @db.NVarChar(500)
-  Example             String?               @db.NVarChar(500)
-  Difficulty          String?               @db.NVarChar(20)
-  PhrasalVerbGroupMap PhrasalVerbGroupMap[]
-}
 
-model PhrasalVerbGroup {
-  GroupId             Int                   @id(map: "PK__PhrasalV__149AF36A78149BE7") @default(autoincrement())
-  Theme               String                @db.NVarChar(100)
-  Description         String?               @db.NVarChar(255)
-  PhrasalVerbGroupMap PhrasalVerbGroupMap[]
-}
 
-model PhrasalVerbGroupMap {
-  VerbId           Int
-  GroupId          Int
-  PhrasalVerbGroup PhrasalVerbGroup @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, onUpdate: NoAction, map: "FK_PhrasalVerbGroupMap_Group")
-  PhrasalVerb      PhrasalVerb      @relation(fields: [VerbId], references: [VerbId], onDelete: Cascade, onUpdate: NoAction, map: "FK_PhrasalVerbGroupMap_Verb")
-
-  @@id([VerbId, GroupId], map: "PK__PhrasalV__063F0A98D6C9FF3C")
-}
-
-model UserVocabularyProgress {
-  UserId         Int
-  WordId         Int
-  Mastery        Int            @default(0, map: "DF__UserVocab__Maste__208CD6FA") @db.TinyInt
-  LastReviewed   DateTime?      @db.Date
-  CorrectStreak  Int            @default(0, map: "DF__UserVocab__Corre__2180FB33")
-  Attempts       Int            @default(0, map: "DF__UserVocab__Attem__22751F6C")
-  Memorized      Boolean        @default(false, map: "DF__UserVocab__Memor__236943A5")
-  AppUser        AppUser        @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserVocabularyProgress_User")
-  VocabularyWord VocabularyWord @relation(fields: [WordId], references: [WordId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserVocabularyProgress_Word")
-
-  @@id([UserId, WordId], map: "PK_UserVocabularyProgress")
-}
-
-model VocabularyWord {
-  WordId                 Int                      @id(map: "PK__Vocabula__2C20F066594E84EC") @default(autoincrement())
-  Word                   String                   @unique(map: "UQ__Vocabula__95B501086E4F5F88") @db.NVarChar(100)
-  Definition             String                   @db.NVarChar(500)
-  Example                String?                  @db.NVarChar(500)
-  PartOfSpeech           String?                  @db.NVarChar(50)
-  Level                  String?                  @db.NVarChar(20)
-  Category               String?                  @db.NVarChar(100)
-  Difficulty             String?                  @db.NVarChar(20)
-  UserVocabularyProgress UserVocabularyProgress[]
-  VocabularyWordGroup    VocabularyWordGroup[]
-}
-
-model VocabularyWordGroup {
-  WordId         Int
-  GroupId        Int
-  WordGroup      WordGroup      @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, onUpdate: NoAction, map: "FK_VocabularyWordGroup_Group")
-  VocabularyWord VocabularyWord @relation(fields: [WordId], references: [WordId], onDelete: Cascade, onUpdate: NoAction, map: "FK_VocabularyWordGroup_Word")
-
-  @@id([WordId, GroupId], map: "PK__Vocabula__9D695F5050914B4E")
-}
-
-model WordGroup {
-  GroupId             Int                   @id(map: "PK__WordGrou__149AF36A3444F8C7") @default(autoincrement())
-  Theme               String                @db.NVarChar(100)
-  Description         String?               @db.NVarChar(255)
-  VocabularyWordGroup VocabularyWordGroup[]
-}
-
-model WritingAssessment {
   AssessmentId             Int             @id(map: "PK__WritingA__3D2BF81E8AE45E95") @default(autoincrement())
   UserEssayAnswerId        Int
   TaskResponseScore        Decimal?        @db.Decimal(5, 2)
@@ -444,4 +353,47 @@ model WritingAssessment {
   EstimatedIELTSScore      Decimal?        @db.Decimal(5, 2)
   CreatedAt                DateTime        @default(dbgenerated("sysdatetime()"), map: "DF__WritingAs__Creat__47A6A41B")
   UserEssayAnswer          UserEssayAnswer @relation(fields: [UserEssayAnswerId], references: [UserAnswerId], onDelete: Cascade, onUpdate: NoAction, map: "FK_WritingAssessment_Essay")
+}
+
+model UserLexiconProgress {
+  UserId        Int
+  LexiconId     Int
+  Mastery       Int       @default(0, map: "DF__UserVocab__Maste__208CD6FA") @db.TinyInt
+  LastReviewed  DateTime? @db.Date
+  CorrectStreak Int       @default(0, map: "DF__UserVocab__Corre__2180FB33")
+  Attempts      Int       @default(0, map: "DF__UserVocab__Attem__22751F6C")
+  Memorized     Boolean   @default(false, map: "DF__UserVocab__Memor__236943A5")
+  AppUser       AppUser   @relation(fields: [UserId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserLexiconProgress_User")
+  Lexicon       Lexicon   @relation(fields: [LexiconId], references: [LexiconId], onDelete: Cascade, onUpdate: NoAction, map: "FK_UserLexiconProgress_Word")
+
+  @@id([UserId, LexiconId], map: "PK_UserLexiconProgress")
+}
+
+model Lexicon {
+  LexiconId   Int      @id(map: "PK_Lexicon") @default(autoincrement())
+  Word        String   @unique(map: "UQ_Lexicon_Word") @db.NVarChar(100)
+  Definition  String   @db.NVarChar(500)
+  Example     String?  @db.NVarChar(500)
+  PartOfSpeech String? @db.NVarChar(50)
+  Level       String?  @db.NVarChar(20)
+  Category    String?  @db.NVarChar(100)
+  Difficulty  String?  @db.NVarChar(20)
+  LexiconType String   @db.NVarChar(20)
+  LexiconGroupMap LexiconGroupMap[]
+}
+
+model LexiconGroup {
+  GroupId         Int             @id(map: "PK_LexiconGroup") @default(autoincrement())
+  Theme           String          @db.NVarChar(100)
+  Description     String?         @db.NVarChar(255)
+  LexiconGroupMap LexiconGroupMap[]
+}
+
+model LexiconGroupMap {
+  LexiconId Int
+  GroupId   Int
+  Lexicon   Lexicon     @relation(fields: [LexiconId], references: [LexiconId], onDelete: Cascade, onUpdate: NoAction, map: "FK_LexiconGroupMap_Lexicon")
+  LexiconGroup LexiconGroup @relation(fields: [GroupId], references: [GroupId], onDelete: Cascade, onUpdate: NoAction, map: "FK_LexiconGroupMap_Group")
+
+  @@id([LexiconId, GroupId], map: "PK_LexiconGroupMap")
 }
