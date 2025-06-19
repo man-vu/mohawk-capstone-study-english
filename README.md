@@ -1,14 +1,14 @@
-# Simple Matching Card Game
+# Matching Card Game
 
-This project is a minimal React + Vite app that renders a small card matching game using only dummy emoji data. It does not require any backend services or database connections.
+This project is a React + Vite app that showcases a vocabulary matching card game. It runs entirely on dummy data so no backend services or database connections are required.
 
 ## Project Structure
 
 ```
 ├── src/
 │   ├── App.tsx          # Main application component
-│   ├── pages/
-│   │   └── SimpleMatchingGame.tsx # Game logic
+│   ├── components/
+│   │   └── MatchingCardsGame.tsx # Game logic and UI
 │   ├── main.tsx         # Application entry point
 │   └── index.css        # Global styles (Tailwind)
 ├── public/              # Static assets
