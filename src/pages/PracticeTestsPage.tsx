@@ -419,7 +419,7 @@ const PracticeTestsPage: React.FC = () => {
                     <Button 
                       className="w-full mt-4"
                       variant={quiz.latestAttempt && !quiz.latestAttempt.is_completed ? "default" : "outline"}
-                      onClick={() => window.location.href = `/practice/${quiz.skill_description.toLowerCase()}`}
+                      onClick={() => window.location.href = `/practice/${quiz.quiz_id}`}
                     >
                       {quiz.latestAttempt && !quiz.latestAttempt.is_completed
                         ? '🔄 Continue Quiz'

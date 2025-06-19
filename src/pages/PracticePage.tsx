@@ -12,7 +12,7 @@ interface QuizResponse {
 
 const PracticePage: React.FC = () => {
   const { id } = useParams();
-  const { user, openAuthModal } = useAuth();
+  const { user, openAuthModal, isLoading: authLoading } = useAuth();
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
   const [data, setData] = useState<QuizResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +28,14 @@ const PracticePage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       openAuthModal('login');
-      setError('Login required');
       setLoading(false);
+    }
+  }, [authLoading, user]);
+
+  useEffect(() => {
+    if (!user) {
       return;
     }
 
