@@ -235,6 +235,12 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
 
   // Keyboard controls
   useEffect(() => {
+    const preventSpaceScroll = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && isGameActive && !isPaused && !gameSession.sessionComplete) {
+        e.preventDefault();
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isGameActive || isPaused || gameSession.sessionComplete) return;
 
@@ -265,8 +271,14 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
           break;
       }
     };
+    window.addEventListener('keydown', preventSpaceScroll, { passive: false });
+    window.addEventListener('keyup', preventSpaceScroll, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', preventSpaceScroll);
+      window.removeEventListener('keyup', preventSpaceScroll);
+    };
   }, [isGameActive, isPaused, gameSession, gameMode]);
 
   const formatTime = (seconds: number) => {
