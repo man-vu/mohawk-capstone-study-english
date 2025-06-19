@@ -284,6 +284,11 @@ CREATE TABLE dbo.UserActivity (
 
 -- ==================== NEW TABLES FOR VOCABULARY AND MOCK TESTS ====================
 
+CREATE TABLE dbo.LexiconType (
+    TypeId INT IDENTITY PRIMARY KEY,
+    TypeName NVARCHAR(50) NOT NULL UNIQUE
+);
+
 CREATE TABLE dbo.Lexicon (
     LexiconId INT IDENTITY PRIMARY KEY,
     Word NVARCHAR(100) NOT NULL UNIQUE,
@@ -293,7 +298,9 @@ CREATE TABLE dbo.Lexicon (
     Level NVARCHAR(20) NULL,
     Category NVARCHAR(100) NULL,
     Difficulty NVARCHAR(20) NULL,
-    LexiconType NVARCHAR(20) NOT NULL
+    TypeId INT NOT NULL,
+    CONSTRAINT FK_Lexicon_LexiconType FOREIGN KEY (TypeId)
+        REFERENCES dbo.LexiconType(TypeId)
 );
 
 CREATE TABLE dbo.LexiconGroup (
@@ -448,6 +455,14 @@ INSERT INTO dbo.QuestionType (TypeId, TypeName) VALUES
     (3, 'Matching'),
     (4, 'Essay');
 SET IDENTITY_INSERT dbo.QuestionType OFF;
+
+-- ========== LEXICON TYPE ==========
+SET IDENTITY_INSERT dbo.LexiconType ON;
+INSERT INTO dbo.LexiconType (TypeId, TypeName) VALUES
+    (1, 'Vocabulary'),
+    (2, 'Idiom'),
+    (3, 'Phrasal Verb');
+SET IDENTITY_INSERT dbo.LexiconType OFF;
 
 -- ========== QUESTION INSTRUCTION ==========
 SET IDENTITY_INSERT dbo.QuestionInstruction ON;

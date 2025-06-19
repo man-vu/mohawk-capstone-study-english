@@ -28,9 +28,9 @@ export class LexiconGroupModel {
     return prisma.lexiconGroup.findMany({
       include: {
         LexiconGroupMap: {
-          include: { Lexicon: true },
+          include: { Lexicon: { include: { LexiconType: true } } },
           where: type
-            ? { Lexicon: { LexiconType: { equals: type, mode: 'insensitive' } } }
+            ? { Lexicon: { LexiconType: { TypeName: { equals: type, mode: 'insensitive' } } } }
             : undefined,
         },
       },

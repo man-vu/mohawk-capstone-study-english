@@ -8,7 +8,11 @@ module.exports = {
   getWords: async (type) => {
     try {
       const words = await LexiconModel.findAll(type);
-      return sendSuccess(words);
+      const formatted = words.map(w => ({
+        ...w,
+        LexiconType: w.LexiconType.TypeName,
+      }));
+      return sendSuccess(formatted);
     } catch (error) {
       console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
@@ -24,7 +28,7 @@ module.exports = {
         words: g.LexiconGroupMap.map((m) => ({
           expression: m.Lexicon.Word,
           meaning: m.Lexicon.Definition,
-          type: m.Lexicon.LexiconType,
+          type: m.Lexicon.LexiconType.TypeName,
         })),
       }));
       return sendSuccess(formatted);

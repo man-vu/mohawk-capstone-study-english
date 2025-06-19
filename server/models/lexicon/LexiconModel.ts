@@ -10,7 +10,11 @@ export interface Lexicon {
   Level?: string | null;
   Category?: string | null;
   Difficulty?: string | null;
-  LexiconType: string;
+  TypeId: number;
+  LexiconType: {
+    TypeId: number;
+    TypeName: string;
+  };
 }
 
 export class LexiconModel {
@@ -32,7 +36,10 @@ export class LexiconModel {
 
   static findAll(type?: string) {
     return prisma.lexicon.findMany({
-      where: type ? { LexiconType: { equals: type, mode: 'insensitive' } } : {},
+      include: { LexiconType: true },
+      where: type
+        ? { LexiconType: { TypeName: { equals: type, mode: 'insensitive' } } }
+        : {},
     });
   }
 }

@@ -378,8 +378,15 @@ model Lexicon {
   Level       String?  @db.NVarChar(20)
   Category    String?  @db.NVarChar(100)
   Difficulty  String?  @db.NVarChar(20)
-  LexiconType String   @db.NVarChar(20)
+  TypeId      Int
+  LexiconType LexiconType @relation(fields: [TypeId], references: [TypeId], onUpdate: NoAction, map: "FK_Lexicon_LexiconType")
   LexiconGroupMap LexiconGroupMap[]
+}
+
+model LexiconType {
+  TypeId   Int      @id(map: "PK_LexiconType") @default(autoincrement())
+  TypeName String   @unique(map: "UQ_LexiconType_TypeName") @db.NVarChar(50)
+  Lexicon  Lexicon[]
 }
 
 model LexiconGroup {
