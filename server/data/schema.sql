@@ -464,6 +464,37 @@ INSERT INTO dbo.LexiconType (TypeId, TypeName) VALUES
     (3, 'Phrasal Verb');
 SET IDENTITY_INSERT dbo.LexiconType OFF;
 
+-- ========== LEXICON GROUP ==========
+SET IDENTITY_INSERT dbo.LexiconGroup ON;
+INSERT INTO dbo.LexiconGroup (GroupId, Theme, Description) VALUES
+    (1, 'Education', 'Words commonly seen in education topics'),
+    (2, 'Everyday Idioms', 'Common daily expressions'),
+    (3, 'Daily Life', 'Common everyday phrasal verbs');
+SET IDENTITY_INSERT dbo.LexiconGroup OFF;
+
+-- ========== LEXICON WORDS ==========
+SET IDENTITY_INSERT dbo.Lexicon ON;
+INSERT INTO dbo.Lexicon (LexiconId, Word, Definition, Example, PartOfSpeech, Level, Category, Difficulty, TypeId) VALUES
+    (1, 'abandon', 'to leave behind or give up completely', 'He decided to abandon the plan.', 'verb', 'B2', 'general', 'medium', 1),
+    (2, 'benevolent', 'well meaning and kindly', 'A benevolent smile spread across her face.', 'adjective', 'C1', 'behavior', 'hard', 1),
+    (3, 'candid', 'truthful and straightforward; frank', 'She gave a candid interview.', 'adjective', 'C1', 'communication', 'medium', 1),
+    (4, 'a piece of cake', 'very easy', 'The test was a piece of cake.', NULL, NULL, NULL, 'easy', 2),
+    (5, 'bite the bullet', 'face something unpleasant', 'I decided to bite the bullet and go to the dentist.', NULL, NULL, NULL, 'medium', 2),
+    (6, 'get up', 'rise from bed', 'I get up at seven.', NULL, NULL, NULL, 'easy', 3),
+    (7, 'look after', 'take care of', 'She looks after her brother.', NULL, NULL, NULL, 'easy', 3);
+SET IDENTITY_INSERT dbo.Lexicon OFF;
+
+-- ========== LEXICON GROUP MAP ==========
+INSERT INTO dbo.LexiconGroupMap (LexiconId, GroupId) VALUES
+    (1,1),(2,1),(3,1),
+    (4,2),(5,2),
+    (6,3),(7,3);
+
+-- ========== USER LEXICON PROGRESS ==========
+INSERT INTO dbo.UserLexiconProgress (UserId, LexiconId, Mastery, LastReviewed, CorrectStreak, Attempts, Memorized) VALUES
+    (1, 1, 1, '2025-06-10', 1, 1, 0),
+    (1, 4, 0, NULL, 0, 0, 0);
+
 -- ========== QUESTION INSTRUCTION ==========
 SET IDENTITY_INSERT dbo.QuestionInstruction ON;
 INSERT INTO dbo.QuestionInstruction (InstructionId, Instruction) VALUES
