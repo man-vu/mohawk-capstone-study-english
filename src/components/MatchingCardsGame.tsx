@@ -55,10 +55,10 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
     medium: [],
     hard: []
   });
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}/api/vocabulary/words`)
+    fetch(`${API_URL}vocabulary/words`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {

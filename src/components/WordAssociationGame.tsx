@@ -59,10 +59,10 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}/api/vocabulary/groups`)
+    fetch(`${API_URL}vocabulary/groups`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {

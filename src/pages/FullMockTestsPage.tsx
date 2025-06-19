@@ -56,10 +56,10 @@ const FullMockTestsPage: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
 
   const [mockTests, setMockTests] = useState<MockTestSession[]>([]);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}/api/mock-tests`)
+    fetch(`${API_URL}mock-tests`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
