@@ -4,6 +4,15 @@ const authMiddleware = require("../middlewares/auth");
 const authTeacherMiddleware = require("../middlewares/authTeacher");
 const router = express.Router();
 
+router.get('/', async (req, res) => {
+  const userId = req.query.user_id ? Number(req.query.user_id) : undefined;
+  if (req.query.user_id && Number.isNaN(userId)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  const result = await quizzesController.getQuizzes(userId);
+  res.json(result);
+});
+
 /**
  * Route that handles starting a quiz
  */

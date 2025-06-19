@@ -135,17 +135,29 @@ model Quiz {
   AppUser      AppUser        @relation(fields: [CreatedBy], references: [UserId], onUpdate: NoAction, map: "FK_Quiz_CreatedBy")
   QuizSkill    QuizSkill?     @relation(fields: [SkillId], references: [SkillId], onDelete: NoAction, onUpdate: NoAction, map: "FK_Quiz_Skill")
   QuizQuestion QuizQuestion[]
+  QuizPart     QuizPart[]
   UserAttempt  UserAttempt[]
   UserFavorite UserFavorite[]
   UserRating   UserRating[]
 }
 
+model QuizPart {
+  PartId    Int      @id @default(autoincrement())
+  QuizId    Int
+  PartTitle String   @db.NVarChar(100)
+  SortOrder Int
+  Quiz      Quiz     @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QuizPart_Quiz")
+  QuizQuestion QuizQuestion[]
+}
+
 model QuizQuestion {
   QuizId     Int
   QuestionId Int
+  PartId     Int
   SortOrder  Int?
   Question   Question @relation(fields: [QuestionId], references: [QuestionId], onUpdate: NoAction, map: "FK_QuizQuestion_Question")
   Quiz       Quiz     @relation(fields: [QuizId], references: [QuizId], onDelete: Cascade, onUpdate: NoAction, map: "FK_QuizQuestion_Quiz")
+  QuizPart   QuizPart @relation(fields: [PartId], references: [PartId], onDelete: NoAction, onUpdate: NoAction, map: "FK_QuizQuestion_Part")
 
   @@id([QuizId, QuestionId], map: "PK__QuizQues__5B9EA87466D4CF6A")
 }

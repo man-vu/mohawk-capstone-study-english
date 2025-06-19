@@ -14,22 +14,56 @@ export const AuthProvider = ({ children }) => {
   // State to determine which form to show (login or register)
   const [authModalView, setAuthModalView] = useState('login'); // 'login' or 'register'
   
-  // Effect to check if user is already logged in (from localStorage)
+  // Effect to check if user is already logged in and verify token
   useEffect(() => {
-    const checkLoggedInUser = () => {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error("Failed to parse user data:", error);
-          localStorage.removeItem('user');
-        }
-      }
-      setIsLoading(false);
+    const getCookie = (name: string) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
     };
-    
-    checkLoggedInUser();
+
+    const verifySession = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (!storedUser) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(storedUser);
+        const token = parsed.token || getCookie('token');
+        if (!token) {
+          localStorage.removeItem('user');
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_URL}auth`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.statusCode === 200) {
+            setUser({ ...parsed, ...data.response, token });
+          } else {
+            localStorage.removeItem('user');
+            setUser(null);
+          }
+        } else {
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('verify session failed', err);
+        localStorage.removeItem('user');
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifySession();
   }, []);
 
   // Function to open auth modal with specific view
@@ -43,37 +77,65 @@ export const AuthProvider = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
+  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
+
   // Function to handle user login
-  const login = (userData) => {
-    // In a real app, you would send a request to your backend
-    // For now, we'll just simulate a successful login
-    
-    // Save user data
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    
-    // Close modal after successful login
-    closeAuthModal();
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${API_URL}auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (data.statusCode === 200) {
+        setUser(data.response);
+        localStorage.setItem('user', JSON.stringify(data.response));
+        closeAuthModal();
+        return { success: true };
+      }
+
+      return { success: false, message: data.error || 'Login failed' };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, message: 'Network error' };
+    }
   };
 
   // Function to handle user registration
-  const register = (userData) => {
-    // In a real app, you would send a request to your backend
-    // For now, we'll just simulate a successful registration followed by login
-    
-    // Add additional user data
-    const newUser = {
-      ...userData,
-      id: Date.now().toString(), // Generate a dummy ID
-      createdAt: new Date().toISOString()
-    };
-    
-    // Save user data (effectively logging them in after registration)
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    
-    // Close modal after successful registration
-    closeAuthModal();
+  const register = async ({ firstName, lastName, email, password }) => {
+    try {
+      const response = await fetch(`${API_URL}auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.statusCode === 201) {
+        setUser(data.response);
+        localStorage.setItem('user', JSON.stringify(data.response));
+        closeAuthModal();
+        return { success: true };
+      }
+
+      return { success: false, message: data.error || 'Registration failed' };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, message: 'Network error' };
+    }
   };
 
   // Function to handle user logout

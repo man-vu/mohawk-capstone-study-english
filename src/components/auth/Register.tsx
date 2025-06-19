@@ -71,27 +71,22 @@ const Register = ({ switchToLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-    
+
     if (validateForm()) {
-      try {
-        setIsLoading(true);
-        
-        // In a real app, this would be an actual API call
-        // Simulating network request
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Call register function from auth context
-        register({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email
-        });
-        
-      } catch (error) {
-        setErrorMsg('Registration failed. Please try again.');
-      } finally {
-        setIsLoading(false);
+      setIsLoading(true);
+
+      const result = await register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (!result.success) {
+        setErrorMsg(result.message || 'Registration failed. Please try again.');
       }
+
+      setIsLoading(false);
     }
   };
 
