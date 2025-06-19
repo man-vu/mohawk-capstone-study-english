@@ -10,10 +10,14 @@ module.exports = {
       const words = limit
         ? await LexiconModel.findRandom(limit, type)
         : await LexiconModel.findAll(type);
-      const formatted = words.map(w => ({
-        ...w,
-        LexiconType: w.LexiconType.TypeName,
-      }));
+      const formatted = words.map((w) => {
+        // normalize results when using raw queries
+        const typeName = w.LexiconType
+          ? w.LexiconType.TypeName
+          : (w as any).TypeName;
+        const { TypeName, ...rest } = w;
+        return { ...rest, LexiconType: typeName };
+      });
       return sendSuccess(formatted);
     } catch (error) {
       console.log(error);
