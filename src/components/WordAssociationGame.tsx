@@ -4,6 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
+import SetupScreen from './word-association/SetupScreen';
+import CompletionScreen from './word-association/CompletionScreen';
+import PauseOverlay from './word-association/PauseOverlay';
+import FeedbackModal from './word-association/FeedbackModal';
+import type { WordGroup, WordItem, GameRound, GameMode, RelationType } from './word-association/types';
 import { 
   Brain, 
   Clock, 
@@ -19,35 +24,6 @@ import {
   Lightbulb,
   Zap
 } from 'lucide-react';
-
-interface WordItem {
-  text: string;
-  meaning?: string;
-  synonyms?: string | null;
-  antonyms?: string | null;
-  related?: string | null;
-  guideword?: string | null;
-}
-
-interface WordGroup {
-  id: string;
-  theme: string;
-  words: WordItem[];
-  description: string;
-}
-
-interface GameRound {
-  id: string;
-  targetWord: string;
-  targetMeaning?: string;
-  synonyms?: string[];
-  antonyms?: string[];
-  guidewords?: string[];
-  relatedWords: string[];
-  distractors: string[];
-  allOptions: string[];
-  theme: string;
-}
 
 interface WordAssociationGameProps {
   onBack: () => void;
@@ -73,7 +49,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
   const [noWordsAvailable, setNoWordsAvailable] = useState(false);
-  const [mode, setMode] = useState<'vocabulary' | 'idiom' | 'phrasal verb' | 'syn-ant'>('vocabulary');
+  const [mode, setMode] = useState<GameMode>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
@@ -251,13 +227,17 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     const targetWord = item.text;
     const synonyms = parseList(item.synonyms);
     const antonyms = parseList(item.antonyms);
-    const relatedSet = [...synonyms, ...antonyms];
+    const useSynonyms = Math.random() < 0.5;
+    const relationType: RelationType = useSynonyms ? 'synonym' : 'antonym';
+    const relatedSet = useSynonyms ? synonyms : antonyms;
+    const allRelated = [...synonyms, ...antonyms];
+
     const relatedWords = relatedSet
       .sort(() => Math.random() - 0.5)
       .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
 
     const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
-    const exclude = [targetWord, ...relatedSet];
+    const exclude = [targetWord, ...allRelated];
     const selectedDistractors = distractorWords
       .filter(w => !exclude.some(ex => w.toLowerCase().includes(ex.toLowerCase())))
       .sort(() => Math.random() - 0.5)
@@ -274,6 +254,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       distractors: selectedDistractors,
       allOptions,
       theme: group.theme,
+      relationType,
     };
   };
 
@@ -423,160 +404,28 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   // Game setup screen
   if (!isGameActive && !isGameComplete) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Brain className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Word Association Game
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            {mode === 'vocabulary'
-              ? 'Find words related to the target word. Test your vocabulary knowledge and word connections!'
-              : mode === 'idiom'
-              ? 'Select the correct meaning for the displayed idiom.'
-              : mode === 'phrasal verb'
-              ? 'Select the correct meaning for the displayed phrasal verb.'
-              : 'Choose words that are synonyms or antonyms of the target word.'}
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-2 mb-6">
-          {[
-            { id: 'vocabulary', label: 'Vocabulary' },
-            { id: 'idiom', label: 'Idioms' },
-            { id: 'phrasal verb', label: 'Phrasal Verbs' },
-            { id: 'syn-ant', label: 'Synonyms & Antonyms' }
-          ].map(m => (
-            <Button
-              key={m.id}
-              variant={mode === m.id ? 'default' : 'outline'}
-              onClick={() => setMode(m.id as any)}
-            >
-              {m.label}
-            </Button>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {(['easy', 'medium', 'hard'] as const).map((level) => (
-            <Card
-              key={level}
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
-              onClick={() => startGame(level)}
-            >
-              <CardContent className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${
-                  level === 'easy' ? 'bg-green-100 dark:bg-green-900/20' :
-                  level === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/20' :
-                  'bg-red-100 dark:bg-red-900/20'
-                }`}>
-                  <Brain className={`w-6 h-6 ${
-                    level === 'easy' ? 'text-green-600 dark:text-green-400' :
-                    level === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
-                    'text-red-600 dark:text-red-400'
-                  }`} />
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2 capitalize">
-                  {level}
-                </h3>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {level === 'easy' && '45s per round • 7 words to choose from'}
-                  {level === 'medium' && '30s per round • 10 words to choose from'}
-                  {level === 'hard' && '20s per round • 13 words to choose from'}
-                </div>
-                <Button className="w-full" disabled={noWordsAvailable}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Game
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-          {noWordsAvailable && (
-            <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
-              No words available for this mode.
-            </div>
-          )}
-        </div>
-
-        <div className="text-center">
-          <Button variant="outline" onClick={onBack}>
-            <Home className="w-4 h-4 mr-2" />
-            Back to Games
-          </Button>
-        </div>
-      </div>
+      <SetupScreen
+        mode={mode}
+        setMode={setMode}
+        startGame={startGame}
+        noWordsAvailable={noWordsAvailable}
+        onBack={onBack}
+      />
     );
   }
 
   // Game completion screen
   if (isGameComplete) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-        </motion.div>
-        
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-          Game Complete! 🧠
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          You've completed all {totalRounds} rounds of word association!
-        </p>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {score}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Score</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Math.round(gameStats.accuracy)}%
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Accuracy</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {gameStats.correctAnswers}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Perfect Rounds</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {Math.floor(gameStats.totalTime / 60)}:{(gameStats.totalTime % 60).toString().padStart(2, '0')}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Time Played</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex gap-4 justify-center">
-            <Button onClick={resetGame} size="lg">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Play Again
-            </Button>
-            <Button variant="outline" onClick={onBack} size="lg">
-              <Home className="w-4 h-4 mr-2" />
-              Back to Games
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CompletionScreen
+        totalRounds={totalRounds}
+        score={score}
+        accuracy={gameStats.accuracy}
+        correctAnswers={gameStats.correctAnswers}
+        totalTime={gameStats.totalTime}
+        resetGame={resetGame}
+        onBack={onBack}
+      />
     );
   }
 
@@ -624,29 +473,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       </div>
 
       {/* Pause Overlay */}
-      <AnimatePresence>
-        {isPaused && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          >
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Pause className="w-12 h-24 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                  Game Paused
-                </h3>
-                <Button onClick={togglePause}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Resume Game
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PauseOverlay isPaused={isPaused} togglePause={togglePause} />
 
       {currentRound && (
         <>
@@ -658,7 +485,9 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   {mode === 'vocabulary'
                     ? 'Find words related to:'
                     : mode === 'syn-ant'
-                    ? 'Select synonyms or antonyms for:'
+                    ? (
+                        <>Select <span className={`font-bold ${currentRound.relationType === 'synonym' ? 'text-green-600' : 'text-red-600'}`}>{currentRound.relationType === 'synonym' ? 'synonyms' : 'antonyms'}</span> for:</>
+                      )
                     : 'What is the meaning of:'}
                 </CardTitle>
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
@@ -682,7 +511,9 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                     {mode === 'vocabulary'
                       ? `Select ${Math.max(1, currentRound.relatedWords.length)} related word${Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}`
                       : mode === 'syn-ant'
-                      ? `Select ${Math.max(1, currentRound.relatedWords.length)} correct word${Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}`
+                      ? (
+                          <>Select {Math.max(1, currentRound.relatedWords.length)} <span className={`font-bold ${currentRound.relationType === 'synonym' ? 'text-green-600' : 'text-red-600'}`}>{currentRound.relationType === 'synonym' ? 'synonym' : 'antonym'}{Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}</span></>
+                        )
                       : 'Select the correct meaning'}
                   </span>
                 </div>
@@ -734,82 +565,12 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           </Card>
 
           {/* Feedback */}
-          <AnimatePresence>
-            {feedback && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-                onClick={closeFeedback}
-              >
-                <Card onClick={e => e.stopPropagation()}>
-                  <CardContent className="p-8 text-center">
-                    <div className="mb-4">
-                      {feedback.includes('Perfect') && (
-                        <Trophy className="w-12 h-12 text-yellow-500 mx-auto" />
-                      )}
-                      {feedback.includes('Partially') && (
-                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-                      )}
-                      {feedback.includes('Better luck') && (
-                        <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-                      )}
-                      {feedback.includes("Time's up") && (
-                        <Clock className="w-12 h-12 text-orange-500 mx-auto" />
-                      )}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      {feedback}
-                    </h3>
-                    {currentRound && (
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        <p className="mb-2">Correct answers were:</p>
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {currentRound.relatedWords.map(word => (
-                            <Badge key={word} variant="success">
-                              {word}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="mt-4 mb-2">Your selections:</p>
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {selectedWords.map(word => (
-                            <Badge
-                              key={word}
-                              variant={currentRound.relatedWords.includes(word) ? 'success' : 'destructive'}
-                            >
-                              {word}
-                            </Badge>
-                          ))}
-                        </div>
-                        {currentRound.targetMeaning && (
-                          <p className="mt-4">
-                            <strong>Definition:</strong> {currentRound.targetMeaning}
-                          </p>
-                        )}
-                        {currentRound.synonyms && currentRound.synonyms.length > 0 && (
-                          <p className="mt-2">
-                            <strong>Synonyms:</strong> {currentRound.synonyms.join(', ')}
-                          </p>
-                        )}
-                        {currentRound.antonyms && currentRound.antonyms.length > 0 && (
-                          <p className="mt-2">
-                            <strong>Antonyms:</strong> {currentRound.antonyms.join(', ')}
-                          </p>
-                        )}
-                        {currentRound.guidewords && currentRound.guidewords.length > 0 && (
-                          <p className="mt-2">
-                            <strong>Guideword:</strong> {currentRound.guidewords.join(', ')}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <FeedbackModal
+            feedback={feedback}
+            currentRound={currentRound}
+            selectedWords={selectedWords}
+            closeFeedback={closeFeedback}
+          />
         </>
       )}
     </div>
