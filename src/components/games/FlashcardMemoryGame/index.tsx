@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
+import { Progress } from '../../ui/progress';
 import { 
   Zap, 
   Clock, 
@@ -72,6 +72,11 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
     useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
   const [timer, setTimer] = useState(0);
 
+  const [quizOptions, setQuizOptions] = useState<string[]>([]);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
+  const [incorrectWords, setIncorrectWords] = useState<FlashcardData[]>([]);
+
   const [sampleFlashcards, setSampleFlashcards] = useState<FlashcardData[]>([]);
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
@@ -112,6 +117,22 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
       if (interval) clearInterval(interval);
     };
   }, [isGameActive, isPaused, gameSession.sessionComplete]);
+
+  // Generate quiz options whenever the current card changes
+  useEffect(() => {
+    if (gameMode !== 'quiz' || flashcards.length === 0) return;
+    const current = flashcards[gameSession.currentCardIndex];
+    const others = flashcards
+      .filter((_, idx) => idx !== gameSession.currentCardIndex)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3)
+      .map(c => c.word);
+    const all = [current.word, ...others].sort(() => Math.random() - 0.5);
+    setQuizOptions(all);
+    setSelectedOption(null);
+    setWasCorrect(null);
+    setGameSession(prev => ({ ...prev, showAnswer: false }));
+  }, [gameMode, flashcards, gameSession.currentCardIndex]);
 
   // Initialize game
   const initializeGame = (difficulty: 'easy' | 'medium' | 'hard' | 'mixed', mode: 'study' | 'quiz' | 'memory') => {
@@ -199,6 +220,18 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
     }, 1500);
   };
 
+  const handleOptionSelect = (option: string) => {
+    if (selectedOption) return;
+    const isCorrect = option === flashcards[gameSession.currentCardIndex].word;
+    setSelectedOption(option);
+    setWasCorrect(isCorrect);
+    if (!isCorrect) {
+      setIncorrectWords(prev => [...prev, flashcards[gameSession.currentCardIndex]]);
+    }
+    setGameSession(prev => ({ ...prev, showAnswer: true }));
+    handleAnswerFeedback(isCorrect);
+  };
+
   // Toggle answer visibility
   const toggleAnswer = () => {
     setGameSession(prev => ({ ...prev, showAnswer: !prev.showAnswer }));
@@ -227,6 +260,10 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
     setIsGameActive(false);
     setIsPaused(false);
     setTimer(0);
+    setQuizOptions([]);
+    setSelectedOption(null);
+    setWasCorrect(null);
+    setIncorrectWords([]);
   };
 
   // Toggle pause
@@ -472,6 +509,19 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
           </Card>
         </div>
 
+        {incorrectWords.length > 0 && (
+          <div className="mb-8 text-left">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Missed Words</h3>
+            <ul className="list-disc list-inside space-y-1">
+              {incorrectWords.map(card => (
+                <li key={card.id}>
+                  <span className="font-medium">{card.word}</span> - {card.definition}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="flex gap-4 justify-center">
             <Button onClick={resetGame} size="lg">
@@ -602,64 +652,84 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
             <CardContent className="flex-1 flex flex-col justify-center">
               <div className="text-center mb-6">
                 <h3 className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-4">
-                  {currentCard.word}
+                  {gameMode === 'quiz' && !gameSession.showAnswer ? 'Guess the Word' : currentCard.word}
                 </h3>
-                
+
                 <AnimatePresence mode="wait">
-                  {gameSession.showAnswer ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="space-y-4"
-                    >
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p className="text-lg text-gray-800 dark:text-gray-200 mb-3">
-                          {currentCard.definition}
-                        </p>
-                        <p className="text-sm italic text-gray-600 dark:text-gray-400">
-                          "{currentCard.example}"
-                        </p>
-                      </div>
-                      
-                      {gameMode === 'quiz' && (
-                        <div className="flex gap-4 justify-center">
-                          <Button 
-                            onClick={() => handleAnswerFeedback(false)}
-                            variant="outline"
-                            className="text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          >
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Difficult
-                          </Button>
-                          <Button 
-                            onClick={() => handleAnswerFeedback(true)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Easy
-                          </Button>
+                  {gameMode === 'quiz' ? (
+                    gameSession.showAnswer ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-lg text-gray-800 dark:text-gray-200 mb-3">
+                            {currentCard.definition}
+                          </p>
                         </div>
-                      )}
-                    </motion.div>
+                        <p className={wasCorrect ? 'text-green-600' : 'text-red-600'}>
+                          {wasCorrect ? 'Correct!' : `Incorrect. Answer: ${currentCard.word}`}
+                        </p>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-lg text-gray-800 dark:text-gray-200 mb-3">
+                            {currentCard.definition}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {quizOptions.map(opt => (
+                            <Button key={opt} onClick={() => handleOptionSelect(opt)} disabled={!!selectedOption} variant="outline">
+                              {opt}
+                            </Button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )
                   ) : (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex flex-col items-center"
-                    >
-                      <div className="text-gray-400 dark:text-gray-600 mb-4">
-                        <Eye className="w-16 h-16 mx-auto" />
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Think about the definition, then reveal the answer
-                      </p>
-                      <Button onClick={toggleAnswer} size="lg">
-                        <EyeOff className="w-4 h-4 mr-2" />
-                        Show Definition
-                      </Button>
-                    </motion.div>
+                    gameSession.showAnswer ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-lg text-gray-800 dark:text-gray-200 mb-3">
+                            {currentCard.definition}
+                          </p>
+                          <p className="text-sm italic text-gray-600 dark:text-gray-400">
+                            "{currentCard.example}"
+                          </p>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex flex-col items-center"
+                      >
+                        <div className="text-gray-400 dark:text-gray-600 mb-4">
+                          <Eye className="w-16 h-16 mx-auto" />
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                          Think about the definition, then reveal the answer
+                        </p>
+                        <Button onClick={toggleAnswer} size="lg">
+                          <EyeOff className="w-4 h-4 mr-2" />
+                          Show Definition
+                        </Button>
+                      </motion.div>
+                    )
                   )}
                 </AnimatePresence>
               </div>
@@ -686,7 +756,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initi
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           )}
-          {!gameSession.showAnswer && (
+          {gameMode !== 'quiz' && !gameSession.showAnswer && (
             <Button onClick={toggleAnswer} variant="outline">
               <Eye className="w-4 h-4 mr-2" />
               Show Answer
