@@ -10,7 +10,7 @@ import PromptModel from "../../models/question/MatchingPromptModel";
 import ChoiceModel from "../../models/question/MatchingChoiceModel";
 import AttemptModel from "../../models/user/UserAttemptModel";
 import InstructionModel from "../../models/question/QuestionInstructionModel";
-import * as validator from "../validators/validator";
+import validator from "../validators/validator";
 
 /**
  * Helper function that creates question content by question type id

@@ -6,6 +6,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import resizeImg from "resize-img";
+import aws from "aws-sdk";
+import { aws_access_key, aws_secret_key, s3_bucket_name } from "../../config/index";
 
 
 const router = express.Router();

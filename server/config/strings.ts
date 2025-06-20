@@ -46,7 +46,6 @@ const STRINGS = {
     CANNOT_UPDATE_ANSWER: "Cannot update answer.",
     CANNOT_UPDATE_QUESTION: "Cannot update question.",
     CANNOT_UPDATE_QUIZ: "Cannot update quiz.",
-    CANNOT_UPDATE_POST: "Cannot update post.",
     CANNOT_UPDATE_FAVORITE: "Cannot update favorite.",
     CANNOT_UPDATE_RATING: "Cannot update rating.",
     CANNOT_LOAD_LATEST_ATTEMPT: "Cannot load latest attempt.",
