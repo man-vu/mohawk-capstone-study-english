@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Progress } from '../../ui/progress';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Card, CardHeader, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
-import { Play, Pause, RotateCcw, Home, Shuffle, Trophy, Zap, Target, Brain, Star, Clock } from 'lucide-react';
+import { Progress } from '../../ui/progress';
+import { RotateCcw } from 'lucide-react';
 
-import StudyMode from './StudyMode';
-import QuizMode from './QuizMode';
-import MemoryChallenge from './MemoryChallenge';
-
-// Type definitions
 interface FlashcardData {
   id: string;
   word: string;
@@ -20,395 +16,197 @@ interface FlashcardData {
   correctStreak: number;
 }
 
-interface GameSession {
-  currentCardIndex: number;
-  showAnswer: boolean;
-  score: number;
-  correctAnswers: number;
-  totalAnswers: number;
-  timeElapsed: number;
-  cardsReviewed: number;
-  sessionComplete: boolean;
+interface MemoryChallengeProps {
+  cards: FlashcardData[];
+  onBack?: () => void;
 }
 
-interface FlashcardMemoryGameProps {
-  onBack: () => void;
-  initialGameMode?: 'study' | 'quiz' | 'memory';
+const PREVIEW_DURATION = 2000; // 2 seconds per card
+const ANSWER_TIME = 5; // seconds to answer
+const ROUND_SIZE = 10;
+
+function shuffle<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
-const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
-  onBack,
-  initialGameMode = 'study',
-}) => {
-  // State
-  const [flashcards, setFlashcards] = useState<FlashcardData[]>([]);
-  const [gameSession, setGameSession] = useState<GameSession>({
-    currentCardIndex: 0,
-    showAnswer: false,
-    score: 0,
-    correctAnswers: 0,
-    totalAnswers: 0,
-    timeElapsed: 0,
-    cardsReviewed: 0,
-    sessionComplete: false,
-  });
-  const [isGameActive, setIsGameActive] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'mixed'>('mixed');
-  const [gameMode, setGameMode] = useState<'study' | 'quiz' | 'memory'>(initialGameMode);
-  const [lexiconType, setLexiconType] = useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
-  const [timer, setTimer] = useState(0);
+const MemoryChallenge: React.FC<MemoryChallengeProps> = ({ cards, onBack }) => {
+  const roundCards = useMemo(
+    () => shuffle(cards).slice(0, Math.min(ROUND_SIZE, cards.length)),
+    [cards]
+  );
 
-  // Quiz-specific
-  const [quizOptions, setQuizOptions] = useState<string[]>([]);
+  const [phase, setPhase] = useState<'preview' | 'quiz' | 'complete'>('preview');
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [quizCards, setQuizCards] = useState<FlashcardData[]>([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [options, setOptions] = useState<string[]>([]);
+  const [timer, setTimer] = useState(ANSWER_TIME);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
 
-  // Memory
-  const [incorrectWords, setIncorrectWords] = useState<FlashcardData[]>([]);
-  const [sampleFlashcards, setSampleFlashcards] = useState<FlashcardData[]>([]);
-  const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
-
-  // Fetch cards
+  // Show each card for PREVIEW_DURATION then advance
   useEffect(() => {
-    fetch(`${API_URL}lexicon/words?type=${encodeURIComponent(lexiconType)}&limit=100`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.response) {
-          const mapped = data.response.map((w: any, idx: number) => ({
-            id: String(w.WordId || idx),
-            word: w.Word,
-            definition: w.Definition,
-            example: w.Example || '',
-            difficulty: (w.Difficulty || 'medium') as 'easy' | 'medium' | 'hard',
-            category: w.Category || 'General',
-            memorized: false,
-            attempts: 0,
-            correctStreak: 0,
-          }));
-          setSampleFlashcards(mapped);
-        }
-      })
-      .catch(() => {});
-  }, [API_URL, lexiconType]);
-
-  // Timer effect
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isGameActive && !isPaused && !gameSession.sessionComplete) {
-      interval = setInterval(() => {
-        setTimer(prev => prev + 1);
-        setGameSession(prev => ({ ...prev, timeElapsed: prev.timeElapsed + 1 }));
-      }, 1000);
+    if (phase !== 'preview') return;
+    if (previewIndex >= roundCards.length) {
+      setQuizCards(shuffle(roundCards));
+      setPhase('quiz');
+      return;
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isGameActive, isPaused, gameSession.sessionComplete]);
+    const t = setTimeout(() => {
+      setPreviewIndex(i => i + 1);
+    }, PREVIEW_DURATION);
+    return () => clearTimeout(t);
+  }, [phase, previewIndex, roundCards]);
 
-  // Quiz options generation
+  // Prepare question options whenever quizIndex changes
   useEffect(() => {
-    if (gameMode !== 'quiz' || flashcards.length === 0) return;
-    const current = flashcards[gameSession.currentCardIndex];
-    const others = flashcards
-      .filter((_, idx) => idx !== gameSession.currentCardIndex)
-      .sort(() => Math.random() - 0.5)
+    if (phase !== 'quiz' || !quizCards[quizIndex]) return;
+    const current = quizCards[quizIndex];
+    const others = shuffle(roundCards.filter(c => c.id !== current.id))
       .slice(0, 3)
       .map(c => c.word);
-    const all = [current.word, ...others].sort(() => Math.random() - 0.5);
-    setQuizOptions(all);
+    setOptions(shuffle([current.word, ...others]));
+    setTimer(ANSWER_TIME);
     setSelectedOption(null);
-    setWasCorrect(null);
-    setGameSession(prev => ({ ...prev, showAnswer: false }));
-  }, [gameMode, flashcards, gameSession.currentCardIndex]);
+  }, [phase, quizIndex, quizCards, roundCards]);
 
-  // Handlers
-  const initializeGame = (
-    difficulty: 'easy' | 'medium' | 'hard' | 'mixed',
-    mode: 'study' | 'quiz' | 'memory'
-  ) => {
-    let filteredCards = [...sampleFlashcards];
-    if (difficulty !== 'mixed') {
-      filteredCards = sampleFlashcards.filter(card => card.difficulty === difficulty);
+  // Countdown timer for quiz phase
+  useEffect(() => {
+    if (phase !== 'quiz') return;
+    if (timer === 0) {
+      handleAnswer(null);
+      return;
     }
-    filteredCards = filteredCards.sort(() => Math.random() - 0.5);
-    setFlashcards(filteredCards);
-    setSelectedDifficulty(difficulty);
-    setGameMode(mode);
-    setGameSession({
-      currentCardIndex: 0,
-      showAnswer: false,
-      score: 0,
-      correctAnswers: 0,
-      totalAnswers: 0,
-      timeElapsed: 0,
-      cardsReviewed: 0,
-      sessionComplete: false,
-    });
-    setIsGameActive(true);
-    setIsPaused(false);
-    setTimer(0);
-  };
+    const interval = setInterval(() => {
+      setTimer(t => t - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [phase, timer]);
 
-  const nextCard = () => {
-    if (gameSession.currentCardIndex < flashcards.length - 1) {
-      setGameSession(prev => ({
-        ...prev,
-        currentCardIndex: prev.currentCardIndex + 1,
-        showAnswer: false,
-        cardsReviewed: prev.cardsReviewed + 1,
-      }));
-    } else {
-      setGameSession(prev => ({ ...prev, sessionComplete: true }));
-      setIsGameActive(false);
-    }
-  };
-
-  const previousCard = () => {
-    if (gameSession.currentCardIndex > 0) {
-      setGameSession(prev => ({
-        ...prev,
-        currentCardIndex: prev.currentCardIndex - 1,
-        showAnswer: false,
-      }));
-    }
-  };
-
-  // Shared toggle
-  const toggleAnswer = () => {
-    setGameSession(prev => ({ ...prev, showAnswer: !prev.showAnswer }));
-  };
-
-  // Shuffle
-  const shuffleCards = () => {
-    const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
-    setFlashcards(shuffled);
-    setGameSession(prev => ({ ...prev, currentCardIndex: 0, showAnswer: false }));
-  };
-
-  // Reset
-  const resetGame = () => {
-    setFlashcards([]);
-    setGameSession({
-      currentCardIndex: 0,
-      showAnswer: false,
-      score: 0,
-      correctAnswers: 0,
-      totalAnswers: 0,
-      timeElapsed: 0,
-      cardsReviewed: 0,
-      sessionComplete: false,
-    });
-    setIsGameActive(false);
-    setIsPaused(false);
-    setTimer(0);
-    setQuizOptions([]);
-    setSelectedOption(null);
-    setWasCorrect(null);
-    setIncorrectWords([]);
-  };
-
-  const togglePause = () => setIsPaused(!isPaused);
-
-  // Quiz logic
-  const handleOptionSelect = (option: string) => {
+  const handleAnswer = (option: string | null) => {
     if (selectedOption) return;
-    const isCorrect = option === flashcards[gameSession.currentCardIndex].word;
+    const current = quizCards[quizIndex];
+    const correct = option === current.word;
     setSelectedOption(option);
-    setWasCorrect(isCorrect);
-    if (!isCorrect) {
-      setIncorrectWords(prev => [...prev, flashcards[gameSession.currentCardIndex]]);
+    if (correct) {
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      setBestStreak(b => (newStreak > b ? newStreak : b));
+      setScore(s => s + 1);
+    } else {
+      setStreak(0);
     }
-    setGameSession(prev => ({ ...prev, showAnswer: true }));
-    setFlashcards(prev =>
-      prev.map(card =>
-        card.id === flashcards[gameSession.currentCardIndex].id
-          ? {
-              ...card,
-              attempts: card.attempts + 1,
-              correctStreak: isCorrect ? card.correctStreak + 1 : 0,
-              memorized: isCorrect && card.correctStreak >= 2,
-            }
-          : card
-      )
-    );
-    setGameSession(prev => ({
-      ...prev,
-      totalAnswers: prev.totalAnswers + 1,
-      correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
-      score: isCorrect ? prev.score + 10 : prev.score,
-    }));
-    // Optionally: auto-advance after delay
-    setTimeout(nextCard, 1200);
+
+    setTimeout(() => {
+      if (quizIndex < quizCards.length - 1) {
+        setQuizIndex(i => i + 1);
+      } else {
+        setPhase('complete');
+      }
+    }, 800);
   };
 
-  // Helper
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const resetGame = () => {
+    setPhase('preview');
+    setPreviewIndex(0);
+    setQuizIndex(0);
+    setScore(0);
+    setStreak(0);
+    setBestStreak(0);
+    setSelectedOption(null);
   };
 
-  // Game setup screen
-  if (!isGameActive && !gameSession.sessionComplete) {
-    // ... (Your setup UI stays the same as before)
-    // Not shown here to focus on the game mode logic
+  // PREVIEW PHASE
+  if (phase === 'preview' && roundCards[previewIndex]) {
+    const card = roundCards[previewIndex];
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">Flashcard Memory Game</h2>
-        {/* Game mode/difficulty/lexicon type selection UI */}
-        <Button
-          onClick={() => initializeGame(selectedDifficulty, gameMode)}
-          size="lg"
-          className="px-8"
-        >
-          <Play className="w-4 h-4 mr-2" />
-          Start Flashcard Game
-        </Button>
-        <Button variant="outline" onClick={onBack} className="ml-4">
-          <Home className="w-4 h-4 mr-2" />
-          Back to Games
-        </Button>
+      <div className="max-w-md mx-auto text-center">
+        <Card>
+          <CardHeader>
+            <h3 className="font-semibold">Memorize the following</h3>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600 mb-2">{card.word}</div>
+            <p className="text-gray-700 mb-4">{card.definition}</p>
+            <Progress
+              value={((previewIndex + 1) / roundCards.length) * 100}
+              className="mt-4"
+            />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Game completion screen
-  if (gameSession.sessionComplete) {
-    const accuracy =
-      gameSession.totalAnswers > 0
-        ? (gameSession.correctAnswers / gameSession.totalAnswers) * 100
-        : 0;
-    const memorizedCount = flashcards.filter(card => card.memorized).length;
+  // QUIZ PHASE
+  if (phase === 'quiz' && quizCards[quizIndex]) {
+    const card = quizCards[quizIndex];
     return (
-      <div className="max-w-2xl mx-auto text-center">
-        <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-        <h2 className="text-3xl font-bold mb-4">Session Complete! ⚡</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div>
-            <div className="text-2xl font-bold text-purple-600">
-              {gameSession.score}
+      <div className="max-w-md mx-auto">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Which word matches?</h3>
+              <span className="text-sm text-gray-500">{timer}s</span>
             </div>
-            <div className="text-sm text-gray-600">Score</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-green-600">
-              {Math.round(accuracy)}%
-            </div>
-            <div className="text-sm text-gray-600">Accuracy</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-blue-600">
-              {memorizedCount}
-            </div>
-            <div className="text-sm text-gray-600">Memorized</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-600">
-              {formatTime(gameSession.timeElapsed)}
-            </div>
-            <div className="text-sm text-gray-600">Time</div>
-          </div>
-        </div>
-        {incorrectWords.length > 0 && (
-          <div className="mb-8 text-left">
-            <h3 className="font-semibold mb-2">Missed Words</h3>
-            <ul className="list-disc list-inside space-y-1">
-              {incorrectWords.map(card => (
-                <li key={card.id}>
-                  <span className="font-medium">{card.word}</span> - {card.definition}
-                </li>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">{card.definition}</p>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {options.map(opt => (
+                <Button
+                  key={opt}
+                  onClick={() => handleAnswer(opt)}
+                  disabled={!!selectedOption}
+                  variant={
+                    selectedOption
+                      ? opt === card.word
+                        ? 'default'
+                        : 'outline'
+                      : 'outline'
+                  }
+                >
+                  {opt}
+                </Button>
               ))}
-            </ul>
-          </div>
-        )}
-        <Button onClick={resetGame} size="lg">
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Play Again
-        </Button>
-        <Button variant="outline" onClick={onBack} size="lg" className="ml-4">
-          <Home className="w-4 h-4 mr-2" />
-          Back to Games
-        </Button>
+            </div>
+            <Progress
+              value={((quizIndex) / roundCards.length) * 100}
+              className="mb-2"
+            />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Show current card in chosen mode
-  const currentCard = flashcards[gameSession.currentCardIndex];
-  if (!currentCard) return null;
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      {/* Game Header and Progress */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <span className="capitalize font-bold">{gameMode} Mode</span>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-blue-500" />
-            <span>{formatTime(timer)}</span>
-            <Target className="w-4 h-4 text-purple-500" />
-            <span>
-              Card: {gameSession.currentCardIndex + 1}/{flashcards.length}
-            </span>
-            <Star className="w-4 h-4 text-yellow-500" />
-            <span>Score: {gameSession.score}</span>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={togglePause} variant="outline" size="sm">
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          </Button>
-          <Button onClick={shuffleCards} variant="outline" size="sm">
-            <Shuffle className="w-4 h-4" />
-          </Button>
-          <Button onClick={resetGame} variant="outline" size="sm">
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-          <Button onClick={onBack} variant="outline" size="sm">
-            <Home className="w-4 h-4" />
-          </Button>
-        </div>
+  // COMPLETE PHASE
+  if (phase === 'complete') {
+    return (
+      <div className="max-w-md mx-auto text-center">
+        <Card>
+          <CardContent>
+            <h3 className="text-2xl font-bold mb-4">Round Complete</h3>
+            <p className="mb-2">Score: {score}/{roundCards.length}</p>
+            <p className="mb-6">Best Streak: {bestStreak}</p>
+            <Button onClick={resetGame} className="mr-2">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Play Again
+            </Button>
+            {onBack && (
+              <Button variant="outline" onClick={onBack}>
+                Back
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       </div>
-      <Progress value={((gameSession.currentCardIndex + 1) / flashcards.length) * 100} className="w-full mb-6" />
+    );
+  }
 
-      {/* Render the appropriate mode */}
-      {gameMode === 'study' && (
-        <StudyMode
-          currentCard={currentCard}
-          showAnswer={gameSession.showAnswer}
-          onToggleAnswer={toggleAnswer}
-          onNextCard={nextCard}
-          onPreviousCard={previousCard}
-          isFirst={gameSession.currentCardIndex === 0}
-          isLast={gameSession.currentCardIndex === flashcards.length - 1}
-        />
-      )}
-      {gameMode === 'quiz' && (
-        <QuizMode
-          currentCard={currentCard}
-          options={quizOptions}
-          selectedOption={selectedOption}
-          wasCorrect={wasCorrect}
-          showAnswer={gameSession.showAnswer}
-          onSelectOption={handleOptionSelect}
-          onNextCard={nextCard}
-          isLast={gameSession.currentCardIndex === flashcards.length - 1}
-        />
-      )}
-      {gameMode === 'memory' && (
-        <MemoryChallenge
-          currentCard={currentCard}
-          showAnswer={gameSession.showAnswer}
-          onToggleAnswer={toggleAnswer}
-          onNextCard={nextCard}
-          onPreviousCard={previousCard}
-          isFirst={gameSession.currentCardIndex === 0}
-          isLast={gameSession.currentCardIndex === flashcards.length - 1}
-        />
-      )}
-    </div>
-  );
+  return null;
 };
 
-export default FlashcardMemoryGame;
+export default MemoryChallenge;
