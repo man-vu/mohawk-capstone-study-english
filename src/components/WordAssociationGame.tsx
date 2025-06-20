@@ -39,6 +39,8 @@ interface GameRound {
   id: string;
   targetWord: string;
   targetMeaning?: string;
+  synonyms?: string[];
+  guidewords?: string[];
   relatedWords: string[];
   distractors: string[];
   allOptions: string[];
@@ -162,14 +164,11 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       const parseList = (val?: string | null) =>
         val ? val.split(',').map((s) => s.trim()).filter(Boolean) : [];
 
-      const fromGroup = randomGroup.words
-        .filter((w) => w.text !== targetWord)
-        .map((w) => w.text);
       const synonyms = parseList(randomItem.synonyms);
       const related = parseList(randomItem.related);
       const guidewords = parseList(randomItem.guideword);
 
-      const relatedSet = Array.from(new Set([...fromGroup, ...synonyms, ...related, ...guidewords]));
+      const relatedSet = Array.from(new Set([...synonyms, ...related]));
       const relatedWords = relatedSet
         .filter((w) => w.toLowerCase() !== targetWord.toLowerCase())
         .sort(() => Math.random() - 0.5)
@@ -186,6 +185,9 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       const newRound: GameRound = {
         id: `round-${roundNum}`,
         targetWord,
+        targetMeaning: randomItem.meaning,
+        synonyms,
+        guidewords,
         relatedWords,
         distractors: selectedDistractors,
         allOptions,
@@ -578,6 +580,11 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                   {currentRound.targetWord.toUpperCase()}
                 </div>
+                {currentRound.guidewords && currentRound.guidewords.length > 0 && (
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    {currentRound.guidewords.join(', ')}
+                  </div>
+                )}
                 <Badge variant="secondary">
                   Theme: {currentRound.theme}
                 </Badge>
@@ -671,6 +678,21 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                             </Badge>
                           ))}
                         </div>
+                        {currentRound.targetMeaning && (
+                          <p className="mt-4">
+                            <strong>Definition:</strong> {currentRound.targetMeaning}
+                          </p>
+                        )}
+                        {currentRound.synonyms && currentRound.synonyms.length > 0 && (
+                          <p className="mt-2">
+                            <strong>Synonyms:</strong> {currentRound.synonyms.join(', ')}
+                          </p>
+                        )}
+                        {currentRound.guidewords && currentRound.guidewords.length > 0 && (
+                          <p className="mt-2">
+                            <strong>Guideword:</strong> {currentRound.guidewords.join(', ')}
+                          </p>
+                        )}
                       </div>
                     )}
                   </CardContent>
