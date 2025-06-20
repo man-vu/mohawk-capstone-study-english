@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardHeader, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
@@ -36,6 +36,25 @@ const StudyMode: React.FC<StudyModeProps> = ({
   isFirst,
   isLast,
 }) => {
+  // Keyboard shortcuts: Left, Right, Space
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'ArrowRight' && !isLast) {
+        e.preventDefault();
+        onNextCard();
+      } else if (e.key === 'ArrowLeft' && !isFirst) {
+        e.preventDefault();
+        onPreviousCard();
+      } else if ((e.key === ' ' || e.code === 'Space') && !showAnswer) {
+        e.preventDefault();
+        onToggleAnswer();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isFirst, isLast, onNextCard, onPreviousCard, showAnswer, onToggleAnswer]);
+
   if (!currentCard) return null;
 
   return (
@@ -135,13 +154,13 @@ const StudyMode: React.FC<StudyModeProps> = ({
           <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
-        {showAnswer && (
-          <Button onClick={onNextCard}>
-            Next Card
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        )}
-        <div />
+        <Button
+          onClick={onNextCard}
+          disabled={isLast}
+        >
+          Next Card
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
       </div>
     </div>
   );
