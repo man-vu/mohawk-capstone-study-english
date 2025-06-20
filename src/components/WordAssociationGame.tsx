@@ -50,6 +50,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
   const [noWordsAvailable, setNoWordsAvailable] = useState(false);
   const [mode, setMode] = useState<GameMode>('vocabulary');
+  const [usedWords, setUsedWords] = useState<string[]>([]);
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
@@ -259,15 +260,25 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   };
 
   const generateRound = (roundNum: number = roundNumber) => {
-    const validGroups = wordGroups.filter(g => g.words.length > 0);
+    const filteredGroups = wordGroups
+      .map(g => ({
+        ...g,
+        words: g.words.filter(w => !usedWords.includes(w.text)),
+      }))
+      .filter(g => g.words.length > 0);
+
+    const validGroups = filteredGroups.length > 0 ? filteredGroups : wordGroups;
+
     if (validGroups.length === 0) {
       setIsGameActive(false);
       setNoWordsAvailable(true);
       return;
     }
 
-    const randomGroup = validGroups[Math.floor(Math.random() * validGroups.length)];
-    const randomItem = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
+    const randomGroup =
+      validGroups[Math.floor(Math.random() * validGroups.length)];
+    const randomItem =
+      randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
 
     let newRound: GameRound;
     if (mode === 'vocabulary') {
@@ -279,6 +290,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     }
 
     setCurrentRound(newRound);
+    setUsedWords(prev => [...prev, randomItem.text]);
     setSelectedWords([]);
     setFeedback(null);
     setTimeLeft(difficulty === 'easy' ? 45 : difficulty === 'medium' ? 30 : 20);
@@ -299,6 +311,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setRoundNumber(1);
     setScore(0);
     setGameStats({ correctAnswers: 0, totalTime: 0, accuracy: 0 });
+    setUsedWords([]);
     generateRound(1);
   };
 
@@ -376,6 +389,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setIsPaused(false);
     setGameStats({ correctAnswers: 0, totalTime: 0, accuracy: 0 });
     setFeedback(null);
+    setUsedWords([]);
   };
 
   // Toggle pause
