@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import MatchingCardsGame from './MatchingCardsGame';
+import MatchingCardsGame from './MatchingCardsGame/index';
 import WordAssociationGame from './WordAssociationGame';
-import FlashcardMemoryGame from './FlashcardMemoryGame';
+import FlashcardMemoryGame from './FlashcardMemoryGame/FlashcardMemoryGame';
 import { 
   Gamepad2, 
   Brain, 
