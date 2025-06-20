@@ -24,21 +24,37 @@ export class LexiconGroupModel {
     return prisma.lexiconGroup.delete({ where: { GroupId } });
   }
 
-  static findAllWithWords(type?: string, limit?: number) {
-    return prisma.lexiconGroup.findMany({
-      take: limit, // Limits number of groups returned
+  static async findAllWithWords(type?: string, limit?: number) {
+    // Fetch groups first with the total count of words in each group
+    const groups = await prisma.lexiconGroup.findMany({
+      take: limit,
       include: {
-        LexiconGroupMap: {
-          take: 50, // Limits mappings per group
-          include: {
-            Lexicon: { include: { LexiconType: true } },
-          },
-          where: type
-            ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
-            : undefined,
+        _count: {
+          select: { LexiconGroupMap: true },
         },
       },
     });
+
+    // For each group, fetch a subset of lexicons and their mappings
+    const groupsWithWords = await Promise.all(
+      groups.map(async (g) => {
+        const maps = await prisma.lexiconGroupMap.findMany({
+          take: 100,
+          where: {
+            GroupId: g.GroupId,
+            ...(type
+              ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
+              : {}),
+          },
+          include: {
+            Lexicon: { include: { LexiconType: true } },
+          },
+        });
+        return { ...g, LexiconGroupMap: maps };
+      })
+    );
+
+    return groupsWithWords;
   }
 }
 export default LexiconGroupModel;
