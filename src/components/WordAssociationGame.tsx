@@ -335,7 +335,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     if (correctCount === currentRound.relatedWords.length && incorrectCount === 0) {
       message = `Perfect! +${totalRoundScore} points`;
       setGameStats(prev => ({ ...prev, correctAnswers: prev.correctAnswers + 1 }));
-    } else if (correctCount > 0 || incorrectCount > 0) {
+    } else if (correctCount > 0) {
       message = `Partially correct. +${totalRoundScore} points`;
     } else {
       message = `Better luck next time. +${totalRoundScore} points`;

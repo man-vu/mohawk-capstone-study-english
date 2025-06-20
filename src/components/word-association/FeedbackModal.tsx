@@ -60,14 +60,28 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   </p>
                 )}
                 {currentRound.synonyms && currentRound.synonyms.length > 0 && (
-                  <p className="mt-2">
-                    <strong>Synonyms:</strong> {currentRound.synonyms.join(', ')}
-                  </p>
+                  <div className="mt-2">
+                    <strong>Synonyms:</strong>
+                    <div className="flex flex-wrap gap-1 mt-1 justify-center">
+                      {currentRound.synonyms.map((word) => (
+                        <Badge key={word} variant="success">
+                          {word}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {currentRound.antonyms && currentRound.antonyms.length > 0 && (
-                  <p className="mt-2">
-                    <strong>Antonyms:</strong> {currentRound.antonyms.join(', ')}
-                  </p>
+                  <div className="mt-2">
+                    <strong>Antonyms:</strong>
+                    <div className="flex flex-wrap gap-1 mt-1 justify-center">
+                      {currentRound.antonyms.map((word) => (
+                        <Badge key={word} variant="destructive">
+                          {word}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {currentRound.guidewords && currentRound.guidewords.length > 0 && (
                   <p className="mt-2">
