@@ -71,15 +71,17 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/mock-tests", mockTestRoutes);
 app.use("/api/writing", writingRoutes);
 
-if (process.env.NODE_ENV === "production") {
-  // In production, port number is automatically assigned by the hosting provider 
-  app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server is running on port ${process.env.PORT}.`);
-  });
-} else {
-  app.listen(server_port, () => {
-    console.log(`Server is running on port ${server_port}.`);
-  });
+if (process.env.NODE_ENV !== "test") {
+  if (process.env.NODE_ENV === "production") {
+    // In production, port number is automatically assigned by the hosting provider
+    app.listen(process.env.PORT || 3000, () => {
+      console.log(`Server is running on port ${process.env.PORT}.`);
+    });
+  } else {
+    app.listen(server_port, () => {
+      console.log(`Server is running on port ${server_port}.`);
+    });
+  }
 }
 
 process.on('uncaughtException', (err) => {
@@ -90,3 +92,5 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 console.log("Server started successfully.");
+
+export default app;

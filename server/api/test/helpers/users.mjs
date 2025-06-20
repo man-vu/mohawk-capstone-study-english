@@ -1,0 +1,61 @@
+import UserModelModule from "../../../models/user/index.ts";
+const UserModel = new UserModelModule();
+
+export const users = [
+  {
+    email: "test3@gmail.com",
+    password: "123456890",
+    gender: "M",
+    profilePictureId: "1",
+    roleId: "1",
+    firstName: "test",
+    lastName: "test",
+  },
+  {
+    email: "test4@gmail.com",
+    password: "123456890",
+    gender: "M",
+    profilePictureId: "1",
+    roleId: "2",
+    firstName: "test",
+    lastName: "test",
+  },
+  {
+    email: "test5@gmail.com",
+    password: "123456890",
+    gender: "M",
+    profilePictureId: "1",
+    roleId: "2",
+    firstName: "test",
+    lastName: "test",
+  },
+];
+
+export async function addUser(user) {
+  await UserModel.addOne(
+    user.email,
+    user.passwordHash || '$2b$10$tymuoeVagAW1VkEpzQGQV.V5IC1uglO.yuTIeU0NrGWAlBdYLisrW',
+    user.passwordSalt || '$2b$10$PIj3eLyGKt7eEXXdLHU0uO',
+    user.gender,
+    user.roleId,
+    user.profilePictureId,
+    user.firstName,
+    user.lastName
+  );
+}
+
+export async function addUsers(list) {
+  for (const u of list) {
+    await addUser(u);
+  }
+}
+
+export async function deleteUsers(list) {
+  for (const u of list) {
+    const existingUser = await UserModel.findOneByEmail(u.email);
+
+    if (!existingUser.error && existingUser.response.length !== 0) {
+      await UserModel.deleteOne(existingUser.response[0].user_id);
+    }
+  }
+}

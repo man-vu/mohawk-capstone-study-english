@@ -1,7 +1,7 @@
-const { expect } = require("chai");
-const STRINGS = require("../../../config/strings");
-const usersController = require("../../controllers/users.ts");
-const { users, addUsers, deleteUsers } = require("../helpers/users");
+import { expect } from "chai";
+import STRINGS from "../../../config/strings.ts";
+import usersController from "../../controllers/users.ts";
+import { users, addUsers, deleteUsers } from "../helpers/users.mjs";
 
 before(async function() {
     await addUsers(users)
