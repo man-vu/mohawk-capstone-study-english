@@ -1,7 +1,7 @@
 import React from 'react';
 import { Brain, Play, Home } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
 import type { GameMode } from './types';
 
 interface SetupScreenProps {

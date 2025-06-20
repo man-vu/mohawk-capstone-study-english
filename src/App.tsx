@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 import { AuthProvider } from './context/AuthContext';
 import AuthModal from './components/auth/AuthModal';
 import { useTheme } from './hooks/useTheme';
@@ -17,8 +17,8 @@ import PracticeTestsPage from './pages/PracticeTestsPage';
 import CoursesPage from './pages/CoursesPage';
 import WritingTestPage from './pages/WritingTestPage';
 import FullMockTestsPage from './pages/FullMockTestsPage';
-import VocabularyGames from './components/VocabularyGames';
-import PageTransition from './components/PageTransition';
+import VocabularyGames from './components/games/VocabularyGames';
+import PageTransition from './components/layout/PageTransition';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();

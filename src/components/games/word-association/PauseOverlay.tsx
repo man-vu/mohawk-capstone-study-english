@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
 import { Play, Pause } from 'lucide-react';
 
 interface PauseOverlayProps {

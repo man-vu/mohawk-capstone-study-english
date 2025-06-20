@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
+import { Card, CardContent } from '../../ui/card';
+import { Badge } from '../../ui/badge';
 import { Clock, Trophy, XCircle, CheckCircle } from 'lucide-react';
 import type { GameRound } from './types';
 

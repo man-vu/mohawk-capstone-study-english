@@ -1,10 +1,10 @@
 import React from 'react';
-import Hero from '../components/Hero';
-import Features from '../components/Features';
-import Categories from '../components/Categories';
-import Statistics from '../components/Statistics';
-import QuizList from '../components/QuizList';
-import Testimonials from '../components/Testimonials';
+import Hero from '../components/home/Hero';
+import Features from '../components/home/Features';
+import Categories from '../components/home/Categories';
+import Statistics from '../components/home/Statistics';
+import QuizList from '../components/home/QuizList';
+import Testimonials from '../components/home/Testimonials';
 
 const HomePage: React.FC = () => (
   <>

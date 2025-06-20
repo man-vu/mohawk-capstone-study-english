@@ -3,7 +3,7 @@ import MultipleChoiceQuestion from './MultipleChoiceQuestion';
 import GapFillingQuestion from './GapFillingQuestion';
 import MatchingPairsQuestion from './MatchingPairsQuestion';
 import EnhancedQuizResults from './EnhancedQuizResults';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Question {
   question_id: number;
