@@ -30,7 +30,9 @@ export default {
    */
   updateAvatar: async (data) => {
     try {
-      await AppUserModel.update(data.userId, { ProfilePictureId: data.mimeId });
+      await AppUserModel.update(data.userId, {
+        MimeType: { connect: { MimeId: data.mimeId } },
+      });
       return sendSuccess(204);
     } catch (error) {
       console.log(error);
