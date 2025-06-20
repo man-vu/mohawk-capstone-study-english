@@ -38,9 +38,9 @@ export const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
-          transition={{ duration: 0.5, type: "spring" }}
+          transition={{ duration: 0.2, type: "tween", ease: "easeOut" }}
           className={cn(
-            "h-full rounded-2xl transition-all duration-300",
+            "h-full rounded-2xl transition-all duration-150",
             colorClass
           )}
         />

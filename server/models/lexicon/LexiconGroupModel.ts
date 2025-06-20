@@ -1,5 +1,5 @@
-import prisma from '../../prismaClient';
-import type { Prisma } from '@prisma/client';
+import prisma from "../../prismaClient";
+import type { Prisma } from "@prisma/client";
 
 export interface LexiconGroup {
   GroupId: number;
@@ -24,18 +24,36 @@ export class LexiconGroupModel {
     return prisma.lexiconGroup.delete({ where: { GroupId } });
   }
 
-  static findAllWithWords(type?: string, limit?: number) {
-    return prisma.lexiconGroup.findMany({
+  static async findAllWithWords(type?: string, limit?: number) {
+    // Fetch groups first with the total count of words in each group
+    const groups = await prisma.lexiconGroup.findMany({
       include: {
-        LexiconGroupMap: {
-          include: { Lexicon: { include: { LexiconType: true } } },
-          where: type
-            ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
-            : undefined,
-          take: limit,
+        _count: {
+          select: { LexiconGroupMap: true },
         },
       },
     });
+
+    // For each group, fetch a subset of lexicons and their mappings
+    const groupsWithWords = await Promise.all(
+      groups.map(async (g) => {
+        const maps = await prisma.lexiconGroupMap.findMany({
+          take: limit,
+          where: {
+            GroupId: g.GroupId,
+            ...(type
+              ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
+              : {}),
+          },
+          include: {
+            Lexicon: { include: { LexiconType: true } },
+          },
+        });
+        return { ...g, LexiconGroupMap: maps };
+      })
+    );
+
+    return groupsWithWords;
   }
 }
 export default LexiconGroupModel;

@@ -252,11 +252,14 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     
     if (correctCount === currentRound.relatedWords.length && incorrectCount === 0) {
       setFeedback(`Perfect! +${totalRoundScore} points`);
+      setIsPaused(true);
       setGameStats(prev => ({ ...prev, correctAnswers: prev.correctAnswers + 1 }));
     } else if (correctCount > incorrectCount) {
       setFeedback(`Good job! +${totalRoundScore} points`);
+      setIsPaused(true);
     } else {
       setFeedback(`Try harder next time. +${totalRoundScore} points`);
+      setIsPaused(true);
     }
 
     // Wait for user to close feedback
@@ -265,8 +268,9 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   // Handle time up
   const handleTimeUp = () => {
     if (!currentRound) return;
-    
+
     setFeedback('Time\'s up!');
+    setIsPaused(true);
     // Wait for user to close feedback
   };
 
@@ -311,6 +315,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   const closeFeedback = () => {
     setFeedback(null);
+    setIsPaused(false);
     advanceRound();
   };
 

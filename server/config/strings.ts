@@ -84,5 +84,3 @@ const STRINGS = {
 };
 
 export default STRINGS;
-
-module.exports = STRINGS;
