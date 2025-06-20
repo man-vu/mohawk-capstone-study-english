@@ -45,12 +45,15 @@ export const buildVocabularyRound = (
     relatedSet = group.words.filter(w => w.text !== targetWord).map(w => w.text);
   }
 
+  const totalOptions = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 16;
+  const maxCorrect = Math.floor(totalOptions * 0.25);
+
   const relatedWords = relatedSet
     .filter(w => w.toLowerCase() !== targetWord.toLowerCase())
     .sort(() => Math.random() - 0.5)
-    .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
+    .slice(0, Math.min(maxCorrect, relatedSet.length));
 
-  const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+  const numDistractors = totalOptions - relatedWords.length;
   const selectedDistractors = distractors
     .filter(w => w !== targetWord && !relatedSet.includes(w))
     .sort(() => Math.random() - 0.5)

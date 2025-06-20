@@ -37,7 +37,7 @@ export const buildPhrasalVerbRound = (
   const targetWord = item.text;
   const targetMeaning = item.meaning as string;
   const totalOptions =
-    difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
+    difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 16;
   const availableDistractors = Array.from(
     new Set(allMeanings.filter(m => m !== targetMeaning))
   );

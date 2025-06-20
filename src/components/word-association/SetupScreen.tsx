@@ -21,7 +21,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({
 }) => {
   const getInfo = (level: 'easy' | 'medium' | 'hard') => {
     const seconds = level === 'easy' ? 45 : level === 'medium' ? 30 : 20;
-    const options = level === 'easy' ? 7 : level === 'medium' ? 10 : 13;
+    const options = level === 'easy' ? 8 : level === 'medium' ? 12 : 16;
     if (mode === 'vocabulary') {
       return `${seconds}s per round • ${options} words to choose from`;
     }

@@ -45,11 +45,14 @@ export const buildSynAntRound = (
   const relatedSet = relationType === 'synonym' ? synonyms : antonyms;
   const allRelated = [...synonyms, ...antonyms];
 
+  const totalOptions = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 16;
+  const maxCorrect = Math.floor(totalOptions * 0.25);
+
   const relatedWords = relatedSet
     .sort(() => Math.random() - 0.5)
-    .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
+    .slice(0, Math.min(maxCorrect, relatedSet.length));
 
-  const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+  const numDistractors = totalOptions - relatedWords.length;
   const exclude = [targetWord, ...allRelated];
   const selectedDistractors = distractors
     .filter(w => !exclude.some(ex => w.toLowerCase().includes(ex.toLowerCase())))

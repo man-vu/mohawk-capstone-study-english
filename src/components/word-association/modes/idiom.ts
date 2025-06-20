@@ -37,7 +37,7 @@ export const buildIdiomRound = (
 ): GameRound => {
   const targetWord = item.text;
   const targetMeaning = item.meaning as string;
-  const totalOptions = difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
+  const totalOptions = difficulty === 'easy' ? 8 : difficulty === 'medium' ? 12 : 16;
   const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
   const selectedDistractors = availableDistractors
     .sort(() => Math.random() - 0.5)
