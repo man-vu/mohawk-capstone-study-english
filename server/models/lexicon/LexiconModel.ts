@@ -54,5 +54,19 @@ export class LexiconModel {
       LexiconType: { TypeId: r.TypeId, TypeName: r.TypeName },
     }));
   }
+
+  static async findRandomWithSynAnt(limit: number) {
+    const query = `SELECT TOP (${limit}) l.*, lt.TypeName
+      FROM Lexicon l
+      JOIN LexiconType lt ON l.TypeId = lt.TypeId
+      WHERE (l.Synonyms IS NOT NULL AND LTRIM(RTRIM(l.Synonyms)) <> '')
+         OR (l.Antonyms IS NOT NULL AND LTRIM(RTRIM(l.Antonyms)) <> '')
+      ORDER BY NEWID()`;
+    const rows: any[] = await prisma.$queryRawUnsafe(query);
+    return rows.map((r) => ({
+      ...r,
+      LexiconType: { TypeId: r.TypeId, TypeName: r.TypeName },
+    }));
+  }
 }
 export default LexiconModel;

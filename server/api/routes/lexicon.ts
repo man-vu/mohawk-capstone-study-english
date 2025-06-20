@@ -5,9 +5,17 @@ import authMiddleware from "../middlewares/auth";
 const router = express.Router();
 
 router.get("/words", async (req, res) => {
-  const { type, limit } = req.query as { type?: string; limit?: string };
+  const { type, limit, synAnt } = req.query as {
+    type?: string;
+    limit?: string;
+    synAnt?: string;
+  };
   const parsedLimit = limit ? Number(limit) : undefined;
-  const result = await lexiconController.getWords(type, parsedLimit);
+  const result = await lexiconController.getWords(
+    type,
+    parsedLimit,
+    synAnt === "true"
+  );
   res.json(result);
 });
 

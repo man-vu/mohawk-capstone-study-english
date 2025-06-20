@@ -4,19 +4,17 @@ const parseList = (val?: string | null): string[] =>
   val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
 
 export const fetchSynAntGroups = async (apiUrl: string): Promise<WordGroup[]> => {
-  const res = await fetch(`${apiUrl}lexicon/words?limit=200`);
+  const res = await fetch(`${apiUrl}lexicon/words?synAnt=true&limit=200`);
   const data = await res.json();
   if (data.response) {
-    const words = data.response
-      .filter((w: any) => w.Synonyms && w.Antonyms)
-      .map((w: any) => ({
-        text: w.Word,
-        meaning: w.Definition,
-        synonyms: w.Synonyms,
-        antonyms: w.Antonyms,
-        guideword: w.Guideword,
-        related: w.RelatedLexicon,
-      }));
+    const words = data.response.map((w: any) => ({
+      text: w.Word,
+      meaning: w.Definition,
+      synonyms: w.Synonyms,
+      antonyms: w.Antonyms,
+      guideword: w.Guideword,
+      related: w.RelatedLexicon,
+    }));
     return [
       {
         id: 'syn-ant',
