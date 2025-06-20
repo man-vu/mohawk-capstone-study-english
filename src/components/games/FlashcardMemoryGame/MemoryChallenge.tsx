@@ -228,6 +228,11 @@ if (!flashcards || flashcards.length < CHALLENGE_LENGTH) {
 
   // PHASE 2: Quiz
   if (phase === "quiz") {
+    if (quizQuestions.length === 0) {
+      return (
+        <div className="text-center py-10 text-lg">Preparing questions...</div>
+      );
+    }
     const q = quizQuestions[quizIndex];
     return (
       <div className="flex flex-col items-center justify-center py-12">
