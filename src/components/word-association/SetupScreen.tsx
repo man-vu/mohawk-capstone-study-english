@@ -19,6 +19,17 @@ const SetupScreen: React.FC<SetupScreenProps> = ({
   noWordsAvailable,
   onBack,
 }) => {
+  const getInfo = (level: 'easy' | 'medium' | 'hard') => {
+    const seconds = level === 'easy' ? 45 : level === 'medium' ? 30 : 20;
+    const options = level === 'easy' ? 7 : level === 'medium' ? 10 : 13;
+    if (mode === 'vocabulary') {
+      return `${seconds}s per round • ${options} words to choose from`;
+    }
+    if (mode === 'syn-ant') {
+      return `${seconds}s per round • ${options} synonym/antonym options`;
+    }
+    return `${seconds}s per round • ${options} meanings to choose from`;
+  };
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
@@ -79,9 +90,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({
               </div>
               <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2 capitalize">{level}</h3>
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {level === 'easy' && '45s per round • 7 words to choose from'}
-                {level === 'medium' && '30s per round • 10 words to choose from'}
-                {level === 'hard' && '20s per round • 13 words to choose from'}
+                {getInfo(level)}
               </div>
               <Button className="w-full" disabled={noWordsAvailable}>
                 <Play className="w-4 h-4 mr-2" />

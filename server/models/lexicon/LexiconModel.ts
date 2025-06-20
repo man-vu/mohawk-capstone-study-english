@@ -60,7 +60,7 @@ export class LexiconModel {
       FROM Lexicon l
       JOIN LexiconType lt ON l.TypeId = lt.TypeId
       WHERE (l.Synonyms IS NOT NULL AND LTRIM(RTRIM(l.Synonyms)) <> '')
-         OR (l.Antonyms IS NOT NULL AND LTRIM(RTRIM(l.Antonyms)) <> '')
+        AND (l.Antonyms IS NOT NULL AND LTRIM(RTRIM(l.Antonyms)) <> '')
       ORDER BY NEWID()`;
     const rows: any[] = await prisma.$queryRawUnsafe(query);
     return rows.map((r) => ({

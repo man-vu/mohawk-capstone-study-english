@@ -220,11 +220,23 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   // Handle word selection
   const handleWordSelect = (word: string) => {
     if (isPaused || !currentRound) return;
-    
-    if (selectedWords.includes(word)) {
-      setSelectedWords(prev => prev.filter(w => w !== word));
+
+    if (mode === 'idiom' || mode === 'phrasal verb') {
+      // Only one selection allowed for meaning based rounds
+      if (selectedWords.includes(word)) {
+        setSelectedWords([]);
+      } else {
+        setSelectedWords([word]);
+      }
     } else {
-      setSelectedWords(prev => [...prev, word]);
+      if (selectedWords.includes(word)) {
+        setSelectedWords(prev => prev.filter(w => w !== word));
+      } else {
+        const max = Math.max(1, currentRound.relatedWords.length);
+        if (selectedWords.length < max) {
+          setSelectedWords(prev => [...prev, word]);
+        }
+      }
     }
   };
 
