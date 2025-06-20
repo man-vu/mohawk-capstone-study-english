@@ -1,14 +1,10 @@
-// StAuth10065: I, Man Vu, 000801665 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else.
-
 import express from "express";
 import { server_port } from "./config/index";
 import bodyParser from "body-parser";
 import cors from "cors";
 import path from "path";
-import sequelize from "./config/orm";
 
 const app = express();
-sequelize.authenticate().catch(err => console.error("Sequelize connection error:", err));
 
 import "./services/scheduler/checkAttempts";
 import connectHistory from "connect-history-api-fallback";

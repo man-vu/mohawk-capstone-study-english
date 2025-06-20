@@ -6,16 +6,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import resizeImg from "resize-img";
-import {
-  s3_bucket_name,
-  aws_access_key,
-  aws_secret_key,
-} from "../../config/index";
-import aws from "aws-sdk";
+
 
 const router = express.Router();
-
-aws.config.region = "us-west-1";
 
 const dest = path.join(__dirname, "./temp");
 const upload = multer({
