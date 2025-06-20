@@ -119,10 +119,10 @@ router.post("/avatar", [authMiddleware, upload.single("avatar")],
     fs.writeFileSync(`${req.file.destination}/${savedFilename}`, image);
 
     const s3 = new aws.S3();
-    const params = {
+  const params = {
       Bucket: s3_bucket_name,
       Key: `avatars/${savedFilename}`,
-      Expires: 60,
+      Expires: new Date(Date.now() + 60 * 1000),
       ContentType: req.file.mimetype,
       Body: fs.createReadStream(`${req.file.destination}/${savedFilename}`),
     };
