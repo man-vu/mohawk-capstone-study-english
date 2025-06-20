@@ -49,9 +49,10 @@ interface GameSession {
 
 interface FlashcardMemoryGameProps {
   onBack: () => void;
+  initialGameMode?: 'study' | 'quiz' | 'memory';
 }
 
-const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => {
+const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack, initialGameMode = 'study' }) => {
   const [flashcards, setFlashcards] = useState<FlashcardData[]>([]);
   const [gameSession, setGameSession] = useState<GameSession>({
     currentCardIndex: 0,
@@ -66,7 +67,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
   const [isGameActive, setIsGameActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'mixed'>('mixed');
-  const [gameMode, setGameMode] = useState<'study' | 'quiz' | 'memory'>('study');
+  const [gameMode, setGameMode] = useState<'study' | 'quiz' | 'memory'>(initialGameMode);
   const [lexiconType, setLexiconType] =
     useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
   const [timer, setTimer] = useState(0);
