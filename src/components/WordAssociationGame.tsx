@@ -24,6 +24,7 @@ interface WordItem {
   text: string;
   meaning?: string;
   synonyms?: string | null;
+  antonyms?: string | null;
   related?: string | null;
   guideword?: string | null;
 }
@@ -40,6 +41,7 @@ interface GameRound {
   targetWord: string;
   targetMeaning?: string;
   synonyms?: string[];
+  antonyms?: string[];
   guidewords?: string[];
   relatedWords: string[];
   distractors: string[];
@@ -71,42 +73,78 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
   const [noWordsAvailable, setNoWordsAvailable] = useState(false);
-  const [mode, setMode] = useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
+  const [mode, setMode] = useState<'vocabulary' | 'idiom' | 'phrasal verb' | 'syn-ant'>('vocabulary');
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    const type = mode;
-    fetch(`${API_URL}lexicon/groups?type=${type}&limit=50`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.response) {
-          const groups = data.response
-            .map((g: any) => ({
-              ...g,
-              words: g.words.map((w: any) =>
-                typeof w === 'string'
-                  ? { text: w }
-                  : {
-                      text: w.expression,
-                      meaning: w.meaning,
-                      synonyms: w.synonyms,
-                      related: w.related,
-                      guideword: w.guideword,
-                    }
-              ),
-            }))
-            .filter((g: any) => g.words.length > 0);
-          setWordGroups(groups);
-          setNoWordsAvailable(groups.length === 0);
-        } else {
+    if (mode === 'syn-ant') {
+      fetch(`${API_URL}lexicon/words?limit=200`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.response) {
+            const words = data.response
+              .filter((w: any) => w.Synonyms && w.Antonyms)
+              .map((w: any) => ({
+                text: w.Word,
+                meaning: w.Definition,
+                synonyms: w.Synonyms,
+                antonyms: w.Antonyms,
+                guideword: w.Guideword,
+                related: w.RelatedLexicon,
+              }));
+            setWordGroups([
+              {
+                id: 'syn-ant',
+                theme: 'Synonyms & Antonyms',
+                words,
+                description: '',
+              },
+            ]);
+            setNoWordsAvailable(words.length === 0);
+          } else {
+            setWordGroups([]);
+            setNoWordsAvailable(true);
+          }
+        })
+        .catch(() => {
           setWordGroups([]);
           setNoWordsAvailable(true);
-        }
-      })
-      .catch(() => {
-        setWordGroups([]);
-        setNoWordsAvailable(true);
-      });
+        });
+    } else {
+      const type = mode;
+      fetch(`${API_URL}lexicon/groups?type=${type}&limit=50`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.response) {
+            const groups = data.response
+              .map((g: any) => ({
+                ...g,
+                words: g.words.map((w: any) =>
+                  typeof w === 'string'
+                    ? { text: w }
+                    : {
+                        text: w.expression,
+                        meaning: w.meaning,
+                        synonyms: w.synonyms,
+                        antonyms: w.antonyms,
+                        related: w.related,
+                        guideword: w.guideword,
+                      }
+                ),
+              }))
+              .filter((g: any) => g.words.length > 0);
+            setWordGroups(groups);
+            setNoWordsAvailable(groups.length === 0);
+          } else {
+            setWordGroups([]);
+            setNoWordsAvailable(true);
+          }
+        })
+        .catch(() => {
+          setWordGroups([]);
+          setNoWordsAvailable(true);
+        });
+    }
   }, [API_URL, mode]);
 
   // Distractor words fetched from the database
@@ -147,6 +185,98 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   }, [isGameActive, isPaused, isGameComplete, timeLeft]);
 
   // Generate a new round
+  const parseList = (val?: string | null) =>
+    val ? val.split(',').map((s) => s.trim()).filter(Boolean) : [];
+
+  const buildVocabularyRound = (group: WordGroup, item: WordItem, roundNum: number): GameRound => {
+    const targetWord = item.text;
+    const synonyms = parseList(item.synonyms);
+    const related = parseList(item.related);
+    const guidewords = parseList(item.guideword);
+
+    let relatedSet = Array.from(new Set([...synonyms, ...related]));
+    if (relatedSet.length === 0) {
+      relatedSet = group.words.filter(w => w.text !== targetWord).map(w => w.text);
+    }
+
+    const relatedWords = relatedSet
+      .filter(w => w.toLowerCase() !== targetWord.toLowerCase())
+      .sort(() => Math.random() - 0.5)
+      .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
+
+    const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+    const selectedDistractors = distractorWords
+      .filter(w => w !== targetWord && !relatedSet.includes(w))
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numDistractors);
+
+    const allOptions = [...relatedWords, ...selectedDistractors].sort(() => Math.random() - 0.5);
+
+    return {
+      id: `round-${roundNum}`,
+      targetWord,
+      targetMeaning: item.meaning,
+      synonyms,
+      guidewords,
+      relatedWords,
+      distractors: selectedDistractors,
+      allOptions,
+      theme: group.theme,
+    };
+  };
+
+  const buildMeaningRound = (group: WordGroup, item: WordItem, roundNum: number): GameRound => {
+    const targetWord = item.text;
+    const targetMeaning = item.meaning as string;
+    const totalOptions = difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
+    const allMeanings = wordGroups.flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
+    const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
+    const selectedDistractors = availableDistractors
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(totalOptions - 1, availableDistractors.length));
+    const allOptions = [targetMeaning, ...selectedDistractors].sort(() => Math.random() - 0.5);
+
+    return {
+      id: `round-${roundNum}`,
+      targetWord,
+      targetMeaning,
+      relatedWords: [targetMeaning],
+      distractors: selectedDistractors,
+      allOptions,
+      theme: group.theme,
+    };
+  };
+
+  const buildSynAntRound = (group: WordGroup, item: WordItem, roundNum: number): GameRound => {
+    const targetWord = item.text;
+    const synonyms = parseList(item.synonyms);
+    const antonyms = parseList(item.antonyms);
+    const relatedSet = [...synonyms, ...antonyms];
+    const relatedWords = relatedSet
+      .sort(() => Math.random() - 0.5)
+      .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
+
+    const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+    const exclude = [targetWord, ...relatedSet];
+    const selectedDistractors = distractorWords
+      .filter(w => !exclude.some(ex => w.toLowerCase().includes(ex.toLowerCase())))
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numDistractors);
+    const allOptions = [...relatedWords, ...selectedDistractors].sort(() => Math.random() - 0.5);
+
+    return {
+      id: `round-${roundNum}`,
+      targetWord,
+      targetMeaning: item.meaning,
+      synonyms,
+      antonyms,
+      relatedWords,
+      distractors: selectedDistractors,
+      allOptions,
+      theme: group.theme,
+    };
+  };
+
   const generateRound = (roundNum: number = roundNumber) => {
     const validGroups = wordGroups.filter(g => g.words.length > 0);
     if (validGroups.length === 0) {
@@ -158,76 +288,16 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     const randomGroup = validGroups[Math.floor(Math.random() * validGroups.length)];
     const randomItem = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
 
+    let newRound: GameRound;
     if (mode === 'vocabulary') {
-      const targetWord = randomItem.text;
-
-      const parseList = (val?: string | null) =>
-        val ? val.split(',').map((s) => s.trim()).filter(Boolean) : [];
-
-      const synonyms = parseList(randomItem.synonyms);
-      const related = parseList(randomItem.related);
-      const guidewords = parseList(randomItem.guideword);
-
-      let relatedSet = Array.from(new Set([...synonyms, ...related]));
-      if (relatedSet.length === 0) {
-        relatedSet = randomGroup.words
-          .filter((w) => w.text !== targetWord)
-          .map((w) => w.text);
-      }
-
-      const relatedWords = relatedSet
-        .filter((w) => w.toLowerCase() !== targetWord.toLowerCase())
-        .sort(() => Math.random() - 0.5)
-        .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
-
-      const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
-      const selectedDistractors = distractorWords
-        .filter((w) => w !== targetWord && !relatedSet.includes(w))
-        .sort(() => Math.random() - 0.5)
-        .slice(0, numDistractors);
-
-      const allOptions = [...relatedWords, ...selectedDistractors].sort(() => Math.random() - 0.5);
-
-      const newRound: GameRound = {
-        id: `round-${roundNum}`,
-        targetWord,
-        targetMeaning: randomItem.meaning,
-        synonyms,
-        guidewords,
-        relatedWords,
-        distractors: selectedDistractors,
-        allOptions,
-        theme: randomGroup.theme,
-      };
-
-      setCurrentRound(newRound);
+      newRound = buildVocabularyRound(randomGroup, randomItem, roundNum);
+    } else if (mode === 'syn-ant') {
+      newRound = buildSynAntRound(randomGroup, randomItem, roundNum);
     } else {
-      const allMeanings = wordGroups.flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
-      const targetWord = randomItem.text;
-      const targetMeaning = randomItem.meaning as string;
-      const totalOptions = difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
-      const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
-      const selectedDistractors = availableDistractors
-        .sort(() => Math.random() - 0.5)
-        .slice(0, Math.min(totalOptions - 1, availableDistractors.length));
-
-      const allOptions = [targetMeaning, ...selectedDistractors].sort(
-        () => Math.random() - 0.5
-      );
-
-      const newRound: GameRound = {
-        id: `round-${roundNum}`,
-        targetWord,
-        targetMeaning,
-        relatedWords: [targetMeaning],
-        distractors: selectedDistractors,
-        allOptions,
-        theme: randomGroup.theme,
-      };
-
-      setCurrentRound(newRound);
+      newRound = buildMeaningRound(randomGroup, randomItem, roundNum);
     }
 
+    setCurrentRound(newRound);
     setSelectedWords([]);
     setFeedback(null);
     setTimeLeft(difficulty === 'easy' ? 45 : difficulty === 'medium' ? 30 : 20);
@@ -366,7 +436,9 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
               ? 'Find words related to the target word. Test your vocabulary knowledge and word connections!'
               : mode === 'idiom'
               ? 'Select the correct meaning for the displayed idiom.'
-              : 'Select the correct meaning for the displayed phrasal verb.'}
+              : mode === 'phrasal verb'
+              ? 'Select the correct meaning for the displayed phrasal verb.'
+              : 'Choose words that are synonyms or antonyms of the target word.'}
           </p>
         </div>
 
@@ -374,7 +446,8 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           {[
             { id: 'vocabulary', label: 'Vocabulary' },
             { id: 'idiom', label: 'Idioms' },
-            { id: 'phrasal verb', label: 'Phrasal Verbs' }
+            { id: 'phrasal verb', label: 'Phrasal Verbs' },
+            { id: 'syn-ant', label: 'Synonyms & Antonyms' }
           ].map(m => (
             <Button
               key={m.id}
@@ -582,7 +655,11 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
             <CardHeader>
               <div className="text-center">
                 <CardTitle className="text-2xl mb-2">
-                  {mode === 'vocabulary' ? 'Find words related to:' : 'What is the meaning of:'}
+                  {mode === 'vocabulary'
+                    ? 'Find words related to:'
+                    : mode === 'syn-ant'
+                    ? 'Select synonyms or antonyms for:'
+                    : 'What is the meaning of:'}
                 </CardTitle>
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                   {currentRound.targetWord.toUpperCase()}
@@ -604,10 +681,12 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {mode === 'vocabulary'
                       ? `Select ${Math.max(1, currentRound.relatedWords.length)} related word${Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}`
+                      : mode === 'syn-ant'
+                      ? `Select ${Math.max(1, currentRound.relatedWords.length)} correct word${Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}`
                       : 'Select the correct meaning'}
                   </span>
                 </div>
-                {mode === 'vocabulary' && (
+                {(mode === 'vocabulary' || mode === 'syn-ant') && (
                   <div className="text-xs text-gray-500">
                     Selected: {selectedWords.length} / {Math.max(1, currentRound.relatedWords.length)}
                   </div>
@@ -712,6 +791,11 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                         {currentRound.synonyms && currentRound.synonyms.length > 0 && (
                           <p className="mt-2">
                             <strong>Synonyms:</strong> {currentRound.synonyms.join(', ')}
+                          </p>
+                        )}
+                        {currentRound.antonyms && currentRound.antonyms.length > 0 && (
+                          <p className="mt-2">
+                            <strong>Antonyms:</strong> {currentRound.antonyms.join(', ')}
                           </p>
                         )}
                         {currentRound.guidewords && currentRound.guidewords.length > 0 && (
