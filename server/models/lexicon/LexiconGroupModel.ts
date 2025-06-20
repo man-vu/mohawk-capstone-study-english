@@ -1,5 +1,5 @@
-import prisma from '../../prismaClient';
-import type { Prisma } from '@prisma/client';
+import prisma from "../../prismaClient";
+import type { Prisma } from "@prisma/client";
 
 export interface LexiconGroup {
   GroupId: number;
@@ -26,13 +26,16 @@ export class LexiconGroupModel {
 
   static findAllWithWords(type?: string, limit?: number) {
     return prisma.lexiconGroup.findMany({
+      take: limit, // Limits number of groups returned
       include: {
         LexiconGroupMap: {
-          include: { Lexicon: { include: { LexiconType: true } } },
+          take: 50, // Limits mappings per group
+          include: {
+            Lexicon: { include: { LexiconType: true } },
+          },
           where: type
             ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
             : undefined,
-          take: limit,
         },
       },
     });

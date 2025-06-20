@@ -4,10 +4,13 @@ import avatarsController from "../controllers/avatar";
 import { imageFilter } from "../../misc/helper";
 import multer from "multer";
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import fs from "fs";
 import resizeImg from "resize-img";
-import aws from "aws-sdk";
-import { aws_access_key, aws_secret_key, s3_bucket_name } from "../../config/index";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 
 const router = express.Router();
@@ -94,15 +97,12 @@ router.put("/", authMiddleware, async (req, res) => {
 });
 
 /**
- * Route that handles uploading avatar to AWS Bucket and then calling controllers to update user's avatar
+ * Route that handles uploading avatar locally and then calling controllers to update user's avatar
  */
-router.post("/avatar", [authMiddleware, upload.single("avatar")],
+router.post(
+  "/avatar",
+  [authMiddleware, upload.single("avatar")],
   async (req, res) => {
-    aws.config.update({
-      accessKeyId: aws_access_key,
-      secretAccessKey: aws_secret_key,
-    });
-
     const userId = Number(req.user.id);
     if (Number.isNaN(userId)) {
       return res.status(400).json({ error: "Invalid user id" });
@@ -111,31 +111,24 @@ router.post("/avatar", [authMiddleware, upload.single("avatar")],
     const image = await resizeImg(fs.readFileSync(req.file.path), dimension);
     const savedFilename = `${req.file.filename}-${dimension.width}x${dimension.height}.png`;
 
-    fs.writeFileSync(`${req.file.destination}/${savedFilename}`, image);
+    const tempPath = `${req.file.destination}/${savedFilename}`;
+    fs.writeFileSync(tempPath, image);
 
-    const s3 = new aws.S3();
-  const params = {
-      Bucket: s3_bucket_name,
-      Key: `avatars/${savedFilename}`,
-      Expires: new Date(Date.now() + 60 * 1000),
-      ContentType: req.file.mimetype,
-      Body: fs.createReadStream(`${req.file.destination}/${savedFilename}`),
-    };
-    s3.putObject(params, async function(err, response) {
-      if (err) {
-        console.log("Error uploading data: ", err);
-      } else {
-        const data = { savedFilename, userId };
+    const avatarsDir = path.join(__dirname, "../../../public/avatars");
+    if (!fs.existsSync(avatarsDir)) {
+      fs.mkdirSync(avatarsDir, { recursive: true });
+    }
+    const finalPath = path.join(avatarsDir, savedFilename);
+    fs.renameSync(tempPath, finalPath);
 
-        const insertAvatar = await avatarsController.insertAvatar(data);
-        const updateAvatar = await avatarsController.updateAvatar({
-          ...insertAvatar.response,
-          userId,
-        });
-
-        res.json(insertAvatar);
-      }
+    const data = { savedFilename, userId };
+    const insertAvatar = await avatarsController.insertAvatar(data);
+    await avatarsController.updateAvatar({
+      ...insertAvatar.response,
+      userId,
     });
+
+    res.json(insertAvatar);
   }
 );
 

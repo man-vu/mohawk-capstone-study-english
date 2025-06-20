@@ -1,5 +1,10 @@
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 if (!process.env.NODE_ENV) {
   throw new Error("NODE_ENV is not defined.");
@@ -30,9 +35,6 @@ const envFile = {
   datetime_format: process.env.DATETIME_FORMAT,
   appmail: process.env.APPMAIL,
   appmail_password: process.env.APPMAIL_PASSWORD,
-  aws_access_key: process.env.AWS_ACCESS_KEY,
-  aws_secret_key: process.env.AWS_SECRET_KEY,
-  s3_bucket_name: process.env.S3_BUCKET_NAME,
 };
 export const {
   vue_app_server_endpoint,
@@ -52,9 +54,6 @@ export const {
   datetime_format,
   appmail,
   appmail_password,
-  aws_access_key,
-  aws_secret_key,
-  s3_bucket_name,
 } = envFile;
 
 export default envFile;
