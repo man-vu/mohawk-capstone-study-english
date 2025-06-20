@@ -30,7 +30,7 @@ const validator = {
   },
   validateQuizId(quizId: number) {
     const regExp = /^\d+$/g;
-    if (!quizId || regExp.test(regExp) || quizId < 0) return false;
+    if (!quizId || !regExp.test(String(quizId)) || quizId < 0) return false;
     return true;
   },
   validateQuestionId(questionId: number) {

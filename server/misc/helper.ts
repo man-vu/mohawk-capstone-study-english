@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import type { Request } from "express";
+import type { Express } from "express";
 
 export const checkPassword = (raw: string, hash: string): Promise<boolean> => {
   return new Promise((resolve, reject) => {
