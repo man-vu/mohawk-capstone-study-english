@@ -4,8 +4,13 @@ import avatarsController from "../controllers/avatar";
 import { imageFilter } from "../../misc/helper";
 import multer from "multer";
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import fs from "fs";
 import resizeImg from "resize-img";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 
 const router = express.Router();
