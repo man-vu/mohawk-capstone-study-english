@@ -1,9 +1,9 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const QuizModel = require("../../models/quiz/QuizModel.ts").default;
-const UserAttemptModel = require("../../models/user/UserAttemptModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import QuizModel from "../../models/quiz/QuizModel";
+import UserAttemptModel from "../../models/user/UserAttemptModel";
 
-module.exports = {
+export default {
   /**
    * Function that loads that for home page
    */

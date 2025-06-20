@@ -1,25 +1,28 @@
-const jwt = require("jsonwebtoken");
-const { jwt_secret_key, jwt_expiry_time, password_reset_expiry_time, datetime_format } = require("../../config/index");
-const { hashPasswordAsync, checkPassword, getAvatarUrl } = require("../../misc/helper");
-const STRINGS = require("../../config/strings");
-const { sendSuccess, sendFailure } = require("../../config/res");
-const {
+import jwt from "jsonwebtoken";
+import {
+  jwt_secret_key,
+  jwt_expiry_time,
+  password_reset_expiry_time,
+  datetime_format,
+} from "../../config/index";
+import { hashPasswordAsync, checkPassword, getAvatarUrl } from "../../misc/helper";
+import STRINGS from "../../config/strings";
+import { sendSuccess, sendFailure } from "../../config/res";
+import {
   validateEmail,
   validatePassword,
   validateProfilePictureId,
   validateGender,
   validateRoleId,
   validateName,
-} = require("../validators/validator");
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const MimeTypeModel = require("../../models/media/MimeTypeModel.ts").default;
-const {
-  sendPasswordReset,
-} = require("../../services/email_notification/passwordReset");
-const passwordGenerator = require("generate-password");
-const moment = require("moment");
+} from "../validators/validator";
+import AppUserModel from "../../models/auth/AppUserModel";
+import MimeTypeModel from "../../models/media/MimeTypeModel";
+import { sendPasswordReset } from "../../services/email_notification/passwordReset";
+import passwordGenerator from "generate-password";
+import moment from "moment";
 
-module.exports = {
+export default {
   /**
    * Function that registers a user
    */

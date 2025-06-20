@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import lexiconController from "../controllers/lexicon";
+import authMiddleware from "../middlewares/auth";
+
 const router = express.Router();
-const lexiconController = require("../controllers/lexicon.ts");
-const authMiddleware = require("../middlewares/auth");
 
 router.get("/words", async (req, res) => {
   const { type, limit } = req.query as { type?: string; limit?: string };
@@ -31,4 +32,4 @@ router.post("/progress", authMiddleware, async (req, res) => {
   res.json(result);
 });
 
-module.exports = router;
+export default router;

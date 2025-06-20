@@ -1,8 +1,9 @@
-const express = require("express");
+import express from "express";
+import authMiddleware from "../middlewares/auth";
+import authTeacherMiddleware from "../middlewares/authTeacher";
+import statisticsController from "../controllers/statistics";
+
 const router = express.Router();
-const authMiddleware = require("../middlewares/auth");
-const authTeacherMiddleware = require("../middlewares/authTeacher");
-const statisticsController = require("../controllers/statistics.ts");
 
 /**
  * Route that gets student statistics
@@ -52,4 +53,4 @@ router.post("/board/student/:id", authTeacherMiddleware, async (req, res) => {
     res.status(200).json(statistics)
 });
 
-module.exports = router;
+export default router;

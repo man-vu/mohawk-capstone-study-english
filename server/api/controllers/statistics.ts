@@ -1,8 +1,8 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const StatisticsModel = require("../../models/logs/StatisticsModel.ts").default;
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const moment = require("moment");
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import StatisticsModel from "../../models/logs/StatisticsModel";
+import AppUserModel from "../../models/auth/AppUserModel";
+import moment from "moment";
 
 /**
  * Function maps statistics by a quiz from provided attempts information
@@ -154,7 +154,7 @@ function createPieChart(statsType, stats, additionalInfo) {
   };
 }
 
-module.exports = {
+export default {
   getStatistics: async (userId) => {
     try {
       const quizStatsData = await StatisticsModel.findQuizOne(userId);

@@ -1,17 +1,17 @@
-const STRINGS = require("../../config/strings");
-const { sendSuccess, sendFailure } = require("../../config/res");
-const moment = require("moment");
-const QuizModel = require("../../models/quiz/QuizModel.ts").default;
-const RatingModel = require("../../models/user/UserRatingModel.ts").default;
-const FavoriteModel = require("../../models/user/UserFavoriteModel.ts").default;
-const QuestionModel = require("../../models/question/QuestionModel.ts").default;
-const AttemptModel = require("../../models/user/UserAttemptModel.ts").default;
-const UserAnswerModel = require("../../models/user/UserAnswerModel.ts").default;
-const CorrectAnswerModel = require("../../models/question/CorrectAnswerModel.ts").default;
-const QuizPartModel = require("../../models/quiz/QuizPartModel.ts").default;
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const validator = require("../validators/validator");
-const { cleanObject } = require("../../misc/helper");
+import STRINGS from "../../config/strings";
+import { sendSuccess, sendFailure } from "../../config/res";
+import moment from "moment";
+import QuizModel from "../../models/quiz/QuizModel";
+import RatingModel from "../../models/user/UserRatingModel";
+import FavoriteModel from "../../models/user/UserFavoriteModel";
+import QuestionModel from "../../models/question/QuestionModel";
+import AttemptModel from "../../models/user/UserAttemptModel";
+import UserAnswerModel from "../../models/user/UserAnswerModel";
+import CorrectAnswerModel from "../../models/question/CorrectAnswerModel";
+import QuizPartModel from "../../models/quiz/QuizPartModel";
+import AppUserModel from "../../models/auth/AppUserModel";
+import * as validator from "../validators/validator";
+import { cleanObject } from "../../misc/helper";
 
 /**
  * Async function marks a quiz as a user's favorite 
@@ -190,7 +190,7 @@ async function getCurrentQuizInfo (quizId, userId, attemptId) {
   return null;
 }
 
-module.exports = {
+export default {
   /**
    * Loads all quizzes with optional user info for home page
    */
@@ -404,7 +404,7 @@ module.exports = {
         await RatingModel.create({ UserId: uId, QuizId: qId, RatingGiven: ratingGiven });
       }
 
-      const ratingAgg = await require("../../models/quiz/QuizModel.ts").default.findDetailed(qId);
+      const ratingAgg = await QuizModel.findDetailed(qId);
       return sendSuccess(200, {
         average_rating: ratingAgg.average_rating,
         rating_count: ratingAgg.rating_count,

@@ -1,11 +1,15 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const { validateEmail, validateGender, validateName, validateNewPassword,
-} = require("../validators/validator");
-const { hashPasswordAsync } = require("../../misc/helper");
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import AppUserModel from "../../models/auth/AppUserModel";
+import {
+  validateEmail,
+  validateGender,
+  validateName,
+  validateNewPassword,
+} from "../validators/validator";
+import { hashPasswordAsync } from "../../misc/helper";
 
-module.exports = {
+export default {
   /**
    * Function loads all users regardless of students or teachers
    */

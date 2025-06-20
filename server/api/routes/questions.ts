@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import questionsController from "../controllers/questions";
+import authMiddleware from "../middlewares/auth";
+
 const router = express.Router();
-const questionsController = require("../controllers/questions.ts");
-const authMiddleware = require("../middlewares/auth");
 
 // GET: [routes/questions]
 // Get question by id
@@ -60,4 +61,4 @@ router.put("/answer/:id", authMiddleware, async (req, res) => {
   res.json(answer)
 });
 
-module.exports = router;
+export default router;

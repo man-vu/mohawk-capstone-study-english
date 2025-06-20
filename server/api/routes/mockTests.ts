@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import mockTestsController from "../controllers/mockTests";
+
 const router = express.Router();
-const mockTestsController = require("../controllers/mockTests.ts");
 
 router.get("/", async (req, res) => {
   const result = await mockTestsController.getTests();
@@ -14,4 +15,4 @@ router.get("/:id", async (req, res) => {
   res.json(result);
 });
 
-module.exports = router;
+export default router;
