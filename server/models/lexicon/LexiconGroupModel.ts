@@ -27,7 +27,6 @@ export class LexiconGroupModel {
   static async findAllWithWords(type?: string, limit?: number) {
     // Fetch groups first with the total count of words in each group
     const groups = await prisma.lexiconGroup.findMany({
-      take: limit,
       include: {
         _count: {
           select: { LexiconGroupMap: true },
@@ -39,7 +38,7 @@ export class LexiconGroupModel {
     const groupsWithWords = await Promise.all(
       groups.map(async (g) => {
         const maps = await prisma.lexiconGroupMap.findMany({
-          take: 100,
+          take: limit,
           where: {
             GroupId: g.GroupId,
             ...(type
