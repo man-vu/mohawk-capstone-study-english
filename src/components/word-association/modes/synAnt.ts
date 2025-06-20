@@ -37,9 +37,12 @@ export const buildSynAntRound = (
   const targetWord = item.text;
   const synonyms = parseList(item.synonyms);
   const antonyms = parseList(item.antonyms);
-  const useSynonyms = Math.random() < 0.5;
-  const relationType: RelationType = useSynonyms ? 'synonym' : 'antonym';
-  const relatedSet = useSynonyms ? synonyms : antonyms;
+  const available: RelationType[] = [];
+  if (synonyms.length > 0) available.push('synonym');
+  if (antonyms.length > 0) available.push('antonym');
+  const relationType: RelationType =
+    available[Math.floor(Math.random() * available.length)];
+  const relatedSet = relationType === 'synonym' ? synonyms : antonyms;
   const allRelated = [...synonyms, ...antonyms];
 
   const relatedWords = relatedSet

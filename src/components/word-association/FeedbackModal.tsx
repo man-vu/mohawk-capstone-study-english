@@ -38,18 +38,41 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{feedback}</h3>
             {currentRound && (
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                <p className="mb-2">Correct answers were:</p>
-                <div className="flex flex-wrap gap-1 justify-center">
-                  {currentRound.relatedWords.map((word) => (
-                    <Badge key={word} variant="success">
-                      {word}
-                    </Badge>
-                  ))}
-                </div>
+                {currentRound.relationType ? (
+                  <>
+                    <p className="mb-2">
+                      Correct {currentRound.relationType === 'synonym' ? 'synonyms' : 'antonyms'}:
+                    </p>
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {currentRound.relatedWords.map((word) => (
+                        <Badge
+                          key={word}
+                          variant={currentRound.relationType === 'synonym' ? 'success' : 'destructive'}
+                        >
+                          {word}
+                        </Badge>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-2">Correct answers were:</p>
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {currentRound.relatedWords.map((word) => (
+                        <Badge key={word} variant="success">
+                          {word}
+                        </Badge>
+                      ))}
+                    </div>
+                  </>
+                )}
                 <p className="mt-4 mb-2">Your selections:</p>
                 <div className="flex flex-wrap gap-1 justify-center">
                   {selectedWords.map((word) => (
-                    <Badge key={word} variant={currentRound.relatedWords.includes(word) ? 'success' : 'destructive'}>
+                    <Badge
+                      key={word}
+                      variant={currentRound.relatedWords.includes(word) ? 'success' : 'destructive'}
+                    >
                       {word}
                     </Badge>
                   ))}
