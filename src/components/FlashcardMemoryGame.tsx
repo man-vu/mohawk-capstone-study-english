@@ -75,7 +75,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({ onBack }) => 
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}lexicon/words?type=${encodeURIComponent(lexiconType)}&limit=100`)
+  fetch(`${API_URL}lexicon/words?type=${encodeURIComponent(lexiconType)}&limit=100`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
