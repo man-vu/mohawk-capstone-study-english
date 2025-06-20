@@ -32,3 +32,11 @@ SET IDENTITY_INSERT dbo.WritingAssessment ON;
 INSERT INTO dbo.WritingAssessment (AssessmentId, UserEssayAnswerId, TaskResponseScore, CoherenceCohesionScore, LexicalResourcesScore, GrammaticalAccuracyScore, OverallBand, EstimatedIELTSScore, CreatedAt) VALUES
     (1, 1, 6.5, 6.0, 6.5, 6.0, 6.5, 6.5, '2025-06-18 00:00:00');
 SET IDENTITY_INSERT dbo.WritingAssessment OFF;
+
+
+-- ========== AUDIT TRAIL, APP LOG, USER ACTIVITY ==========
+-- (You can seed these as needed, or leave empty for now.)
+
+-- ========== END ==========
+-- Ensure all tables are created and seeded correctly
+PRINT 'Database QuizVerse created and seeded successfully.';

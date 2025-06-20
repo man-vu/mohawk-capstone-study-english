@@ -1,7 +1,8 @@
-const express = require("express");
-const quizzesController = require("../controllers/quizzes.ts");
-const authMiddleware = require("../middlewares/auth");
-const authTeacherMiddleware = require("../middlewares/authTeacher");
+import express from "express";
+import quizzesController from "../controllers/quizzes";
+import authMiddleware from "../middlewares/auth";
+import authTeacherMiddleware from "../middlewares/authTeacher";
+
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -138,4 +139,4 @@ router.post("/submit", authMiddleware, async (req, res) => {
   res.status(200).json(submit);
 });
 
-module.exports = router;
+export default router;

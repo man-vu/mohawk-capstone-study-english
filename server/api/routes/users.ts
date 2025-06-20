@@ -1,20 +1,16 @@
-const express = require("express");
-const router = express.Router();
-const usersController = require("../controllers/users.ts");
-const avatarsController = require("../controllers/avatar.ts");
-const { imageFilter } = require("../../misc/helper");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
-const resizeImg = require("resize-img");
-const {
-  s3_bucket_name,
-  aws_access_key,
-  aws_secret_key,
-} = require("../../config/index");
-const aws = require("aws-sdk");
+import express from "express";
+import usersController from "../controllers/users";
+import avatarsController from "../controllers/avatar";
+import { imageFilter } from "../../misc/helper";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import resizeImg from "resize-img";
+import aws from "aws-sdk";
+import { aws_access_key, aws_secret_key, s3_bucket_name } from "../../config/index";
 
-aws.config.region = "us-west-1";
+
+const router = express.Router();
 
 const dest = path.join(__dirname, "./temp");
 const upload = multer({
@@ -23,8 +19,8 @@ const upload = multer({
   fileFilter: imageFilter,
 });
 
-const authMiddleware = require("../middlewares/auth");
-const authTeacherMiddleware = require("../middlewares/authTeacher");
+import authMiddleware from "../middlewares/auth";
+import authTeacherMiddleware from "../middlewares/authTeacher";
 
 /**
  * Route that loads all users
@@ -118,10 +114,10 @@ router.post("/avatar", [authMiddleware, upload.single("avatar")],
     fs.writeFileSync(`${req.file.destination}/${savedFilename}`, image);
 
     const s3 = new aws.S3();
-    const params = {
+  const params = {
       Bucket: s3_bucket_name,
       Key: `avatars/${savedFilename}`,
-      Expires: 60,
+      Expires: new Date(Date.now() + 60 * 1000),
       ContentType: req.file.mimetype,
       Body: fs.createReadStream(`${req.file.destination}/${savedFilename}`),
     };
@@ -143,4 +139,4 @@ router.post("/avatar", [authMiddleware, upload.single("avatar")],
   }
 );
 
-module.exports = router;
+export default router;

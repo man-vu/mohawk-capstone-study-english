@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import writingController from "../controllers/writing";
+import authMiddleware from "../middlewares/auth";
+
 const router = express.Router();
-const writingController = require("../controllers/writing.ts");
-const authMiddleware = require("../middlewares/auth");
 
 router.post("/assess", authMiddleware, async (req, res) => {
   const userEssayAnswerId = Number(req.body.userEssayAnswerId);
@@ -19,4 +20,4 @@ router.post("/assess", authMiddleware, async (req, res) => {
   res.json(result);
 });
 
-module.exports = router;
+export default router;

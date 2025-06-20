@@ -71,7 +71,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   useEffect(() => {
     const type = mode;
-    fetch(`${API_URL}lexicon/groups?type=${type}`)
+    fetch(`${API_URL}lexicon/groups?type=${type}&limit=50`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
@@ -96,12 +96,20 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       });
   }, [API_URL, mode]);
 
-  // Distractor words (unrelated to any theme)
-  const distractorWords = [
-    'elephant', 'purple', 'sandwich', 'telescope', 'umbrella', 'volcano', 'crystal', 'hurricane',
-    'butterfly', 'guitar', 'lighthouse', 'rainbow', 'diamond', 'ocean', 'mountain', 'sunset',
-    'library', 'carpet', 'fountain', 'mirror', 'candle', 'window', 'garden', 'bridge'
-  ];
+  // Distractor words fetched from the database
+  const [distractorWords, setDistractorWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Fetch a random subset once to minimize network load
+    fetch(`${API_URL}lexicon/words?limit=80`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response) {
+          setDistractorWords(data.response.map((w: any) => w.Word));
+        }
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   // Timer effect
   useEffect(() => {
@@ -147,6 +155,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
       const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
       const selectedDistractors = distractorWords
+        .filter(w => w !== targetWord)
         .sort(() => Math.random() - 0.5)
         .slice(0, numDistractors);
 

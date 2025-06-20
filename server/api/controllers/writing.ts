@@ -1,8 +1,8 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const WritingAssessmentModel = require("../../models/writing/WritingAssessmentModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import WritingAssessmentModel from "../../models/writing/WritingAssessmentModel";
 
-module.exports = {
+export default {
   createAssessment: async (data) => {
     try {
       const assessment = await WritingAssessmentModel.create(data);

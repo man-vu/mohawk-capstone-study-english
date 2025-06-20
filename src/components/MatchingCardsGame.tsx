@@ -49,6 +49,8 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [timer, setTimer] = useState(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [lexiconType, setLexiconType] =
+    useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
 
   const [vocabularyPairs, setVocabularyPairs] = useState<{ [key: string]: { word: string; definition: string }[] }>({
     easy: [],
@@ -58,20 +60,28 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    fetch(`${API_URL}lexicon/words?type=vocabulary&limit=50`)
+  fetch(`${API_URL}lexicon/words?type=${encodeURIComponent(lexiconType)}&limit=50`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
-          const groups = { easy: [], medium: [], hard: [] } as any;
-          data.response.forEach((w: any) => {
-            const level = (w.Difficulty || 'medium') as 'easy' | 'medium' | 'hard';
-            groups[level].push({ word: w.Word, definition: w.Definition });
-          });
+          const pairs = data.response.map((w: any) => ({
+            word: w.Word,
+            definition: w.Definition
+          }));
+
+          const shuffled = pairs.sort(() => Math.random() - 0.5);
+
+          const groups = {
+            easy: shuffled.slice(0, 6),
+            medium: shuffled.slice(6, 14),
+            hard: shuffled.slice(14, 24)
+          };
+
           setVocabularyPairs(groups);
         }
       })
       .catch(() => {});
-  }, [API_URL]);
+  }, [API_URL, lexiconType]);
 
   // Timer effect
   useEffect(() => {
@@ -219,8 +229,24 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
             Matching Cards Game
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Flip cards to match vocabulary words with their definitions. Test your memory and learn new words!
+            Flip cards to match expressions with their definitions. Choose vocabulary, idioms, or phrasal verbs for a custom challenge!
           </p>
+        </div>
+
+        <div className="flex justify-center gap-2 mb-6">
+          {[
+            { id: 'vocabulary', label: 'Vocabulary' },
+            { id: 'idiom', label: 'Idioms' },
+            { id: 'phrasal verb', label: 'Phrasal Verbs' }
+          ].map((t) => (
+            <Button
+              key={t.id}
+              variant={lexiconType === t.id ? 'default' : 'outline'}
+              onClick={() => setLexiconType(t.id as any)}
+            >
+              {t.label}
+            </Button>
+          ))}
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
@@ -285,7 +311,7 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
           Congratulations! 🎉
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          You've successfully matched all vocabulary pairs!
+          You've successfully matched all pairs!
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -489,7 +515,7 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
         <CardContent className="p-4">
           <div className="text-center text-sm text-gray-600 dark:text-gray-400">
             <p>
-              <strong>How to play:</strong> Click on cards to flip them and find matching word-definition pairs. 
+              <strong>How to play:</strong> Click on cards to flip them and find matching expression-definition pairs.
               Try to complete the game with the fewest moves and fastest time!
             </p>
           </div>

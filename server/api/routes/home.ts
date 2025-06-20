@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import authMiddleware from "../middlewares/auth";
+import homeController from "../controllers/home";
+
 const router = express.Router();
-const authMiddleware = require("../middlewares/auth");
-const homeController = require("../controllers/home.ts");
 
 /**
  * This handles loading data for Home Page
@@ -15,5 +16,5 @@ router.get("/", authMiddleware, async (req, res) => {
   res.json(homeSummary);
 });
 
-module.exports = router;
+export default router;
 

@@ -1,8 +1,8 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const CourseModel = require("../../models/courses/CourseModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import CourseModel from "../../models/courses/CourseModel";
 
-module.exports = {
+export default {
   getCourses: async () => {
     try {
       const courses = await CourseModel.findAll();
