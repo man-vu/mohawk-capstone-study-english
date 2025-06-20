@@ -1,12 +1,7 @@
 import { sendSuccess, sendFailure } from "../../config/res";
 import STRINGS from "../../config/strings";
 import AppUserModel from "../../models/auth/AppUserModel";
-import {
-  validateEmail,
-  validateGender,
-  validateName,
-  validateNewPassword,
-} from "../validators/validator";
+import validator from "../validators/validator";
 import { hashPasswordAsync } from "../../misc/helper";
 
 export default {
@@ -57,18 +52,18 @@ export default {
   updateUser: async (data) => {
     const { id, email, firstName, lastName, gender } = data;
 
-    if (!validateName(firstName)) {
+    if (!validator.validateName(firstName)) {
       return sendFailure(STRINGS.PLEASE_CHECK_YOUR_FIRST_NAME);
     }
 
-    if (!validateName(lastName)) {
+    if (!validator.validateName(lastName)) {
       return sendFailure(STRINGS.PLEASE_CHECK_YOUR_LAST_NAME);
     }
 
-    if (!validateEmail(email)) {
+    if (!validator.validateEmail(email)) {
       return sendFailure(STRINGS.EMAIL_IS_NOT_IN_CORRECT_FORMAT);
     }
-    if (!validateGender(gender)) {
+    if (!validator.validateGender(gender)) {
       return sendFailure(STRINGS.INVALID_GENDER);
     }
 
@@ -91,7 +86,7 @@ export default {
   updatePassword: async (data) => {
     const { id, currentPassword, newPassword } = data;
 
-    const validated = validateNewPassword(currentPassword, newPassword);
+    const validated = validator.validateNewPassword(currentPassword, newPassword);
 
     if (validated === true) {
       const passwordInfo = await hashPasswordAsync(newPassword);

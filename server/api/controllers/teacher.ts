@@ -10,7 +10,7 @@ import GModel from "../../models/question/QuestionGapFillingModel";
 import PromptModel from "../../models/question/MatchingPromptModel";
 import ChoiceModel from "../../models/question/MatchingChoiceModel";
 import InstructionModel from "../../models/question/QuestionInstructionModel";
-import * as validator from "../validators/validator";
+import validator from "../validators/validator";
 
 /**
  * A helper function that creates instruction

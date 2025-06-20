@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import type { Request } from "express";
+import type { Express } from "express";
 
 export const checkPassword = (raw: string, hash: string): Promise<boolean> => {
   return new Promise((resolve, reject) => {
@@ -38,7 +39,7 @@ export function cleanObject<T extends Record<string, any>>(obj: T[]) {
   return obj;
 }
 
-export function imageFilter(req: Request, file: Express.Multer.File, cb: (err: Error | null, res?: boolean) => void) {
+export function imageFilter(req: Request, file: any, cb: (err: Error | null, res?: boolean) => void) {
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
       return cb(new Error('Only image files are allowed!'), false);
   }
