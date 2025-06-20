@@ -330,6 +330,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
       )}
       {gameMode === "memory" && (
         <MemoryChallenge
+          flashcards={flashcards}
           currentCard={currentCard}
           showAnswer={gameSession.showAnswer}
           onToggleAnswer={toggleAnswer}
