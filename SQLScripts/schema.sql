@@ -302,6 +302,7 @@ CREATE TABLE dbo.Lexicon (
     Synonyms NVARCHAR(500) NULL,
     Antonyms NVARCHAR(500) NULL,
     RelatedLexicon NVARCHAR(500) NULL,
+    Guideword NVARCHAR(500) NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     TypeId INT NOT NULL,
     CONSTRAINT FK_Lexicon_LexiconType FOREIGN KEY (TypeId)

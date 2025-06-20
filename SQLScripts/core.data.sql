@@ -50,3 +50,37 @@ INSERT INTO dbo.Course (CourseId, Title, Description, Level, Category, Duration,
     (2, 'IELTS Writing Mastery', 'Perfect your IELTS writing skills with proven techniques and personalized feedback.', 'Intermediate', 'Writing', '6 weeks', 'Task 1;Task 2;Grammar;Vocabulary', 'Essay Reviews;Templates;Band 9 Examples', 89, 129, 'Prof. Michael Chen', '/assets/images/instructor2.jpg', 4.7, '8 years IELTS specialist', 8930, 4.6, 1120, '/assets/images/course2.jpg', 1, 0, '2025-06-18 00:00:00'),
     (3, 'IELTS Speaking Confidence', 'Build confidence and fluency in IELTS speaking with interactive practice sessions.', 'Beginner', 'Speaking', '4 weeks', 'Pronunciation;Fluency;Part 1-3 Strategies', '1-on-1 Sessions;Mock Tests;Accent Training', 69, 99, 'Emma Thompson', '/assets/images/instructor3.jpg', 4.8, '6 years conversation expert', 6750, 4.7, 890, '/assets/images/course3.jpg', 0, 0, '2025-06-18 00:00:00');
 SET IDENTITY_INSERT dbo.Course OFF;
+
+-- ========== LEXICON TYPE ==========
+SET IDENTITY_INSERT dbo.LexiconType ON;
+INSERT INTO dbo.LexiconType (TypeId, TypeName) VALUES
+    (1, 'Vocabulary'),
+    (2, 'Idiom'),
+    (3, 'Phrasal Verb');
+SET IDENTITY_INSERT dbo.LexiconType OFF;
+
+-- ========== LEXICON GROUP ==========
+SET IDENTITY_INSERT dbo.LexiconGroup ON;
+INSERT INTO dbo.LexiconGroup (GroupId, Theme, Description) VALUES
+    (1, 'Education', 'Words commonly seen in education topics'),
+    (2, 'Everyday Idioms', 'Common daily expressions'),
+    (3, 'Daily Life', 'Common everyday phrasal verbs'),
+    (4, 'All Idioms (Cambridge)', 'A collection of all idioms from Cambridge Dictionary'),
+    (5, 'All Phrasal Verbs (Cambridge)', 'A collection of all phrasal verbs from Cambridge Dictionary'),
+    (6, 'All Vocabulary (Cambridge)', 'A collection of all vocabulary words from Cambridge Dictionary'),
+    (7, 'All Idioms (Longman)', 'A collection of all idioms from  Longman Dictionary')
+    (8, 'All Phrasal Verbs (Longman)', 'A collection of all phrasal verbs from  Longman Dictionary'),
+    (9, 'All Vocabulary (Longman)', 'A collection of all vocabulary word from  Longman Dictionary')
+    (10, 'All Idioms (Oxford)', 'A collection of all idioms from Oxford Dictionary'),
+    (11, 'All Phrasal Verbs (Oxford)', 'A collection of all phrasal verbs from Oxford Dictionary'),
+    (12, 'All Vocabulary (Oxford)', 'A collection of all vocabulary words from Oxford Dictionary'),
+    (13, 'All Idioms (Macmillan)', 'A collection of all idioms from Macmillan Dictionary'),
+    (14, 'All Phrasal Verbs (Macmillan)', 'A collection of all phrasal verbs from Macmillan Dictionary'),
+    (15, 'All Vocabulary (Macmillan)', 'A collection of all vocabulary words from Macmillan Dictionary'),
+    (16, 'All Idioms (Merriam-Webster)', 'A collection of all idioms from Merriam-Webster Dictionary'),
+    (17, 'All Phrasal Verbs (Merriam-Webster)', 'A collection of all phrasal verbs from Merriam-Webster Dictionary'),
+    (18, 'All Vocabulary (Merriam-Webster)', 'A collection of all vocabulary words from Merriam-Webster Dictionary'),
+    (19, 'All Idioms (Collins)', 'A collection of all idioms from Collins Dictionary'),
+    (20, 'All Phrasal Verbs (Collins)', 'A collection of all phrasal verbs from Collins Dictionary'),
+    (21, 'All Vocabulary (Collins)', 'A collection of all vocabulary words from Collins Dictionary');
+SET IDENTITY_INSERT dbo.LexiconGroup OFF;
