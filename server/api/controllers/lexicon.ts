@@ -1,26 +1,32 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const LexiconModel = require("../../models/lexicon/LexiconModel.ts").default;
-const LexiconGroupModel = require("../../models/lexicon/LexiconGroupModel.ts").default;
-const UserLexiconProgressModel = require("../../models/lexicon/UserLexiconProgressModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import LexiconModel from "../../models/lexicon/LexiconModel";
+import LexiconGroupModel from "../../models/lexicon/LexiconGroupModel";
+import UserLexiconProgressModel from "../../models/lexicon/UserLexiconProgressModel";
 
-module.exports = {
-  getWords: async (type) => {
+export default {
+  getWords: async (type, limit) => {
     try {
-      const words = await LexiconModel.findAll(type);
-      const formatted = words.map(w => ({
-        ...w,
-        LexiconType: w.LexiconType.TypeName,
-      }));
+      const words = limit
+        ? await LexiconModel.findRandom(limit, type)
+        : await LexiconModel.findAll(type);
+      const formatted = words.map((w) => {
+        // normalize results when using raw queries
+        const typeName = w.LexiconType
+          ? w.LexiconType.TypeName
+          : (w as any).TypeName;
+        const { TypeName, ...rest } = w;
+        return { ...rest, LexiconType: typeName };
+      });
       return sendSuccess(formatted);
     } catch (error) {
       console.log(error);
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
-  getGroups: async (type) => {
+  getGroups: async (type, limit?: number) => {
     try {
-      const groups = await LexiconGroupModel.findAllWithWords(type);
+      const groups = await LexiconGroupModel.findAllWithWords(type, limit);
       const formatted = groups.map((g) => ({
         id: g.GroupId,
         theme: g.Theme,

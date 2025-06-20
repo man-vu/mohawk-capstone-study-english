@@ -71,7 +71,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   useEffect(() => {
     const type = mode;
-    fetch(`${API_URL}lexicon/groups?type=${type}`)
+    fetch(`${API_URL}lexicon/groups?type=${type}&limit=50`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {
@@ -96,12 +96,20 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       });
   }, [API_URL, mode]);
 
-  // Distractor words (unrelated to any theme)
-  const distractorWords = [
-    'elephant', 'purple', 'sandwich', 'telescope', 'umbrella', 'volcano', 'crystal', 'hurricane',
-    'butterfly', 'guitar', 'lighthouse', 'rainbow', 'diamond', 'ocean', 'mountain', 'sunset',
-    'library', 'carpet', 'fountain', 'mirror', 'candle', 'window', 'garden', 'bridge'
-  ];
+  // Distractor words fetched from the database
+  const [distractorWords, setDistractorWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Fetch a random subset once to minimize network load
+    fetch(`${API_URL}lexicon/words?limit=80`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.response) {
+          setDistractorWords(data.response.map((w: any) => w.Word));
+        }
+      })
+      .catch(() => {});
+  }, [API_URL]);
 
   // Timer effect
   useEffect(() => {
@@ -147,6 +155,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
       const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
       const selectedDistractors = distractorWords
+        .filter(w => w !== targetWord)
         .sort(() => Math.random() - 0.5)
         .slice(0, numDistractors);
 
@@ -166,13 +175,15 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       const allMeanings = wordGroups.flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
       const targetWord = randomItem.text;
       const targetMeaning = randomItem.meaning as string;
-      const numDistractors = difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5;
-      const selectedDistractors = allMeanings
-        .filter(m => m !== targetMeaning)
+      const totalOptions = difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
+      const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
+      const selectedDistractors = availableDistractors
         .sort(() => Math.random() - 0.5)
-        .slice(0, numDistractors);
+        .slice(0, Math.min(totalOptions - 1, availableDistractors.length));
 
-      const allOptions = [targetMeaning, ...selectedDistractors].sort(() => Math.random() - 0.5);
+      const allOptions = [targetMeaning, ...selectedDistractors].sort(
+        () => Math.random() - 0.5
+      );
 
       const newRound: GameRound = {
         id: `round-${roundNum}`,
@@ -563,7 +574,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
               </div>
 
               {/* Word Options */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6 items-stretch">
                 {currentRound.allOptions.map((option, index) => (
                   <motion.div
                     key={option}
@@ -573,7 +584,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   >
                     <Button
                       variant={selectedWords.includes(option) ? "default" : "outline"}
-                      className={`w-full h-36 text-sm ${
+                      className={`w-full h-full py-4 text-sm whitespace-normal break-words ${
                         selectedWords.includes(option)
                           ? 'bg-purple-600 hover:bg-purple-700'
                           : 'hover:bg-purple-50 dark:hover:bg-purple-900/20'

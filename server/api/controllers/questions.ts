@@ -1,15 +1,16 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const UserAnswerModel = require("../../models/user/UserAnswerModel.ts").default;
-const QuizQuestionModel = require("../../models/quiz/QuizQuestionModel.ts").default;
-const QuestionModel = require("../../models/question/QuestionModel.ts").default;
-const MCModel = require("../../models/question/QuestionMultipleChoiceModel.ts").default;
-const GModel = require("../../models/question/QuestionGapFillingModel.ts").default;
-const PromptModel = require("../../models/question/MatchingPromptModel.ts").default;
-const ChoiceModel = require("../../models/question/MatchingChoiceModel.ts").default;
-const AttemptModel = require("../../models/user/UserAttemptModel.ts").default;
-const InstructionModel = require("../../models/question/QuestionInstructionModel.ts").default;
-const validator = require("../validators/validator");
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import UserAnswerModel from "../../models/user/UserAnswerModel";
+import QuizQuestionModel from "../../models/quiz/QuizQuestionModel";
+import QuestionModel from "../../models/question/QuestionModel";
+import QuizPartModel from "../../models/quiz/QuizPartModel";
+import MCModel from "../../models/question/QuestionMultipleChoiceModel";
+import GModel from "../../models/question/QuestionGapFillingModel";
+import PromptModel from "../../models/question/MatchingPromptModel";
+import ChoiceModel from "../../models/question/MatchingChoiceModel";
+import AttemptModel from "../../models/user/UserAttemptModel";
+import InstructionModel from "../../models/question/QuestionInstructionModel";
+import validator from "../validators/validator";
 
 /**
  * Helper function that creates question content by question type id
@@ -74,7 +75,13 @@ async function createQuestionContent(
  */
 async function createBridgingQuizAndQuestion(quizId, questionId) {
   try {
-    await QuizQuestionModel.create({ QuizId: quizId, QuestionId: questionId });
+    const parts = await QuizPartModel.findAllByQuiz(quizId);
+    const partId = parts[0]?.PartId ?? 1;
+    await QuizQuestionModel.create({
+      Quiz: { connect: { QuizId: quizId } },
+      Question: { connect: { QuestionId: questionId } },
+      QuizPart: { connect: { PartId: partId } },
+    });
     return sendSuccess(201);
   } catch (error) {
     console.log(error);
@@ -127,9 +134,9 @@ async function updateIncompleteAttempts(quizId, questionId) {
     const attempts = await AttemptModel.findIncompleteAttemptsByQuizId(quizId);
     for (const attempt of attempts) {
       await UserAnswerModel.create({
-        AttemptId: attempt.AttemptId,
-        QuestionId: questionId,
         AnswerText: '',
+        UserAttempt: { connect: { AttemptId: attempt.AttemptId } },
+        Question: { connect: { QuestionId: questionId } },
       });
     }
     return true;
@@ -139,7 +146,7 @@ async function updateIncompleteAttempts(quizId, questionId) {
   }
 }
 
-module.exports = {
+export default {
   /**
    * Function that creates a new question
    */
@@ -179,11 +186,11 @@ module.exports = {
 
       try {
         const q = await QuestionModel.create({
-          TypeId: typeId,
-          InstructionId: instructionId,
           IsActive: !!isActive,
           ParagraphTitle: paragraphTitle,
           QuestionText: question,
+          QuestionType: { connect: { TypeId: typeId } },
+          QuestionInstruction: { connect: { InstructionId: instructionId } },
         });
 
         const questionId = q.QuestionId;

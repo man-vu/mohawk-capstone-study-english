@@ -1,31 +1,28 @@
-// StAuth10065: I, Man Vu, 000801665 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else.
+import express from "express";
+import { server_port } from "./config/index";
+import bodyParser from "body-parser";
+import cors from "cors";
+import path from "path";
 
-const express = require("express");
 const app = express();
-const { server_port } = require("./config/index");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const path = require("path");
-const sequelize = require("./config/orm");
-sequelize.authenticate().catch(err => console.error("Sequelize connection error:", err));
 
-const scheduler = require("./services/scheduler/checkAttempts");
-const connectHistory = require("connect-history-api-fallback");
+import "./services/scheduler/checkAttempts";
+import connectHistory from "connect-history-api-fallback";
 
 /* 
   Import all routes in the application
 */
-const authRoutes = require("./api/routes/auth.ts");
-const homeRoutes = require("./api/routes/home.ts");
-const userRoutes = require("./api/routes/users.ts");
-const quizRoutes = require("./api/routes/quizzes.ts");
-const teacherRoutes = require("./api/routes/teacher.ts");
-const statisticsRoutes = require("./api/routes/statistics.ts");
-const questionsRoutes = require("./api/routes/questions.ts");
-const lexiconRoutes = require("./api/routes/lexicon.ts");
-const mockTestRoutes = require("./api/routes/mockTests.ts");
-const writingRoutes = require("./api/routes/writing.ts");
-const courseRoutes = require("./api/routes/courses.ts");
+import authRoutes from "./api/routes/auth";
+import homeRoutes from "./api/routes/home";
+import userRoutes from "./api/routes/users";
+import quizRoutes from "./api/routes/quizzes";
+import teacherRoutes from "./api/routes/teacher";
+import statisticsRoutes from "./api/routes/statistics";
+import questionsRoutes from "./api/routes/questions";
+import lexiconRoutes from "./api/routes/lexicon";
+import mockTestRoutes from "./api/routes/mockTests";
+import writingRoutes from "./api/routes/writing";
+import courseRoutes from "./api/routes/courses";
 
 /**
  * Set CORS policy in development environment to prevent CORS blocking
@@ -79,3 +76,10 @@ if (process.env.NODE_ENV === "production") {
     console.log(`Server is running on port ${server_port}.`);
   });
 }
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, p) => {
+  console.error('Unhandled Rejection at:', p, 'reason:', reason);
+});

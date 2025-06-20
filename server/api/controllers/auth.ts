@@ -1,25 +1,21 @@
-const jwt = require("jsonwebtoken");
-const { jwt_secret_key, jwt_expiry_time, password_reset_expiry_time, datetime_format } = require("../../config/index");
-const { hashPasswordAsync, checkPassword, getAvatarUrl } = require("../../misc/helper");
-const STRINGS = require("../../config/strings");
-const { sendSuccess, sendFailure } = require("../../config/res");
-const {
-  validateEmail,
-  validatePassword,
-  validateProfilePictureId,
-  validateGender,
-  validateRoleId,
-  validateName,
-} = require("../validators/validator");
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const MimeTypeModel = require("../../models/media/MimeTypeModel.ts").default;
-const {
-  sendPasswordReset,
-} = require("../../services/email_notification/passwordReset");
-const passwordGenerator = require("generate-password");
-const moment = require("moment");
+import jwt from "jsonwebtoken";
+import {
+  jwt_secret_key,
+  jwt_expiry_time,
+  password_reset_expiry_time,
+  datetime_format,
+} from "../../config/index";
+import { hashPasswordAsync, checkPassword, getAvatarUrl } from "../../misc/helper";
+import STRINGS from "../../config/strings";
+import { sendSuccess, sendFailure } from "../../config/res";
+import validator from "../validators/validator";
+import AppUserModel from "../../models/auth/AppUserModel";
+import MimeTypeModel from "../../models/media/MimeTypeModel";
+import { sendPasswordReset } from "../../services/email_notification/passwordReset";
+import passwordGenerator from "generate-password";
+import moment from "moment";
 
-module.exports = {
+export default {
   /**
    * Function that registers a user
    */
@@ -34,27 +30,27 @@ module.exports = {
       lastName,
     } = data;
 
-    if (!validateName(firstName)) {
+    if (!validator.validateName(firstName)) {
       return sendFailure(STRINGS.PLEASE_CHECK_YOUR_FIRST_NAME);
     }
 
-    if (!validateName(lastName)) {
+    if (!validator.validateName(lastName)) {
       return sendFailure(STRINGS.PLEASE_CHECK_YOUR_LAST_NAME);
     }
 
-    if (!validateEmail(email)) {
+    if (!validator.validateEmail(email)) {
       return sendFailure(STRINGS.EMAIL_IS_NOT_IN_CORRECT_FORMAT);
     }
-    if (!validatePassword(password)) {
+    if (!validator.validatePassword(password)) {
       return sendFailure(STRINGS.PASSWORD_MUST_BE_AT_LEAST());
     }
-    if (profilePictureId !== undefined && !validateProfilePictureId(profilePictureId)) {
+    if (profilePictureId !== undefined && !validator.validateProfilePictureId(profilePictureId)) {
       return sendFailure(STRINGS.INVALID_PROFILE_PICTURE_ID);
     }
-    if (!validateGender(gender)) {
+    if (!validator.validateGender(gender)) {
       return sendFailure(STRINGS.INVALID_GENDER);
     }
-    if (!validateRoleId(roleId)) {
+    if (!validator.validateRoleId(roleId)) {
       return sendFailure(STRINGS.INVALID_ROLE_ID);
     }
 
@@ -78,7 +74,7 @@ module.exports = {
       const user = await AppUserModel.create(createData);
 
       const userId = user.UserId;
-      const isTeacher = roleId === 1 ? true : false;
+      const isTeacher = Number(roleId) === 1;
       const avatarUrl = getAvatarUrl(firstName);
 
       const token = jwt.sign(
@@ -114,7 +110,7 @@ module.exports = {
     if (!email || !password) {
       return sendFailure(STRINGS.EMAIL_AND_PASSWORD_CANNOT_BE_BLANK);
     }
-    if (!validateEmail(email)) {
+    if (!validator.validateEmail(email)) {
       return sendFailure(STRINGS.EMAIL_IS_NOT_IN_CORRECT_FORMAT);
     }
 
@@ -178,7 +174,7 @@ module.exports = {
   passwordReset: async (data) => {
     const { email } = data;
 
-    if (!validateEmail(email)) {
+    if (!validator.validateEmail(email)) {
       return sendFailure(STRINGS.EMAIL_IS_NOT_IN_CORRECT_FORMAT);
     }
 

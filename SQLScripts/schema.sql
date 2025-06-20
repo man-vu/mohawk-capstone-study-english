@@ -293,7 +293,7 @@ CREATE TABLE dbo.Lexicon (
     LexiconId INT IDENTITY PRIMARY KEY,
     Word NVARCHAR(100) NOT NULL,
     Definition NVARCHAR(500) NOT NULL,
-    Example NVARCHAR(500) NULL,
+    Example NVARCHAR(1000) NULL,
     PartOfSpeech NVARCHAR(50) NULL,
     Level NVARCHAR(20) NULL,
     Category NVARCHAR(100) NULL,

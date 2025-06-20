@@ -1,5 +1,6 @@
-const jwt = require("jsonwebtoken");
-const { jwt_secret_key } = require("../../config/index");
+import jwt from "jsonwebtoken";
+import { jwt_secret_key } from "../../config/index";
+import type { Request, Response, NextFunction } from "express";
 
 /**
  * Middleware for checking JWT authentication token and if user requesting is a teacher which is used for only teacher routes
@@ -7,7 +8,7 @@ const { jwt_secret_key } = require("../../config/index");
  * @param {*} res 
  * @param {*} next 
  */
-module.exports = (req, res, next) => {
+export default (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (authHeader) {

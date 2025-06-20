@@ -12,4 +12,4 @@ const PERMISSIONS = {
   CAN_VIEW_USER_STATISTICS: "CAN_VIEW_USER_STATISTICS",
 };
 
-module.exports = PERMISSIONS;
+export default PERMISSIONS;

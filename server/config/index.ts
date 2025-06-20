@@ -1,5 +1,5 @@
-const path = require("path");
-const dotenv = require("dotenv")
+import path from "path";
+import dotenv from "dotenv";
 
 if (!process.env.NODE_ENV) {
   throw new Error("NODE_ENV is not defined.");
@@ -34,5 +34,27 @@ const envFile = {
   aws_secret_key: process.env.AWS_SECRET_KEY,
   s3_bucket_name: process.env.S3_BUCKET_NAME,
 };
+export const {
+  vue_app_server_endpoint,
+  server_port,
+  client_port,
+  mysql_host,
+  mysql_port,
+  mysql_user,
+  mysql_password,
+  database_name,
+  redis_host,
+  redis_port,
+  redis_ttl,
+  jwt_secret_key,
+  jwt_expiry_time,
+  password_reset_expiry_time,
+  datetime_format,
+  appmail,
+  appmail_password,
+  aws_access_key,
+  aws_secret_key,
+  s3_bucket_name,
+} = envFile;
 
-module.exports = envFile;
+export default envFile;
