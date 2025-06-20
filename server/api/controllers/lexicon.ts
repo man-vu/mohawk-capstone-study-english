@@ -34,6 +34,9 @@ export default {
         words: g.LexiconGroupMap.map((m) => ({
           expression: m.Lexicon.Word,
           meaning: m.Lexicon.Definition,
+          synonyms: m.Lexicon.Synonyms,
+          related: m.Lexicon.RelatedLexicon,
+          guideword: m.Lexicon.Guideword,
           type: m.Lexicon.LexiconType.TypeName,
         })),
       }));

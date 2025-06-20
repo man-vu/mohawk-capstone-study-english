@@ -23,6 +23,9 @@ import {
 interface WordItem {
   text: string;
   meaning?: string;
+  synonyms?: string | null;
+  related?: string | null;
+  guideword?: string | null;
 }
 
 interface WordGroup {
@@ -79,7 +82,15 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
             .map((g: any) => ({
               ...g,
               words: g.words.map((w: any) =>
-                typeof w === 'string' ? { text: w } : { text: w.expression, meaning: w.meaning }
+                typeof w === 'string'
+                  ? { text: w }
+                  : {
+                      text: w.expression,
+                      meaning: w.meaning,
+                      synonyms: w.synonyms,
+                      related: w.related,
+                      guideword: w.guideword,
+                    }
               ),
             }))
             .filter((g: any) => g.words.length > 0);
@@ -147,15 +158,26 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
     if (mode === 'vocabulary') {
       const targetWord = randomItem.text;
-      const relatedWords = randomGroup.words
-        .filter(w => w.text !== targetWord)
-        .map(w => w.text)
+
+      const parseList = (val?: string | null) =>
+        val ? val.split(',').map((s) => s.trim()).filter(Boolean) : [];
+
+      const fromGroup = randomGroup.words
+        .filter((w) => w.text !== targetWord)
+        .map((w) => w.text);
+      const synonyms = parseList(randomItem.synonyms);
+      const related = parseList(randomItem.related);
+      const guidewords = parseList(randomItem.guideword);
+
+      const relatedSet = Array.from(new Set([...fromGroup, ...synonyms, ...related, ...guidewords]));
+      const relatedWords = relatedSet
+        .filter((w) => w.toLowerCase() !== targetWord.toLowerCase())
         .sort(() => Math.random() - 0.5)
         .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
 
       const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
       const selectedDistractors = distractorWords
-        .filter(w => w !== targetWord)
+        .filter((w) => w !== targetWord && !relatedSet.includes(w))
         .sort(() => Math.random() - 0.5)
         .slice(0, numDistractors);
 
