@@ -1,9 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
+import SetupScreen from './word-association/SetupScreen';
+import CompletionScreen from './word-association/CompletionScreen';
+import PauseOverlay from './word-association/PauseOverlay';
+import FeedbackModal from './word-association/FeedbackModal';
+import type { WordGroup, GameRound, GameMode } from './word-association/types';
+import {
+  fetchVocabularyGroups,
+  buildVocabularyRound,
+} from './word-association/modes/vocabulary';
+import {
+  fetchIdiomGroups,
+  buildIdiomRound,
+} from './word-association/modes/idiom';
+import {
+  fetchPhrasalVerbGroups,
+  buildPhrasalVerbRound,
+} from './word-association/modes/phrasalVerb';
+import {
+  fetchSynAntGroups,
+  buildSynAntRound,
+} from './word-association/modes/synAnt';
 import { 
   Brain, 
   Clock, 
@@ -19,33 +40,6 @@ import {
   Lightbulb,
   Zap
 } from 'lucide-react';
-
-interface WordItem {
-  text: string;
-  meaning?: string;
-  synonyms?: string | null;
-  related?: string | null;
-  guideword?: string | null;
-}
-
-interface WordGroup {
-  id: string;
-  theme: string;
-  words: WordItem[];
-  description: string;
-}
-
-interface GameRound {
-  id: string;
-  targetWord: string;
-  targetMeaning?: string;
-  synonyms?: string[];
-  guidewords?: string[];
-  relatedWords: string[];
-  distractors: string[];
-  allOptions: string[];
-  theme: string;
-}
 
 interface WordAssociationGameProps {
   onBack: () => void;
@@ -71,42 +65,31 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   const [wordGroups, setWordGroups] = useState<WordGroup[]>([]);
   const [noWordsAvailable, setNoWordsAvailable] = useState(false);
-  const [mode, setMode] = useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
+  const [mode, setMode] = useState<GameMode>('vocabulary');
+  const [usedWords, setUsedWords] = useState<string[]>([]);
   const API_URL = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
-    const type = mode;
-    fetch(`${API_URL}lexicon/groups?type=${type}&limit=50`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.response) {
-          const groups = data.response
-            .map((g: any) => ({
-              ...g,
-              words: g.words.map((w: any) =>
-                typeof w === 'string'
-                  ? { text: w }
-                  : {
-                      text: w.expression,
-                      meaning: w.meaning,
-                      synonyms: w.synonyms,
-                      related: w.related,
-                      guideword: w.guideword,
-                    }
-              ),
-            }))
-            .filter((g: any) => g.words.length > 0);
-          setWordGroups(groups);
-          setNoWordsAvailable(groups.length === 0);
+    const loadGroups = async () => {
+      try {
+        let groups: WordGroup[] = [];
+        if (mode === 'vocabulary') {
+          groups = await fetchVocabularyGroups(API_URL);
+        } else if (mode === 'idiom') {
+          groups = await fetchIdiomGroups(API_URL);
+        } else if (mode === 'phrasal verb') {
+          groups = await fetchPhrasalVerbGroups(API_URL);
         } else {
-          setWordGroups([]);
-          setNoWordsAvailable(true);
+          groups = await fetchSynAntGroups(API_URL);
         }
-      })
-      .catch(() => {
+        setWordGroups(groups);
+        setNoWordsAvailable(groups.length === 0);
+      } catch {
         setWordGroups([]);
         setNoWordsAvailable(true);
-      });
+      }
+    };
+    loadGroups();
   }, [API_URL, mode]);
 
   // Distractor words fetched from the database
@@ -147,90 +130,75 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   }, [isGameActive, isPaused, isGameComplete, timeLeft]);
 
   // Generate a new round
-  const generateRound = (roundNum: number = roundNumber) => {
-    const validGroups = wordGroups.filter(g => g.words.length > 0);
+
+  const generateRound = (
+    roundNum: number = roundNumber,
+    diff: 'easy' | 'medium' | 'hard' = difficulty
+  ) => {
+    const filteredGroups = wordGroups
+      .map(g => ({
+        ...g,
+        words: g.words.filter(w => !usedWords.includes(w.text)),
+      }))
+      .filter(g => g.words.length > 0);
+
+    const validGroups = filteredGroups.length > 0 ? filteredGroups : wordGroups;
+
     if (validGroups.length === 0) {
       setIsGameActive(false);
       setNoWordsAvailable(true);
       return;
     }
 
-    const randomGroup = validGroups[Math.floor(Math.random() * validGroups.length)];
-    const randomItem = randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
+    const randomGroup =
+      validGroups[Math.floor(Math.random() * validGroups.length)];
+    const randomItem =
+      randomGroup.words[Math.floor(Math.random() * randomGroup.words.length)];
 
+    let newRound: GameRound;
     if (mode === 'vocabulary') {
-      const targetWord = randomItem.text;
-
-      const parseList = (val?: string | null) =>
-        val ? val.split(',').map((s) => s.trim()).filter(Boolean) : [];
-
-      const synonyms = parseList(randomItem.synonyms);
-      const related = parseList(randomItem.related);
-      const guidewords = parseList(randomItem.guideword);
-
-      let relatedSet = Array.from(new Set([...synonyms, ...related]));
-      if (relatedSet.length === 0) {
-        relatedSet = randomGroup.words
-          .filter((w) => w.text !== targetWord)
-          .map((w) => w.text);
-      }
-
-      const relatedWords = relatedSet
-        .filter((w) => w.toLowerCase() !== targetWord.toLowerCase())
-        .sort(() => Math.random() - 0.5)
-        .slice(0, difficulty === 'easy' ? 3 : difficulty === 'medium' ? 4 : 5);
-
-      const numDistractors = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
-      const selectedDistractors = distractorWords
-        .filter((w) => w !== targetWord && !relatedSet.includes(w))
-        .sort(() => Math.random() - 0.5)
-        .slice(0, numDistractors);
-
-      const allOptions = [...relatedWords, ...selectedDistractors].sort(() => Math.random() - 0.5);
-
-      const newRound: GameRound = {
-        id: `round-${roundNum}`,
-        targetWord,
-        targetMeaning: randomItem.meaning,
-        synonyms,
-        guidewords,
-        relatedWords,
-        distractors: selectedDistractors,
-        allOptions,
-        theme: randomGroup.theme,
-      };
-
-      setCurrentRound(newRound);
-    } else {
-      const allMeanings = wordGroups.flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
-      const targetWord = randomItem.text;
-      const targetMeaning = randomItem.meaning as string;
-      const totalOptions = difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
-      const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
-      const selectedDistractors = availableDistractors
-        .sort(() => Math.random() - 0.5)
-        .slice(0, Math.min(totalOptions - 1, availableDistractors.length));
-
-      const allOptions = [targetMeaning, ...selectedDistractors].sort(
-        () => Math.random() - 0.5
+      newRound = buildVocabularyRound(
+        randomGroup,
+        randomItem,
+        roundNum,
+        distractorWords,
+        diff
       );
-
-      const newRound: GameRound = {
-        id: `round-${roundNum}`,
-        targetWord,
-        targetMeaning,
-        relatedWords: [targetMeaning],
-        distractors: selectedDistractors,
-        allOptions,
-        theme: randomGroup.theme,
-      };
-
-      setCurrentRound(newRound);
+    } else if (mode === 'syn-ant') {
+      newRound = buildSynAntRound(
+        randomGroup,
+        randomItem,
+        roundNum,
+        distractorWords,
+        diff
+      );
+    } else {
+      const allMeanings = wordGroups
+        .flatMap(g => g.words.map(w => w.meaning).filter(Boolean));
+      if (mode === 'idiom') {
+        newRound = buildIdiomRound(
+          randomGroup,
+          randomItem,
+          roundNum,
+          diff,
+          allMeanings
+        );
+      } else {
+        newRound = buildPhrasalVerbRound(
+          randomGroup,
+          randomItem,
+          roundNum,
+          diff,
+          allMeanings
+        );
+      }
     }
 
+    setCurrentRound(newRound);
+    setUsedWords(prev => [...prev, randomItem.text]);
     setSelectedWords([]);
     setFeedback(null);
-    setTimeLeft(difficulty === 'easy' ? 45 : difficulty === 'medium' ? 30 : 20);
+    setTimeLeft(diff === 'easy' ? 45 : diff === 'medium' ? 30 : 20);
   };
 
   // Start game
@@ -248,17 +216,30 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setRoundNumber(1);
     setScore(0);
     setGameStats({ correctAnswers: 0, totalTime: 0, accuracy: 0 });
-    generateRound(1);
+    setUsedWords([]);
+    generateRound(1, selectedDifficulty);
   };
 
   // Handle word selection
   const handleWordSelect = (word: string) => {
     if (isPaused || !currentRound) return;
-    
-    if (selectedWords.includes(word)) {
-      setSelectedWords(prev => prev.filter(w => w !== word));
+
+    if (mode === 'idiom' || mode === 'phrasal verb') {
+      // Only one selection allowed for meaning based rounds
+      if (selectedWords.includes(word)) {
+        setSelectedWords([]);
+      } else {
+        setSelectedWords([word]);
+      }
     } else {
-      setSelectedWords(prev => [...prev, word]);
+      if (selectedWords.includes(word)) {
+        setSelectedWords(prev => prev.filter(w => w !== word));
+      } else {
+        const max = Math.max(1, currentRound.relatedWords.length);
+        if (selectedWords.length < max) {
+          setSelectedWords(prev => [...prev, word]);
+        }
+      }
     }
   };
 
@@ -284,10 +265,10 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     if (correctCount === currentRound.relatedWords.length && incorrectCount === 0) {
       message = `Perfect! +${totalRoundScore} points`;
       setGameStats(prev => ({ ...prev, correctAnswers: prev.correctAnswers + 1 }));
-    } else if (correctCount > 0 || incorrectCount > 0) {
-      message = `Partially correct. +${totalRoundScore} points`;
-    } else {
+    } else if (correctCount === 0) {
       message = `Better luck next time. +${totalRoundScore} points`;
+    } else {
+      message = `Partially correct. +${totalRoundScore} points`;
     }
 
     setFeedback(message);
@@ -325,6 +306,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setIsPaused(false);
     setGameStats({ correctAnswers: 0, totalTime: 0, accuracy: 0 });
     setFeedback(null);
+    setUsedWords([]);
   };
 
   // Toggle pause
@@ -353,157 +335,28 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
   // Game setup screen
   if (!isGameActive && !isGameComplete) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Brain className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Word Association Game
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            {mode === 'vocabulary'
-              ? 'Find words related to the target word. Test your vocabulary knowledge and word connections!'
-              : mode === 'idiom'
-              ? 'Select the correct meaning for the displayed idiom.'
-              : 'Select the correct meaning for the displayed phrasal verb.'}
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-2 mb-6">
-          {[
-            { id: 'vocabulary', label: 'Vocabulary' },
-            { id: 'idiom', label: 'Idioms' },
-            { id: 'phrasal verb', label: 'Phrasal Verbs' }
-          ].map(m => (
-            <Button
-              key={m.id}
-              variant={mode === m.id ? 'default' : 'outline'}
-              onClick={() => setMode(m.id as any)}
-            >
-              {m.label}
-            </Button>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {(['easy', 'medium', 'hard'] as const).map((level) => (
-            <Card
-              key={level}
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
-              onClick={() => startGame(level)}
-            >
-              <CardContent className="p-6 text-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${
-                  level === 'easy' ? 'bg-green-100 dark:bg-green-900/20' :
-                  level === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/20' :
-                  'bg-red-100 dark:bg-red-900/20'
-                }`}>
-                  <Brain className={`w-6 h-6 ${
-                    level === 'easy' ? 'text-green-600 dark:text-green-400' :
-                    level === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
-                    'text-red-600 dark:text-red-400'
-                  }`} />
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2 capitalize">
-                  {level}
-                </h3>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {level === 'easy' && '45s per round • 7 words to choose from'}
-                  {level === 'medium' && '30s per round • 10 words to choose from'}
-                  {level === 'hard' && '20s per round • 13 words to choose from'}
-                </div>
-                <Button className="w-full" disabled={noWordsAvailable}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Game
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-          {noWordsAvailable && (
-            <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
-              No words available for this mode.
-            </div>
-          )}
-        </div>
-
-        <div className="text-center">
-          <Button variant="outline" onClick={onBack}>
-            <Home className="w-4 h-4 mr-2" />
-            Back to Games
-          </Button>
-        </div>
-      </div>
+      <SetupScreen
+        mode={mode}
+        setMode={setMode}
+        startGame={startGame}
+        noWordsAvailable={noWordsAvailable}
+        onBack={onBack}
+      />
     );
   }
 
   // Game completion screen
   if (isGameComplete) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-        </motion.div>
-        
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-          Game Complete! 🧠
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          You've completed all {totalRounds} rounds of word association!
-        </p>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {score}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Score</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Math.round(gameStats.accuracy)}%
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Accuracy</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {gameStats.correctAnswers}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Perfect Rounds</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {Math.floor(gameStats.totalTime / 60)}:{(gameStats.totalTime % 60).toString().padStart(2, '0')}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Time Played</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex gap-4 justify-center">
-            <Button onClick={resetGame} size="lg">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Play Again
-            </Button>
-            <Button variant="outline" onClick={onBack} size="lg">
-              <Home className="w-4 h-4 mr-2" />
-              Back to Games
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CompletionScreen
+        totalRounds={totalRounds}
+        score={score}
+        accuracy={gameStats.accuracy}
+        correctAnswers={gameStats.correctAnswers}
+        totalTime={gameStats.totalTime}
+        resetGame={resetGame}
+        onBack={onBack}
+      />
     );
   }
 
@@ -551,29 +404,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       </div>
 
       {/* Pause Overlay */}
-      <AnimatePresence>
-        {isPaused && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          >
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Pause className="w-12 h-24 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                  Game Paused
-                </h3>
-                <Button onClick={togglePause}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Resume Game
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PauseOverlay isPaused={isPaused} togglePause={togglePause} />
 
       {currentRound && (
         <>
@@ -582,7 +413,13 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
             <CardHeader>
               <div className="text-center">
                 <CardTitle className="text-2xl mb-2">
-                  {mode === 'vocabulary' ? 'Find words related to:' : 'What is the meaning of:'}
+                  {mode === 'vocabulary'
+                    ? 'Find words related to:'
+                    : mode === 'syn-ant'
+                    ? (
+                        <>Select <span className={`font-bold ${currentRound.relationType === 'synonym' ? 'text-green-600' : 'text-red-600'}`}>{currentRound.relationType === 'synonym' ? 'synonyms' : 'antonyms'}</span> for:</>
+                      )
+                    : 'What is the meaning of:'}
                 </CardTitle>
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                   {currentRound.targetWord.toUpperCase()}
@@ -604,10 +441,14 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {mode === 'vocabulary'
                       ? `Select ${Math.max(1, currentRound.relatedWords.length)} related word${Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}`
+                      : mode === 'syn-ant'
+                      ? (
+                          <>Select {Math.max(1, currentRound.relatedWords.length)} <span className={`font-bold ${currentRound.relationType === 'synonym' ? 'text-green-600' : 'text-red-600'}`}>{currentRound.relationType === 'synonym' ? 'synonym' : 'antonym'}{Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}</span></>
+                        )
                       : 'Select the correct meaning'}
                   </span>
                 </div>
-                {mode === 'vocabulary' && (
+                {(mode === 'vocabulary' || mode === 'syn-ant') && (
                   <div className="text-xs text-gray-500">
                     Selected: {selectedWords.length} / {Math.max(1, currentRound.relatedWords.length)}
                   </div>
@@ -618,7 +459,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6 items-stretch">
                 {currentRound.allOptions.map((option, index) => (
                   <motion.div
-                    key={option}
+                    key={`${option}-${index}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
@@ -655,77 +496,12 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           </Card>
 
           {/* Feedback */}
-          <AnimatePresence>
-            {feedback && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-                onClick={closeFeedback}
-              >
-                <Card onClick={e => e.stopPropagation()}>
-                  <CardContent className="p-8 text-center">
-                    <div className="mb-4">
-                      {feedback.includes('Perfect') && (
-                        <Trophy className="w-12 h-12 text-yellow-500 mx-auto" />
-                      )}
-                      {feedback.includes('Partially') && (
-                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-                      )}
-                      {feedback.includes('Better luck') && (
-                        <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-                      )}
-                      {feedback.includes("Time's up") && (
-                        <Clock className="w-12 h-12 text-orange-500 mx-auto" />
-                      )}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      {feedback}
-                    </h3>
-                    {currentRound && (
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        <p className="mb-2">Correct answers were:</p>
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {currentRound.relatedWords.map(word => (
-                            <Badge key={word} variant="success">
-                              {word}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="mt-4 mb-2">Your selections:</p>
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {selectedWords.map(word => (
-                            <Badge
-                              key={word}
-                              variant={currentRound.relatedWords.includes(word) ? 'success' : 'destructive'}
-                            >
-                              {word}
-                            </Badge>
-                          ))}
-                        </div>
-                        {currentRound.targetMeaning && (
-                          <p className="mt-4">
-                            <strong>Definition:</strong> {currentRound.targetMeaning}
-                          </p>
-                        )}
-                        {currentRound.synonyms && currentRound.synonyms.length > 0 && (
-                          <p className="mt-2">
-                            <strong>Synonyms:</strong> {currentRound.synonyms.join(', ')}
-                          </p>
-                        )}
-                        {currentRound.guidewords && currentRound.guidewords.length > 0 && (
-                          <p className="mt-2">
-                            <strong>Guideword:</strong> {currentRound.guidewords.join(', ')}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <FeedbackModal
+            feedback={feedback}
+            currentRound={currentRound}
+            selectedWords={selectedWords}
+            closeFeedback={closeFeedback}
+          />
         </>
       )}
     </div>

@@ -5,11 +5,16 @@ import LexiconGroupModel from "../../models/lexicon/LexiconGroupModel";
 import UserLexiconProgressModel from "../../models/lexicon/UserLexiconProgressModel";
 
 export default {
-  getWords: async (type, limit) => {
+  getWords: async (type, limit, synAnt?: boolean) => {
     try {
-      const words = limit
-        ? await LexiconModel.findRandom(limit, type)
-        : await LexiconModel.findAll(type);
+      let words;
+      if (synAnt) {
+        words = await LexiconModel.findRandomWithSynAnt(limit ?? 50);
+      } else {
+        words = limit
+          ? await LexiconModel.findRandom(limit, type)
+          : await LexiconModel.findAll(type);
+      }
       const formatted = words.map((w) => {
         // normalize results when using raw queries
         const typeName = w.LexiconType
