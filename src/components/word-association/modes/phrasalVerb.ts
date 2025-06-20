@@ -38,13 +38,15 @@ export const buildPhrasalVerbRound = (
   const targetMeaning = item.meaning as string;
   const totalOptions =
     difficulty === 'easy' ? 7 : difficulty === 'medium' ? 10 : 13;
-  const availableDistractors = allMeanings.filter(m => m !== targetMeaning);
+  const availableDistractors = Array.from(
+    new Set(allMeanings.filter(m => m !== targetMeaning))
+  );
   const selectedDistractors = availableDistractors
     .sort(() => Math.random() - 0.5)
     .slice(0, Math.min(totalOptions - 1, availableDistractors.length));
-  const allOptions = [targetMeaning, ...selectedDistractors].sort(
-    () => Math.random() - 0.5
-  );
+  const allOptions = Array.from(
+    new Set([targetMeaning, ...selectedDistractors])
+  ).sort(() => Math.random() - 0.5);
 
   return {
     id: `round-${roundNum}`,

@@ -44,9 +44,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                       Correct {currentRound.relationType === 'synonym' ? 'synonyms' : 'antonyms'}:
                     </p>
                     <div className="flex flex-wrap gap-1 justify-center">
-                      {currentRound.relatedWords.map((word) => (
+                      {currentRound.relatedWords.map((word, idx) => (
                         <Badge
-                          key={word}
+                          key={`${word}-${idx}`}
                           variant={currentRound.relationType === 'synonym' ? 'success' : 'destructive'}
                         >
                           {word}
@@ -58,8 +58,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   <>
                     <p className="mb-2">Correct answers were:</p>
                     <div className="flex flex-wrap gap-1 justify-center">
-                      {currentRound.relatedWords.map((word) => (
-                        <Badge key={word} variant="success">
+                      {currentRound.relatedWords.map((word, idx) => (
+                        <Badge key={`${word}-${idx}`} variant="success">
                           {word}
                         </Badge>
                       ))}
@@ -68,9 +68,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 )}
                 <p className="mt-4 mb-2">Your selections:</p>
                 <div className="flex flex-wrap gap-1 justify-center">
-                  {selectedWords.map((word) => (
+                  {selectedWords.map((word, idx) => (
                     <Badge
-                      key={word}
+                      key={`${word}-${idx}`}
                       variant={currentRound.relatedWords.includes(word) ? 'success' : 'destructive'}
                     >
                       {word}
@@ -86,8 +86,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   <div className="mt-2">
                     <strong>Synonyms:</strong>
                     <div className="flex flex-wrap gap-1 mt-1 justify-center">
-                      {currentRound.synonyms.map((word) => (
-                        <Badge key={word} variant="success">
+                      {currentRound.synonyms.map((word, idx) => (
+                        <Badge key={`${word}-${idx}`} variant="success">
                           {word}
                         </Badge>
                       ))}
@@ -98,8 +98,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   <div className="mt-2">
                     <strong>Antonyms:</strong>
                     <div className="flex flex-wrap gap-1 mt-1 justify-center">
-                      {currentRound.antonyms.map((word) => (
-                        <Badge key={word} variant="destructive">
+                      {currentRound.antonyms.map((word, idx) => (
+                        <Badge key={`${word}-${idx}`} variant="destructive">
                           {word}
                         </Badge>
                       ))}
