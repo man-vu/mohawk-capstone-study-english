@@ -168,7 +168,13 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
       const related = parseList(randomItem.related);
       const guidewords = parseList(randomItem.guideword);
 
-      const relatedSet = Array.from(new Set([...synonyms, ...related]));
+      let relatedSet = Array.from(new Set([...synonyms, ...related]));
+      if (relatedSet.length === 0) {
+        relatedSet = randomGroup.words
+          .filter((w) => w.text !== targetWord)
+          .map((w) => w.text);
+      }
+
       const relatedWords = relatedSet
         .filter((w) => w.toLowerCase() !== targetWord.toLowerCase())
         .sort(() => Math.random() - 0.5)
@@ -274,17 +280,18 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
     setScore(prev => prev + totalRoundScore);
     
+    let message = '';
     if (correctCount === currentRound.relatedWords.length && incorrectCount === 0) {
-      setFeedback(`Perfect! +${totalRoundScore} points`);
-      setIsPaused(true);
+      message = `Perfect! +${totalRoundScore} points`;
       setGameStats(prev => ({ ...prev, correctAnswers: prev.correctAnswers + 1 }));
-    } else if (correctCount > incorrectCount) {
-      setFeedback(`Good job! +${totalRoundScore} points`);
-      setIsPaused(true);
+    } else if (correctCount > 0 || incorrectCount > 0) {
+      message = `Partially correct. +${totalRoundScore} points`;
     } else {
-      setFeedback(`Try harder next time. +${totalRoundScore} points`);
-      setIsPaused(true);
+      message = `Better luck next time. +${totalRoundScore} points`;
     }
+
+    setFeedback(message);
+    setIsPaused(true);
 
     // Wait for user to close feedback
   };
@@ -596,13 +603,13 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                   <Lightbulb className="w-4 h-4 text-yellow-500" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {mode === 'vocabulary'
-                      ? `Select ${currentRound.relatedWords.length} related words`
+                      ? `Select ${Math.max(1, currentRound.relatedWords.length)} related word${Math.max(1, currentRound.relatedWords.length) > 1 ? 's' : ''}`
                       : 'Select the correct meaning'}
                   </span>
                 </div>
                 {mode === 'vocabulary' && (
                   <div className="text-xs text-gray-500">
-                    Selected: {selectedWords.length} / {currentRound.relatedWords.length}
+                    Selected: {selectedWords.length} / {Math.max(1, currentRound.relatedWords.length)}
                   </div>
                 )}
               </div>
@@ -660,10 +667,18 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                 <Card onClick={e => e.stopPropagation()}>
                   <CardContent className="p-8 text-center">
                     <div className="mb-4">
-                      {feedback.includes('Perfect') && <Trophy className="w-12 h-12 text-yellow-500 mx-auto" />}
-                      {feedback.includes('Good') && <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />}
-                      {feedback.includes('Try harder') && <XCircle className="w-12 h-12 text-red-500 mx-auto" />}
-                      {feedback.includes('Time\'s up') && <Clock className="w-12 h-12 text-orange-500 mx-auto" />}
+                      {feedback.includes('Perfect') && (
+                        <Trophy className="w-12 h-12 text-yellow-500 mx-auto" />
+                      )}
+                      {feedback.includes('Partially') && (
+                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+                      )}
+                      {feedback.includes('Better luck') && (
+                        <XCircle className="w-12 h-12 text-red-500 mx-auto" />
+                      )}
+                      {feedback.includes("Time's up") && (
+                        <Clock className="w-12 h-12 text-orange-500 mx-auto" />
+                      )}
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                       {feedback}
@@ -673,7 +688,18 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
                         <p className="mb-2">Correct answers were:</p>
                         <div className="flex flex-wrap gap-1 justify-center">
                           {currentRound.relatedWords.map(word => (
-                            <Badge key={word} variant="secondary">
+                            <Badge key={word} variant="success">
+                              {word}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="mt-4 mb-2">Your selections:</p>
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {selectedWords.map(word => (
+                            <Badge
+                              key={word}
+                              variant={currentRound.relatedWords.includes(word) ? 'success' : 'destructive'}
+                            >
                               {word}
                             </Badge>
                           ))}
