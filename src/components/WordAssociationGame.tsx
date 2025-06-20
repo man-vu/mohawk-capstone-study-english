@@ -71,7 +71,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   useEffect(() => {
     const type = mode;
-    fetch(`${API_URL}lexicon/groups?type=${type}`)
+    fetch(`${API_URL}lexicon/groups?type=${type}&limit=50`)
       .then(res => res.json())
       .then(data => {
         if (data.response) {

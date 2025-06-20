@@ -12,8 +12,9 @@ router.get("/words", async (req, res) => {
 });
 
 router.get("/groups", async (req, res) => {
-  const { type } = req.query;
-  const result = await lexiconController.getGroups(type as string | undefined);
+  const { type, limit } = req.query as { type?: string; limit?: string };
+  const parsedLimit = limit ? Number(limit) : undefined;
+  const result = await lexiconController.getGroups(type as string | undefined, parsedLimit);
   res.json(result);
 });
 

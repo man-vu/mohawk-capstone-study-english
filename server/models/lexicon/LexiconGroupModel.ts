@@ -24,7 +24,7 @@ export class LexiconGroupModel {
     return prisma.lexiconGroup.delete({ where: { GroupId } });
   }
 
-  static findAllWithWords(type?: string) {
+  static findAllWithWords(type?: string, limit?: number) {
     return prisma.lexiconGroup.findMany({
       include: {
         LexiconGroupMap: {
@@ -32,6 +32,7 @@ export class LexiconGroupModel {
           where: type
             ? { Lexicon: { LexiconType: { TypeName: { equals: type } } } }
             : undefined,
+          take: limit,
         },
       },
     });

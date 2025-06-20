@@ -24,9 +24,9 @@ export default {
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
-  getGroups: async (type) => {
+  getGroups: async (type, limit?: number) => {
     try {
-      const groups = await LexiconGroupModel.findAllWithWords(type);
+      const groups = await LexiconGroupModel.findAllWithWords(type, limit);
       const formatted = groups.map((g) => ({
         id: g.GroupId,
         theme: g.Theme,
