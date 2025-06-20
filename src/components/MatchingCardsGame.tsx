@@ -64,11 +64,19 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
       .then(res => res.json())
       .then(data => {
         if (data.response) {
-          const groups = { easy: [], medium: [], hard: [] } as any;
-          data.response.forEach((w: any) => {
-            const level = (w.Difficulty || 'medium') as 'easy' | 'medium' | 'hard';
-            groups[level].push({ word: w.Word, definition: w.Definition });
-          });
+          const pairs = data.response.map((w: any) => ({
+            word: w.Word,
+            definition: w.Definition
+          }));
+
+          const shuffled = pairs.sort(() => Math.random() - 0.5);
+
+          const groups = {
+            easy: shuffled.slice(0, 6),
+            medium: shuffled.slice(6, 14),
+            hard: shuffled.slice(14, 24)
+          };
+
           setVocabularyPairs(groups);
         }
       })

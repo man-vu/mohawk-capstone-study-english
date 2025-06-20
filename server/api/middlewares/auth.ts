@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken')
-const { jwt_secret_key } = require("../../config/index");
+import jwt from 'jsonwebtoken';
+import { jwt_secret_key } from "../../config/index";
+import type { Request, Response, NextFunction } from 'express';
 
-const guestAccessibleURLs = {
+const guestAccessibleURLs: Record<string, boolean> = {
   "/api/home": true,
   "/api/discussion": true
 } 
@@ -12,7 +13,7 @@ const guestAccessibleURLs = {
  * @param {*} res 
  * @param {*} next 
  */
-module.exports = (req, res, next) => {
+export default (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   
   if (authHeader) {

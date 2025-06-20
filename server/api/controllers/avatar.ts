@@ -1,9 +1,9 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const MimeTypeModel = require("../../models/media/MimeTypeModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import AppUserModel from "../../models/auth/AppUserModel";
+import MimeTypeModel from "../../models/media/MimeTypeModel";
 
-module.exports = {
+export default {
   /**
    * Function that inserts an avatar into mime_type table after it has been uploaded to AWS Bucket
    */
@@ -30,7 +30,9 @@ module.exports = {
    */
   updateAvatar: async (data) => {
     try {
-      await AppUserModel.update(data.userId, { ProfilePictureId: data.mimeId });
+      await AppUserModel.update(data.userId, {
+        MimeType: { connect: { MimeId: data.mimeId } },
+      });
       return sendSuccess(204);
     } catch (error) {
       console.log(error);

@@ -1,10 +1,10 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const LexiconModel = require("../../models/lexicon/LexiconModel.ts").default;
-const LexiconGroupModel = require("../../models/lexicon/LexiconGroupModel.ts").default;
-const UserLexiconProgressModel = require("../../models/lexicon/UserLexiconProgressModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import LexiconModel from "../../models/lexicon/LexiconModel";
+import LexiconGroupModel from "../../models/lexicon/LexiconGroupModel";
+import UserLexiconProgressModel from "../../models/lexicon/UserLexiconProgressModel";
 
-module.exports = {
+export default {
   getWords: async (type, limit) => {
     try {
       const words = limit
@@ -24,9 +24,9 @@ module.exports = {
       return sendFailure(STRINGS.ERROR_OCCURRED);
     }
   },
-  getGroups: async (type) => {
+  getGroups: async (type, limit?: number) => {
     try {
-      const groups = await LexiconGroupModel.findAllWithWords(type);
+      const groups = await LexiconGroupModel.findAllWithWords(type, limit);
       const formatted = groups.map((g) => ({
         id: g.GroupId,
         theme: g.Theme,

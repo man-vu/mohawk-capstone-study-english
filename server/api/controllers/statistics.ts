@@ -1,8 +1,8 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const StatisticsModel = require("../../models/logs/StatisticsModel.ts").default;
-const AppUserModel = require("../../models/auth/AppUserModel.ts").default;
-const moment = require("moment");
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import StatisticsModel from "../../models/logs/StatisticsModel";
+import AppUserModel from "../../models/auth/AppUserModel";
+import moment from "moment";
 
 /**
  * Function maps statistics by a quiz from provided attempts information
@@ -117,9 +117,6 @@ function createPieChart(statsType, stats, additionalInfo) {
         {
           breakpoint: 350,
           options: {
-            title: {
-              align: 'left'
-            },
             chart: {
               width: 350,
             },
@@ -127,6 +124,7 @@ function createPieChart(statsType, stats, additionalInfo) {
               position: "bottom",
             },
             title: {
+              align: 'left',
               style: {
                 fontSize: "12px"
               }
@@ -154,14 +152,14 @@ function createPieChart(statsType, stats, additionalInfo) {
   };
 }
 
-module.exports = {
+export default {
   getStatistics: async (userId) => {
     try {
       const quizStatsData = await StatisticsModel.findQuizOne(userId);
       const answerStatsData = await StatisticsModel.findAnswerOne(userId);
 
-      const quizStatistics = createPieChart(1, quizStatsData);
-      const answerStatistics = createPieChart(2, answerStatsData);
+      const quizStatistics = createPieChart(1, quizStatsData, undefined);
+      const answerStatistics = createPieChart(2, answerStatsData, undefined);
 
       return sendSuccess({ quizStatistics, answerStatistics });
     } catch (error) {

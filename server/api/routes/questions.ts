@@ -1,20 +1,8 @@
-const express = require("express");
+import express from "express";
+import questionsController from "../controllers/questions";
+import authMiddleware from "../middlewares/auth";
+
 const router = express.Router();
-const questionsController = require("../controllers/questions.ts");
-const authMiddleware = require("../middlewares/auth");
-
-// GET: [routes/questions]
-// Get question by id
-router.get("/:id", authMiddleware, async (req, res) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ error: "Invalid question id" });
-  }
-
-  const question = await questionsController.getQuestion(id);
-
-  res.json(question);
-});
 
 // POST: [routes/questions]
 // Create a new question
@@ -60,4 +48,4 @@ router.put("/answer/:id", authMiddleware, async (req, res) => {
   res.json(answer)
 });
 
-module.exports = router;
+export default router;

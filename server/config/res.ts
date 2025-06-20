@@ -2,7 +2,7 @@
  * Send content of response that has a default success status code of 200 
  * @param {*} response content of response that has a default success status code of 200 
  */
-function send200(response) {
+function send200(response: any) {
   return {
     error: null,
     statusCode: 200,
@@ -14,7 +14,7 @@ function send200(response) {
  * Send content of response that has a default failure status code of 400
  * @param {*} response content of response that has a default failure status code of 400
  */
-function send400(message) {
+function send400(message: any) {
   return {
     error: message,
     statusCode: 400,
@@ -22,17 +22,7 @@ function send400(message) {
   };
 }
 
-module.exports = {
-  /**
-   * Send success response with status code and response
-   *  200 - OK
-      201 - Created
-      203 - Non-authoritative information
-      204 - No content
-      205 - Reset content
-      206 - Partial content
-   */
-  sendSuccess: (statusCode, response) => {
+export function sendSuccess(statusCode: any, response?: any) {
     if (typeof response === "undefined") {
       const res = statusCode;
       return send200(res);
@@ -43,7 +33,7 @@ module.exports = {
         response: response,
       };
     }
-  },
+}
   /**
    * Send success response with status code and response
    *  400 - Bad Request
@@ -67,7 +57,7 @@ module.exports = {
       451 - Unavailable For Legal Reason
       499 - Client Close Request
    */
-  sendFailure: (statusCode, message) => {
+export function sendFailure(statusCode: any, message?: any) {
     if (typeof message === "undefined") {
       const mes = statusCode;
       return send400(mes);
@@ -78,5 +68,9 @@ module.exports = {
         response: null,
       };
     }
-  },
+}
+
+export default {
+  sendSuccess,
+  sendFailure,
 };

@@ -1,8 +1,8 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const MockTestModel = require("../../models/mockTests/MockTestModel.ts").default;
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import MockTestModel from "../../models/mockTests/MockTestModel";
 
-module.exports = {
+export default {
   getTests: async () => {
     try {
       const tests = await MockTestModel.findAll();

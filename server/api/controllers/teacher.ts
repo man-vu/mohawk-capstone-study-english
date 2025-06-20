@@ -1,16 +1,16 @@
-const { sendSuccess, sendFailure } = require("../../config/res");
-const STRINGS = require("../../config/strings");
-const QuizSkillModel = require("../../models/quiz/QuizSkillModel.ts").default;
-const UserRatingModel = require("../../models/user/UserRatingModel.ts").default;
-const QuestionTypeModel = require("../../models/question/QuestionTypeModel.ts").default;
-const QuizModel = require("../../models/quiz/QuizModel.ts").default;
-const QuestionModel = require("../../models/question/QuestionModel.ts").default;
-const MCModel = require("../../models/question/QuestionMultipleChoiceModel.ts").default;
-const GModel = require("../../models/question/QuestionGapFillingModel.ts").default;
-const PromptModel = require("../../models/question/MatchingPromptModel.ts").default;
-const ChoiceModel = require("../../models/question/MatchingChoiceModel.ts").default;
-const InstructionModel = require("../../models/question/QuestionInstructionModel.ts").default;
-const validator = require("../validators/validator");
+import { sendSuccess, sendFailure } from "../../config/res";
+import STRINGS from "../../config/strings";
+import QuizSkillModel from "../../models/quiz/QuizSkillModel";
+import UserRatingModel from "../../models/user/UserRatingModel";
+import QuestionTypeModel from "../../models/question/QuestionTypeModel";
+import QuizModel from "../../models/quiz/QuizModel";
+import QuestionModel from "../../models/question/QuestionModel";
+import MCModel from "../../models/question/QuestionMultipleChoiceModel";
+import GModel from "../../models/question/QuestionGapFillingModel";
+import PromptModel from "../../models/question/MatchingPromptModel";
+import ChoiceModel from "../../models/question/MatchingChoiceModel";
+import InstructionModel from "../../models/question/QuestionInstructionModel";
+import validator from "../validators/validator";
 
 /**
  * A helper function that creates instruction
@@ -109,7 +109,7 @@ async function getQuestionContent(id, typeId, questionData) {
   }
 }
 
-module.exports = {
+export default {
   /**
    * Function that reset all ratings given by student for a quiz
    */

@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import authController from "../controllers/auth";
+import authMiddleware from "../middlewares/auth";
+
 const router = express.Router();
-const authController = require("../controllers/auth.ts");
-const authMiddleware = require("../middlewares/auth");
 
 /**
  * This route handles user registration
@@ -62,4 +63,4 @@ router.get("/", authMiddleware, async (req, res) => {
   res.json(result);
 });
 
-module.exports = router;
+export default router;

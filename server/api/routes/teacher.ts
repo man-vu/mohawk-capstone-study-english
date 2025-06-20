@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import authTeacherMiddleware from "../middlewares/authTeacher";
+import teacherController from "../controllers/teacher";
+
 const router = express.Router();
-const authTeacherMiddleware = require("../middlewares/authTeacher");
-const teacherController = require("../controllers/teacher.ts");
 
 /**
  * Route that gets teacher home 
@@ -84,4 +85,4 @@ router.put("/questions/:id", authTeacherMiddleware, async (req, res) => {
   res.status(200).json(question)
 })
 
-module.exports = router;
+export default router;

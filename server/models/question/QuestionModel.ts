@@ -10,6 +10,20 @@ export interface Question {
   CreatedAt: Date;
 }
 
+export interface QuizQuestionItem {
+  question_id: number;
+  type_id: number;
+  type_name: string;
+  is_active: boolean;
+  paragraph_title: string;
+  question: string;
+  instruction: string;
+  answer_text: string;
+  part_id: number;
+  content?: any[];
+  number_of_selections?: number;
+}
+
 export class QuestionModel {
   static create(data: Prisma.QuestionCreateInput) {
     return prisma.question.create({ data });
@@ -39,7 +53,7 @@ export class QuestionModel {
     quizId: number;
     userId?: number;
     attemptId?: number;
-  }) {
+  }): Promise<QuizQuestionItem[]> {
     const quizQuestions = await prisma.quizQuestion.findMany({
       where: {
         QuizId: quizId,
@@ -71,7 +85,7 @@ export class QuestionModel {
         instruction: q.QuestionInstruction.Instruction,
         answer_text: attemptId && userId ? q.UserAnswer[0]?.AnswerText ?? '' : '',
         part_id: qq.PartId,
-      };
+      } as QuizQuestionItem;
     });
   }
 

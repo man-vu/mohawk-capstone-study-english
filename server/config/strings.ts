@@ -46,7 +46,6 @@ const STRINGS = {
     CANNOT_UPDATE_ANSWER: "Cannot update answer.",
     CANNOT_UPDATE_QUESTION: "Cannot update question.",
     CANNOT_UPDATE_QUIZ: "Cannot update quiz.",
-    CANNOT_UPDATE_POST: "Cannot update post.",
     CANNOT_UPDATE_FAVORITE: "Cannot update favorite.",
     CANNOT_UPDATE_RATING: "Cannot update rating.",
     CANNOT_LOAD_LATEST_ATTEMPT: "Cannot load latest attempt.",
@@ -67,13 +66,13 @@ const STRINGS = {
     PLEASE_CHECK_YOUR_LAST_NAME: "Please check your last name.",
     NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD_AND_AT_LEAST_8_CHARACTERS: "New password must be different from old password and at least 8 characters.",
     CANNOT_SAVE_NEW_PASSWORD: "Cannot save new password.",
-    QUESTION_ITEMS_VALIDATION_ERROR: (questionTypeId) => {
+    QUESTION_ITEMS_VALIDATION_ERROR: (questionTypeId: number) => {
         if (questionTypeId === 1) {
-            return module.exports.MULTIPLE_CHOICE_MUST_HAVE_AT_LEAST_2_CHOICES
+            return STRINGS.MULTIPLE_CHOICE_MUST_HAVE_AT_LEAST_2_CHOICES;
         } else if (questionTypeId === 2) {
-            return module.exports.GAP_FILLING_QUESTION_MUST_HAVE_AT_LEAST_1_GAP
+            return STRINGS.GAP_FILLING_QUESTION_MUST_HAVE_AT_LEAST_1_GAP;
         } else if (questionTypeId === 3) {
-            return module.exports.MATCHING_QUESTION_MUST_HAVE_AT_LEAST_2_OPTIONS_ON_BOTH_SIDES
+            return STRINGS.MATCHING_QUESTION_MUST_HAVE_AT_LEAST_2_OPTIONS_ON_BOTH_SIDES;
         }
     },
     MULTIPLE_CHOICE_MUST_HAVE_AT_LEAST_2_CHOICES: "Multiple choice question must have at least 2 choices",
@@ -81,7 +80,9 @@ const STRINGS = {
     MATCHING_QUESTION_MUST_HAVE_AT_LEAST_2_OPTIONS_ON_BOTH_SIDES: "Matching question must have at least 2 options on both sides",
     INVALID_IS_ACTIVE_VALUE: "Invalid is active value.",
     TIME_ALLOWED_MUST_BE_AT_LEAST_1_MINUTE: "Time allowed must be at least 1 minute.",
-    RATING_MUST_BE_BETWEEN_1_AND_5: "Rating must be between 1 and 5." 
-}
+    RATING_MUST_BE_BETWEEN_1_AND_5: "Rating must be between 1 and 5.",
+};
 
-module.exports = STRINGS
+export default STRINGS;
+
+module.exports = STRINGS;
