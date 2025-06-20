@@ -10,7 +10,7 @@
     "lint": "eslint ./src --quiet",
     "heroku-prebuild": "npm install",
     "heroku-postbuild": "vite build",
-    "dev:server": "cross-env NODE_ENV=development nodemon --exec \"node --inspect=9300 --loader ts-node/esm --experimental-specifier-resolution=node\" server/server.ts",
+    "dev:server": "cross-env NODE_ENV=development nodemon --exec \"node --inspect=9300 --import ./loader-register.js --experimental-specifier-resolution=node\" server/server.ts",
     "prod:server": "cross-env NODE_ENV=production NODE_OPTIONS=\"--require ts-node/register/transpile-only\" node server/server.ts",
     "test": "cross-env NODE_ENV=test mocha -r ts-node/register/transpile-only 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",
     "test-coverage": "cross-env NODE_ENV=test nyc mocha -r ts-node/register/transpile-only 'server/api/test/**/*.test.js' --recursive --timeout 60000 --exit",

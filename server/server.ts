@@ -88,3 +88,5 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unhandled Rejection at:', p, 'reason:', reason);
 });
+
+console.log("Server started successfully.");
