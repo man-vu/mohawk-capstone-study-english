@@ -1,5 +1,5 @@
 import React from 'react';
-import QuestionTemplates from '../components/QuestionTemplates';
+import QuestionTemplates from '../components/quiz/QuestionTemplates';
 
 const TemplatesPage: React.FC = () => <QuestionTemplates />;
 

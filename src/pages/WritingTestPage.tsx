@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import WritingTask from '../components/WritingTask';
-import WritingFeedback from '../components/WritingFeedback';
+import WritingTask from '../components/quiz/WritingTask';
+import WritingFeedback from '../components/quiz/WritingFeedback';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Clock, BookOpen, FileText, CheckCircle } from 'lucide-react';

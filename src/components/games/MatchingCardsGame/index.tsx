@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Card, CardContent } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import { 
   RotateCcw, 
   Trophy, 
@@ -33,9 +33,10 @@ interface GameStats {
 
 interface MatchingCardsGameProps {
   onBack: () => void;
+  initialLexiconType?: 'vocabulary' | 'idiom' | 'phrasal verb';
 }
 
-const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
+const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack, initialLexiconType = 'vocabulary' }) => {
   const [cards, setCards] = useState<VocabularyCard[]>([]);
   const [flippedCards, setFlippedCards] = useState<string[]>([]);
   const [gameStats, setGameStats] = useState<GameStats>({
@@ -50,7 +51,7 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack }) => {
   const [timer, setTimer] = useState(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [lexiconType, setLexiconType] =
-    useState<'vocabulary' | 'idiom' | 'phrasal verb'>('vocabulary');
+    useState<'vocabulary' | 'idiom' | 'phrasal verb'>(initialLexiconType);
 
   const [vocabularyPairs, setVocabularyPairs] = useState<{ [key: string]: { word: string; definition: string }[] }>({
     easy: [],

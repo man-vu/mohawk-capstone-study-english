@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import PracticeQuiz from '../components/PracticeQuiz';
+import PracticeQuiz from '../components/quiz/PracticeQuiz';
 
 interface QuizResponse {
   questions: any[];
