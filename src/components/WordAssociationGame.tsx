@@ -131,7 +131,10 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
 
   // Generate a new round
 
-  const generateRound = (roundNum: number = roundNumber) => {
+  const generateRound = (
+    roundNum: number = roundNumber,
+    diff: 'easy' | 'medium' | 'hard' = difficulty
+  ) => {
     const filteredGroups = wordGroups
       .map(g => ({
         ...g,
@@ -159,7 +162,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         randomItem,
         roundNum,
         distractorWords,
-        difficulty
+        diff
       );
     } else if (mode === 'syn-ant') {
       newRound = buildSynAntRound(
@@ -167,7 +170,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
         randomItem,
         roundNum,
         distractorWords,
-        difficulty
+        diff
       );
     } else {
       const allMeanings = wordGroups
@@ -177,7 +180,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           randomGroup,
           randomItem,
           roundNum,
-          difficulty,
+          diff,
           allMeanings
         );
       } else {
@@ -185,7 +188,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
           randomGroup,
           randomItem,
           roundNum,
-          difficulty,
+          diff,
           allMeanings
         );
       }
@@ -195,7 +198,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setUsedWords(prev => [...prev, randomItem.text]);
     setSelectedWords([]);
     setFeedback(null);
-    setTimeLeft(difficulty === 'easy' ? 45 : difficulty === 'medium' ? 30 : 20);
+    setTimeLeft(diff === 'easy' ? 45 : diff === 'medium' ? 30 : 20);
   };
 
   // Start game
@@ -214,7 +217,7 @@ const WordAssociationGame: React.FC<WordAssociationGameProps> = ({ onBack }) => 
     setScore(0);
     setGameStats({ correctAnswers: 0, totalTime: 0, accuracy: 0 });
     setUsedWords([]);
-    generateRound(1);
+    generateRound(1, selectedDifficulty);
   };
 
   // Handle word selection
