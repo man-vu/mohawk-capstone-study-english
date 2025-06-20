@@ -3,6 +3,7 @@ import STRINGS from "../../config/strings";
 import UserAnswerModel from "../../models/user/UserAnswerModel";
 import QuizQuestionModel from "../../models/quiz/QuizQuestionModel";
 import QuestionModel from "../../models/question/QuestionModel";
+import QuizPartModel from "../../models/quiz/QuizPartModel";
 import MCModel from "../../models/question/QuestionMultipleChoiceModel";
 import GModel from "../../models/question/QuestionGapFillingModel";
 import PromptModel from "../../models/question/MatchingPromptModel";
@@ -74,7 +75,13 @@ async function createQuestionContent(
  */
 async function createBridgingQuizAndQuestion(quizId, questionId) {
   try {
-    await QuizQuestionModel.create({ QuizId: quizId, QuestionId: questionId });
+    const parts = await QuizPartModel.findAllByQuiz(quizId);
+    const partId = parts[0]?.PartId ?? 1;
+    await QuizQuestionModel.create({
+      Quiz: { connect: { QuizId: quizId } },
+      Question: { connect: { QuestionId: questionId } },
+      QuizPart: { connect: { PartId: partId } },
+    });
     return sendSuccess(201);
   } catch (error) {
     console.log(error);
@@ -127,9 +134,9 @@ async function updateIncompleteAttempts(quizId, questionId) {
     const attempts = await AttemptModel.findIncompleteAttemptsByQuizId(quizId);
     for (const attempt of attempts) {
       await UserAnswerModel.create({
-        AttemptId: attempt.AttemptId,
-        QuestionId: questionId,
         AnswerText: '',
+        UserAttempt: { connect: { AttemptId: attempt.AttemptId } },
+        Question: { connect: { QuestionId: questionId } },
       });
     }
     return true;
@@ -179,11 +186,11 @@ export default {
 
       try {
         const q = await QuestionModel.create({
-          TypeId: typeId,
-          InstructionId: instructionId,
           IsActive: !!isActive,
           ParagraphTitle: paragraphTitle,
           QuestionText: question,
+          QuestionType: { connect: { TypeId: typeId } },
+          QuestionInstruction: { connect: { InstructionId: instructionId } },
         });
 
         const questionId = q.QuestionId;

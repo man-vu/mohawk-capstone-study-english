@@ -4,19 +4,6 @@ import authMiddleware from "../middlewares/auth";
 
 const router = express.Router();
 
-// GET: [routes/questions]
-// Get question by id
-router.get("/:id", authMiddleware, async (req, res) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ error: "Invalid question id" });
-  }
-
-  const question = await questionsController.getQuestion(id);
-
-  res.json(question);
-});
-
 // POST: [routes/questions]
 // Create a new question
 router.post("/", authMiddleware, async (req, res) => {

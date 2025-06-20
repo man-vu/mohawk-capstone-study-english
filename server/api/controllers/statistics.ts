@@ -117,9 +117,6 @@ function createPieChart(statsType, stats, additionalInfo) {
         {
           breakpoint: 350,
           options: {
-            title: {
-              align: 'left'
-            },
             chart: {
               width: 350,
             },
@@ -127,6 +124,7 @@ function createPieChart(statsType, stats, additionalInfo) {
               position: "bottom",
             },
             title: {
+              align: 'left',
               style: {
                 fontSize: "12px"
               }
@@ -160,8 +158,8 @@ export default {
       const quizStatsData = await StatisticsModel.findQuizOne(userId);
       const answerStatsData = await StatisticsModel.findAnswerOne(userId);
 
-      const quizStatistics = createPieChart(1, quizStatsData);
-      const answerStatistics = createPieChart(2, answerStatsData);
+      const quizStatistics = createPieChart(1, quizStatsData, undefined);
+      const answerStatistics = createPieChart(2, answerStatsData, undefined);
 
       return sendSuccess({ quizStatistics, answerStatistics });
     } catch (error) {
