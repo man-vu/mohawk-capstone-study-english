@@ -30,6 +30,24 @@ export const users = [
     firstName: "test",
     lastName: "test",
   },
+  {
+    email: "manvminh@gmail.com",
+    password: "testtest",
+    gender: "M",
+    profilePictureId: "1",
+    roleId: "2",
+    firstName: "test",
+    lastName: "test",
+  },
+  {
+    email: "test@gmail.com",
+    password: "testtest",
+    gender: "M",
+    profilePictureId: "1",
+    roleId: "2",
+    firstName: "test",
+    lastName: "test",
+  },
 ];
 
 export async function addUser(user: any) {

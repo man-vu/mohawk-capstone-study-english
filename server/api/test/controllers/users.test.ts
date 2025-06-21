@@ -24,7 +24,7 @@ describe("UsersController: getUsers", () => {
     expect(actual.statusCode).to.equal(200);
     expect(actual.error).to.equal(null);
     expect(actual.response).to.be.an("array");
-    expect(actual.response.every((u) => u.role_id == "2")).to.be.true;
+    expect(actual.response.every((u) => u.RoleId == "2" || u.RoleId == 2)).to.be.true;
   });
 
   it(`Should fail to load a user`, async () => {

@@ -216,6 +216,6 @@ describe("AuthController: resetPassword", () => {
     const actual = await authController.passwordReset(data);
     expect(actual.statusCode).to.equal(200);
     expect(actual.error).to.be.null;
-    expect(actual.response).to.be.an('null');
+    expect(actual.response).to.be.null;
   });
 })
