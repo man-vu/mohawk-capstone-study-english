@@ -19,6 +19,10 @@ export async function sendPasswordReset(sendTo: string, password: string) {
       Thanks for using our site!`,
   };
 
+  if (process.env.NODE_ENV === "test") {
+    return { response: "250 Test" } as any;
+  }
+
   return transporter.sendMail(mailOptions);
 }
 

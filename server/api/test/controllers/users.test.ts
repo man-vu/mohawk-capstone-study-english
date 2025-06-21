@@ -2,9 +2,11 @@ import { expect } from "chai";
 import STRINGS from "../../../config/strings.ts";
 import usersController from "../../controllers/users.ts";
 import { users, addUsers, deleteUsers } from "../helpers/users.ts";
+import AppUserModel from "../../../models/auth/AppUserModel.ts";
 
 before(async function() {
-    await addUsers(users)
+    AppUserModel.__testReset();
+    await addUsers(users);
 });
 
 after(async function() {
@@ -24,7 +26,7 @@ describe("UsersController: getUsers", () => {
     expect(actual.statusCode).to.equal(200);
     expect(actual.error).to.equal(null);
     expect(actual.response).to.be.an("array");
-    expect(actual.response.every((u) => u.role_id == "2")).to.be.true;
+    expect(actual.response.every((u) => u.RoleId == "2" || u.RoleId == 2)).to.be.true;
   });
 
   it(`Should fail to load a user`, async () => {
