@@ -248,7 +248,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
       correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
       score: isCorrect ? prev.score + 10 : prev.score,
     }));
-    setTimeout(nextCard, 1200);
+    nextCard();
   };
 
   const formatTime = (seconds: number) => {
