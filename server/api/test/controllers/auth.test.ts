@@ -1,8 +1,9 @@
-const { expect } = require("chai");
-const STRINGS = require("../../../config/strings");
-const authController = require("../../controllers/auth.ts");
-const UserModel = new (require("../../../models/user"))();
-const { users, addUsers, deleteUsers } = require("../helpers/users");
+import { expect } from "chai";
+import STRINGS from "../../../config/strings.ts";
+import authController from "../../controllers/auth.ts";
+import UserModelClass from "../../../models/user/index.ts";
+const UserModel = new UserModelClass();
+import { users, addUsers, deleteUsers } from "../helpers/users.ts";
 
 before(async function() {
   await addUsers(users)
