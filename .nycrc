@@ -1,0 +1,6 @@
+{
+  "extension": [".ts"],
+  "exclude": ["**/*.test.ts"],
+  "reporter": ["lcov", "text"],
+  "all": true
+}
