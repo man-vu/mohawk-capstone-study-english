@@ -1,7 +1,10 @@
 import React from "react";
 import { Button } from "../../ui/button";
 import { Card, CardHeader, CardContent } from "../../ui/card";
-import { Trophy, RotateCcw, Home } from "lucide-react";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import { Trophy, RotateCcw, Home, ChevronDown } from "lucide-react";
 
 interface FlashcardData {
   id: string;
@@ -62,9 +65,11 @@ const GameCompletion: React.FC<GameCompletionProps> = ({
     {(correctWords.length > 0 || incorrectWords.length > 0 || missedWords.length > 0) && (
       <div className="grid md:grid-cols-3 gap-4 mb-8 text-left">
         {correctWords.length > 0 && (
-          <Card>
-            <CardHeader className="font-semibold">Correct Words</CardHeader>
-            <CardContent>
+          <Accordion className="border rounded">
+            <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
+              Correct Words ({correctWords.length})
+            </AccordionSummary>
+            <AccordionDetails>
               <ul className="list-disc list-inside space-y-1">
                 {correctWords.map((card, idx) => (
                   <li key={`${card.id}-${idx}`}>
@@ -72,36 +77,40 @@ const GameCompletion: React.FC<GameCompletionProps> = ({
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+            </AccordionDetails>
+          </Accordion>
         )}
         {incorrectWords.length > 0 && (
-          <Card>
-            <CardHeader className="font-semibold">Incorrect Words</CardHeader>
-            <CardContent>
+          <Accordion className="border rounded">
+            <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
+              Incorrect Words ({incorrectWords.length})
+            </AccordionSummary>
+            <AccordionDetails>
               <ul className="list-disc list-inside space-y-1">
                 {incorrectWords.map((card, idx) => (
-                  <li key={`${card.id}-${idx}`}> 
+                  <li key={`${card.id}-${idx}`}>
                     <span className="font-medium">{card.word}</span> - {card.definition}
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+            </AccordionDetails>
+          </Accordion>
         )}
         {missedWords.length > 0 && (
-          <Card>
-            <CardHeader className="font-semibold">Missed Words</CardHeader>
-            <CardContent>
+          <Accordion className="border rounded">
+            <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
+              Missed Words ({missedWords.length})
+            </AccordionSummary>
+            <AccordionDetails>
               <ul className="list-disc list-inside space-y-1">
                 {missedWords.map((card, idx) => (
-                  <li key={`${card.id}-${idx}`}> 
+                  <li key={`${card.id}-${idx}`}>
                     <span className="font-medium">{card.word}</span> - {card.definition}
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
+            </AccordionDetails>
+          </Accordion>
         )}
       </div>
     )}
