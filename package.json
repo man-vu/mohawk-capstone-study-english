@@ -86,8 +86,22 @@
     "tailwindcss": "^3.4.10",
     "tsx": "^4.20.3",
     "vite": "^5.4.1",
-    "vitest": "^1.4.0"
-    ,
+    "vitest": "^1.4.0",
     "c8": "^8.0.1"
+  },
+  "c8": {
+    "all": true,
+    "include": [
+      "server/**/*.ts"
+    ],
+    "exclude": [
+      "**/*.test.ts",
+      "**/test/**",
+      "server/**/*.tsx"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ]
   }
 }
