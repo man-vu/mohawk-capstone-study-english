@@ -2,12 +2,12 @@ $server = "localhost"
 $database = "QuizVerse"
 
 $sqlFiles = @(
-    "schema.sql",
-    "core.data.sql",
-    "quiz.data.sql",
-    "mocktest.data.sql",
-    "lexical.data.sql",
-    "sampleuser.data.sql"
+    "01_schema.sql",
+    "02_core_data.sql",
+    "03_quiz_data.sql",
+    "04_mocktest_data.sql",
+    "05_lexical_data.sql",
+    "06_sample_users.sql"
 )
 
 foreach ($file in $sqlFiles) {
