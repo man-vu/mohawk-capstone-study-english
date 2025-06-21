@@ -1,11 +1,14 @@
-const { expect } = require("chai");
-const STRINGS = require("../../../config/strings");
-const authController = require("../../controllers/auth.ts");
-const UserModel = new (require("../../../models/user"))();
-const { users, addUsers, deleteUsers } = require("../helpers/users");
+import { expect } from "chai";
+import STRINGS from "../../../config/strings.ts";
+import authController from "../../controllers/auth.ts";
+import UserModelClass from "../../../models/user/index.ts";
+const UserModel = new UserModelClass();
+import { users, addUsers, deleteUsers } from "../helpers/users.ts";
+import AppUserModel from "../../../models/auth/AppUserModel.ts";
 
 before(async function() {
-  await addUsers(users)
+  AppUserModel.__testReset();
+  await addUsers(users);
 });
 
 after(async function() {
@@ -18,7 +21,6 @@ describe("AuthController: Register", () => {
       email: "abc",
       password: "",
       gender: "M",
-      profilePictureId: "1",
       roleId: "2",
 
       firstName: "test",
@@ -36,7 +38,6 @@ describe("AuthController: Register", () => {
       email: "abc@gmail.com",
       password: "",
       gender: "M",
-      profilePictureId: "1",
       roleId: "2",
 
       firstName: "test",
@@ -54,7 +55,6 @@ describe("AuthController: Register", () => {
       email: "abc@gmail.com",
       password: "123456890",
       gender: "P",
-      profilePictureId: "1",
       roleId: "2",
 
       firstName: "test",
@@ -90,7 +90,6 @@ describe("AuthController: Register", () => {
       email: "abc@gmail.com",
       password: "123456890",
       gender: "M",
-      profilePictureId: "1",
       roleId: "3",
       firstName: "test",
       lastName: "test",
@@ -107,7 +106,6 @@ describe("AuthController: Register", () => {
       email: "manvminh@gmail.com",
       password: "123456890",
       gender: "M",
-      profilePictureId: "1",
       roleId: "2",
 
       firstName: "test",
@@ -127,7 +125,6 @@ describe("AuthController: Register", () => {
       email: "test100@gmail.com",
       password: "123456890",
       gender: "M",
-      profilePictureId: "1",
       roleId: "2",
       firstName: "test",
       lastName: "test",
@@ -215,6 +212,6 @@ describe("AuthController: resetPassword", () => {
     const actual = await authController.passwordReset(data);
     expect(actual.statusCode).to.equal(200);
     expect(actual.error).to.be.null;
-    expect(actual.response).to.be.an('null');
+    expect(actual.response).to.be.null;
   });
 })

@@ -68,7 +68,7 @@ export default {
         LastName: lastName,
       };
       if (profilePictureId !== undefined) {
-        createData.ProfilePictureId = profilePictureId;
+        createData.ProfilePictureId = Number(profilePictureId);
       }
 
       const user = await AppUserModel.create(createData);
