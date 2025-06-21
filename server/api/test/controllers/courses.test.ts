@@ -5,8 +5,15 @@ import CourseModel from '../../../models/courses/CourseModel.ts';
 import STRINGS from '../../../config/strings.ts';
 
 describe('CoursesController: getCourses', () => {
+  let consoleStub: sinon.SinonStub;
+
+  beforeEach(() => {
+    consoleStub = sinon.stub(console, 'log');
+  });
+
   afterEach(() => {
     sinon.restore();
+    consoleStub.restore();
   });
 
   it('should load all courses', async () => {

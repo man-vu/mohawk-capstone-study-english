@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import sinon from "sinon";
 import STRINGS from "../../../config/strings.ts";
 import authController from "../../controllers/auth.ts";
 import UserModelClass from "../../../models/user/index.ts";
@@ -16,6 +17,15 @@ after(async function() {
 });
 
 describe("AuthController: Register", () => {
+  let consoleStub: sinon.SinonStub;
+
+  beforeEach(() => {
+    consoleStub = sinon.stub(console, 'log');
+  });
+
+  afterEach(() => {
+    consoleStub.restore();
+  });
   it(`Should log ${STRINGS.EMAIL_IS_NOT_IN_CORRECT_FORMAT}`, async () => {
     const data = {
       email: "abc",
