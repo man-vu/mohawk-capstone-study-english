@@ -18,6 +18,30 @@ export function mockApi() {
         response: [{ quiz_id: '1', title: 'Mock Quiz', skill_id: 1, skill_description: 'Listening', time_allowed: 60, attempts: 0, number_of_questions: 5, average_rating: 4, rating_count: 1, favorite: false }]
       }), { status: 200 }));
     }
+    if (url.endsWith('/home') || url.endsWith('home')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            statusCode: 200,
+            response: [
+              {
+                quiz_id: 1,
+                title: 'Sample Quiz',
+                skill_description: 'Reading',
+                description: 'desc',
+                time_allowed: 45,
+                attempts: 2,
+                number_of_questions: 10,
+                average_rating: 4,
+                rating_count: 1,
+                favorite: 0,
+              },
+            ],
+          }),
+          { status: 200 }
+        )
+      );
+    }
     if (url.endsWith('/mock-tests')) {
       return Promise.resolve(new Response(JSON.stringify({
         response: [{ MockTestId: 1, Title: 'Mock Test', Description: 'desc', TotalDuration: 120, MockTestSection: [] }]
