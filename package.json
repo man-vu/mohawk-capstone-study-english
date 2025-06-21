@@ -12,8 +12,8 @@
     "heroku-postbuild": "vite build",
     "dev:server": "cross-env NODE_ENV=development nodemon --exec \"node --inspect=9300 --import ./loader-register.js --experimental-specifier-resolution=node\" server/server.ts",
     "prod:server": "cross-env NODE_ENV=production NODE_OPTIONS=\"--require ts-node/register/transpile-only\" node server/server.ts",
-    "test:back:coverage": "cross-env NODE_ENV=test nyc --report-dir=coverage-backend tsx ./node_modules/mocha/bin/mocha 'server/**/*.test.ts' --recursive --timeout 60000 --exit",
-    "test:front:coverage": "vitest run --coverage.dir=coverage-frontend",
+    "test:back:coverage": "cross-env NODE_ENV=test c8 -o coverage-backend tsx ./node_modules/mocha/bin/mocha 'server/**/*.test.ts' --recursive --timeout 60000 --exit",
+    "test:front:coverage": "vitest run --coverage --coverage.reportsDirectory=coverage-frontend",
     "test:back": "cross-env NODE_ENV=test tsx ./node_modules/mocha/bin/mocha 'server/**/*.test.ts' --recursive --timeout 60000 --exit",
     "test:front": "vitest run",
     "test": "npm run test:back && npm run test:front",
@@ -86,6 +86,22 @@
     "tailwindcss": "^3.4.10",
     "tsx": "^4.20.3",
     "vite": "^5.4.1",
-    "vitest": "^1.4.0"
+    "vitest": "^1.4.0",
+    "c8": "^8.0.1"
+  },
+  "c8": {
+    "all": true,
+    "include": [
+      "server/**/*.ts"
+    ],
+    "exclude": [
+      "**/*.test.ts",
+      "**/test/**",
+      "server/**/*.tsx"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ]
   }
 }
