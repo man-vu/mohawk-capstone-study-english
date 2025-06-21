@@ -31,10 +31,13 @@ export function mockApi() {
   return () => { global.fetch = original; };
 }
 
-type Options = { route?: string };
+type Options = { route?: string; auth?: Partial<any> };
 
-export function renderWithProviders(ui: React.ReactElement, options: Options = {}) {
-  const { route = '/' } = options;
+export function renderWithProviders(
+  ui: React.ReactElement,
+  options: Options = {}
+) {
+  const { route = '/', auth = {} } = options;
   const mockAuth = {
     user: null,
     isLoading: false,
@@ -47,6 +50,7 @@ export function renderWithProviders(ui: React.ReactElement, options: Options = {
     openAuthModal: vi.fn(),
     closeAuthModal: vi.fn(),
     setAuthModalView: vi.fn(),
+    ...auth,
   } as any;
 
   window.history.pushState({}, '', route);
