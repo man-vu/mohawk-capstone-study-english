@@ -4,11 +4,12 @@ import { Card, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { 
-  RotateCcw, 
-  Trophy, 
-  Clock, 
+  RotateCcw,
+  Trophy,
+  Clock,
   Target,
   Star,
+  CheckCircle,
   Play,
   Pause,
   Home
@@ -273,9 +274,18 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack, initialLe
                   {level}
                 </h3>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {level === 'easy' && '6 pairs • Basic vocabulary'}
-                  {level === 'medium' && '8 pairs • Intermediate words'}
-                  {level === 'hard' && '10 pairs • Advanced vocabulary'}
+                  {(() => {
+                    const defaultPairs = level === 'easy' ? 6 : level === 'medium' ? 8 : 10;
+                    const pairCount = vocabularyPairs[level].length || defaultPairs;
+                    const cardCount = pairCount * 2;
+                    const desc =
+                      level === 'easy'
+                        ? 'Basic vocabulary'
+                        : level === 'medium'
+                        ? 'Intermediate words'
+                        : 'Advanced vocabulary';
+                    return `${cardCount} cards • ${desc}`;
+                  })()}
                 </div>
                 <Button className="w-full">
                   <Play className="w-4 h-4 mr-2" />
@@ -475,11 +485,16 @@ const MatchingCardsGame: React.FC<MatchingCardsGameProps> = ({ onBack, initialLe
                     transform: 'rotateY(180deg)'
                   }}
                 >
-                  <Card className={`h-full transition-all duration-300 ${
-                    card.isMatched 
-                      ? 'bg-green-100 dark:bg-green-900/20 border-green-500' 
-                      : 'bg-white dark:bg-gray-800 hover:shadow-md'
-                  }`}>
+                  <Card
+                    className={`relative h-full transition-all duration-300 ${
+                      card.isMatched
+                        ? 'bg-green-100 dark:bg-green-900/20 border-green-500 ring-2 ring-green-400 cursor-default'
+                        : 'bg-white dark:bg-gray-800 hover:shadow-md'
+                    }`}
+                  >
+                    {card.isMatched && (
+                      <CheckCircle className="absolute top-2 right-2 w-5 h-5 text-green-600" />
+                    )}
                     <CardContent className="h-full flex items-center justify-center p-3">
                       <div className="text-center">
                         {card.type === 'word' ? (
