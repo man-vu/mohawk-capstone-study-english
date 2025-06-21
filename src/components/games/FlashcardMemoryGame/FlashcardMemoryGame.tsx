@@ -59,6 +59,12 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
   const [lexiconType, setLexiconType] =
     useState<'vocabulary' | 'idiom' | 'phrasal verb'>("vocabulary");
   const [timer, setTimer] = useState(0);
+  const [memoryHeader, setMemoryHeader] = useState({
+    current: 0,
+    total: 0,
+    score: 0,
+    timer: undefined as number | undefined,
+  });
 
   // Quiz-specific
   const [quizOptions, setQuizOptions] = useState<string[]>([]);
@@ -274,13 +280,22 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
         ? (gameSession.correctAnswers / gameSession.totalAnswers) * 100
         : 0;
     const memorizedCount = flashcards.filter((card) => card.memorized).length;
+    const correctWords = flashcards.filter(
+      (card) => !incorrectWords.some((w) => w.id === card.id)
+    );
+    const missedWords =
+      gameSession.totalAnswers < flashcards.length
+        ? flashcards.slice(gameSession.totalAnswers)
+        : [];
     return (
       <GameCompletion
         score={gameSession.score}
         accuracy={accuracy}
         memorizedCount={memorizedCount}
         time={formatTime(gameSession.timeElapsed)}
+        correctWords={correctWords}
         incorrectWords={incorrectWords}
+        missedWords={missedWords}
         onPlayAgain={resetGame}
         onBack={onBack}
       />
@@ -291,14 +306,24 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
   const currentCard = flashcards[gameSession.currentCardIndex];
   if (!currentCard) return null;
 
+  const headerTimer =
+    gameMode === "memory" && memoryHeader.timer !== undefined
+      ? `${memoryHeader.timer}s`
+      : formatTime(timer);
+  const headerCurrent =
+    gameMode === "memory" ? memoryHeader.current : gameSession.currentCardIndex + 1;
+  const headerTotal =
+    gameMode === "memory" ? memoryHeader.total : flashcards.length;
+  const headerScore = gameMode === "memory" ? memoryHeader.score : gameSession.score;
+
   return (
     <div className="max-w-4xl mx-auto">
       <GameHeader
         gameMode={gameMode}
-        timer={formatTime(timer)}
-        currentIndex={gameSession.currentCardIndex + 1}
-        totalCards={flashcards.length}
-        score={gameSession.score}
+        timer={headerTimer}
+        currentIndex={headerCurrent}
+        totalCards={headerTotal}
+        score={headerScore}
         isPaused={isPaused}
         onPauseToggle={togglePause}
         onShuffle={shuffleCards}
@@ -331,13 +356,7 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
       {gameMode === "memory" && (
         <MemoryChallenge
           flashcards={flashcards}
-          currentCard={currentCard}
-          showAnswer={gameSession.showAnswer}
-          onToggleAnswer={toggleAnswer}
-          onNextCard={nextCard}
-          onPreviousCard={previousCard}
-          isFirst={gameSession.currentCardIndex === 0}
-          isLast={gameSession.currentCardIndex === flashcards.length - 1}
+          onHeaderUpdate={setMemoryHeader}
         />
       )}
     </div>

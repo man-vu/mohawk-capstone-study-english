@@ -1,13 +1,43 @@
 import React from "react";
 import { Button } from "../../ui/button";
-import { Trophy, RotateCcw, Home } from "lucide-react";
+import { Card, CardHeader, CardContent } from "../../ui/card";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import { Trophy, RotateCcw, Home, ChevronDown } from "lucide-react";
 
-const GameCompletion = ({
+interface FlashcardData {
+  id: string;
+  word: string;
+  definition: string;
+  example: string;
+  difficulty: "easy" | "medium" | "hard";
+  category: string;
+  memorized: boolean;
+  attempts: number;
+  correctStreak: number;
+}
+
+interface GameCompletionProps {
+  score: number;
+  accuracy: number;
+  memorizedCount: number;
+  time: string;
+  correctWords: FlashcardData[];
+  incorrectWords: FlashcardData[];
+  missedWords: FlashcardData[];
+  onPlayAgain: () => void;
+  onBack: () => void;
+}
+
+const GameCompletion: React.FC<GameCompletionProps> = ({
   score,
   accuracy,
   memorizedCount,
   time,
+  correctWords,
   incorrectWords,
+  missedWords,
   onPlayAgain,
   onBack,
 }) => (
@@ -32,16 +62,56 @@ const GameCompletion = ({
         <div className="text-sm text-gray-600">Time</div>
       </div>
     </div>
-    {incorrectWords.length > 0 && (
-      <div className="mb-8 text-left">
-        <h3 className="font-semibold mb-2">Missed Words</h3>
-        <ul className="list-disc list-inside space-y-1">
-          {incorrectWords.map(card => (
-            <li key={card.id}>
-              <span className="font-medium">{card.word}</span> - {card.definition}
-            </li>
-          ))}
-        </ul>
+    {(correctWords.length > 0 || incorrectWords.length > 0 || missedWords.length > 0) && (
+      <div className="space-y-4 mb-8 text-left">
+        {correctWords.length > 0 && (
+          <Accordion className="border rounded w-full">
+            <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
+              Correct Words ({correctWords.length})
+            </AccordionSummary>
+            <AccordionDetails>
+              <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
+                {correctWords.map((card, idx) => (
+                  <li key={`${card.id}-${idx}`}>
+                    <span className="font-medium">{card.word}</span> - {card.definition}
+                  </li>
+                ))}
+              </ul>
+            </AccordionDetails>
+          </Accordion>
+        )}
+        {incorrectWords.length > 0 && (
+          <Accordion className="border rounded w-full">
+            <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
+              Incorrect Words ({incorrectWords.length})
+            </AccordionSummary>
+            <AccordionDetails>
+              <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
+                {incorrectWords.map((card, idx) => (
+                  <li key={`${card.id}-${idx}`}>
+                    <span className="font-medium">{card.word}</span> - {card.definition}
+                  </li>
+                ))}
+              </ul>
+            </AccordionDetails>
+          </Accordion>
+        )}
+        {missedWords.length > 0 && (
+          <Accordion className="border rounded w-full">
+            <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
+              Missed Words ({missedWords.length})
+            </AccordionSummary>
+            <AccordionDetails>
+              <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
+                {missedWords.map((card, idx) => (
+                  <li key={`${card.id}-${idx}`}>
+                    <span className="font-medium">{card.word}</span> - {card.definition}
+                  </li>
+                ))}
+              </ul>
+            </AccordionDetails>
+          </Accordion>
+        )}
       </div>
     )}
     <Button onClick={onPlayAgain} size="lg">

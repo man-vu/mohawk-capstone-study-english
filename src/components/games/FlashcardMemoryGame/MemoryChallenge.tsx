@@ -3,7 +3,14 @@ import { Card, CardHeader, CardContent } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Progress } from "../../ui/progress";
 import { Badge } from "../../ui/badge";
-import { Play, RotateCcw, Trophy, Timer } from "lucide-react";
+import {
+  RotateCcw,
+  Trophy,
+  Timer,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+
 
 interface FlashcardData {
   id: string;
@@ -19,13 +26,22 @@ interface FlashcardData {
 
 interface MemoryChallengeProps {
   flashcards?: FlashcardData[];
+  onHeaderUpdate?: (data: {
+    current: number;
+    total: number;
+    score: number;
+    timer?: number;
+  }) => void;
 }
 
 const CHALLENGE_LENGTH = 10;
 const FLASHCARD_INTERVAL = 2000;
 const QUIZ_TIME_LIMIT = 5;
 
-const MemoryChallenge: React.FC<MemoryChallengeProps> = ({ flashcards = [] }) => {
+const MemoryChallenge: React.FC<MemoryChallengeProps> = ({
+  flashcards = [],
+  onHeaderUpdate,
+}) => {
   const [phase, setPhase] = useState<"show" | "quiz" | "results">("show");
   const [showIndex, setShowIndex] = useState(0);
 
@@ -120,6 +136,44 @@ const MemoryChallenge: React.FC<MemoryChallengeProps> = ({ flashcards = [] }) =>
     };
   }, [phase, quizIndex, quizQuestions.length]);
 
+  // Notify parent of header updates
+  useEffect(() => {
+    if (!onHeaderUpdate) return;
+    const current = phase === "show" ? showIndex + 1 : quizIndex + 1;
+    const total = phase === "show" ? CHALLENGE_LENGTH : quizQuestions.length;
+    onHeaderUpdate({
+      current,
+      total,
+      score,
+      timer: phase === "quiz" ? timer : undefined,
+    });
+  }, [onHeaderUpdate, phase, showIndex, quizIndex, quizQuestions.length, score, timer]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (phase === "show") {
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          nextShow();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          prevShow();
+        }
+      } else if (phase === "quiz") {
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          nextQuiz();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          prevQuiz();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [phase, showIndex, quizIndex]);
+
   useEffect(() => {
     if (phase === "quiz" && timer <= 0) {
       handleAnswer(null);
@@ -157,6 +211,34 @@ const MemoryChallenge: React.FC<MemoryChallengeProps> = ({ flashcards = [] }) =>
           return prev;
         });
       }, 200);
+    }
+  };
+
+  const prevQuiz = () => {
+    if (quizIndex > 0) {
+      setQuizIndex((i) => i - 1);
+      setTimer(QUIZ_TIME_LIMIT);
+    }
+  };
+
+  const nextQuiz = () => {
+    if (quizIndex < quizQuestions.length - 1) {
+      setQuizIndex((i) => i + 1);
+      setTimer(QUIZ_TIME_LIMIT);
+    }
+  };
+
+  const prevShow = () => {
+    if (showIndex > 0) {
+      setShowIndex((i) => i - 1);
+    }
+  };
+
+  const nextShow = () => {
+    if (showIndex < CHALLENGE_LENGTH - 1) {
+      setShowIndex((i) => i + 1);
+    } else {
+      setPhase("quiz");
     }
   };
 
@@ -222,12 +304,25 @@ if (!flashcards || flashcards.length < CHALLENGE_LENGTH) {
             </div>
           </CardContent>
         </Card>
+        <div className="flex justify-between w-full max-w-xl mt-4">
+          <Button onClick={prevShow} variant="outline" disabled={showIndex === 0}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Prev
+          </Button>
+          <Button onClick={nextShow}>
+            Next <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </div>
     );
   }
 
   // PHASE 2: Quiz
   if (phase === "quiz") {
+    if (quizQuestions.length === 0) {
+      return (
+        <div className="text-center py-10 text-lg">Preparing questions...</div>
+      );
+    }
     const q = quizQuestions[quizIndex];
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -286,6 +381,14 @@ if (!flashcards || flashcards.length < CHALLENGE_LENGTH) {
             </div>
           </CardContent>
         </Card>
+        <div className="flex justify-between w-full max-w-xl mt-4">
+          <Button onClick={prevQuiz} variant="outline" disabled={quizIndex === 0}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Prev
+          </Button>
+          <Button onClick={nextQuiz} disabled={quizIndex === quizQuestions.length - 1}>
+            Next <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </div>
     );
   }
