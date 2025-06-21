@@ -280,13 +280,22 @@ const FlashcardMemoryGame: React.FC<FlashcardMemoryGameProps> = ({
         ? (gameSession.correctAnswers / gameSession.totalAnswers) * 100
         : 0;
     const memorizedCount = flashcards.filter((card) => card.memorized).length;
+    const correctWords = flashcards.filter(
+      (card) => !incorrectWords.some((w) => w.id === card.id)
+    );
+    const missedWords =
+      gameSession.totalAnswers < flashcards.length
+        ? flashcards.slice(gameSession.totalAnswers)
+        : [];
     return (
       <GameCompletion
         score={gameSession.score}
         accuracy={accuracy}
         memorizedCount={memorizedCount}
         time={formatTime(gameSession.timeElapsed)}
+        correctWords={correctWords}
         incorrectWords={incorrectWords}
+        missedWords={missedWords}
         onPlayAgain={resetGame}
         onBack={onBack}
       />

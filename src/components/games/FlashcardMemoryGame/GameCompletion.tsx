@@ -1,13 +1,40 @@
 import React from "react";
 import { Button } from "../../ui/button";
+import { Card, CardHeader, CardContent } from "../../ui/card";
 import { Trophy, RotateCcw, Home } from "lucide-react";
 
-const GameCompletion = ({
+interface FlashcardData {
+  id: string;
+  word: string;
+  definition: string;
+  example: string;
+  difficulty: "easy" | "medium" | "hard";
+  category: string;
+  memorized: boolean;
+  attempts: number;
+  correctStreak: number;
+}
+
+interface GameCompletionProps {
+  score: number;
+  accuracy: number;
+  memorizedCount: number;
+  time: string;
+  correctWords: FlashcardData[];
+  incorrectWords: FlashcardData[];
+  missedWords: FlashcardData[];
+  onPlayAgain: () => void;
+  onBack: () => void;
+}
+
+const GameCompletion: React.FC<GameCompletionProps> = ({
   score,
   accuracy,
   memorizedCount,
   time,
+  correctWords,
   incorrectWords,
+  missedWords,
   onPlayAgain,
   onBack,
 }) => (
@@ -32,16 +59,50 @@ const GameCompletion = ({
         <div className="text-sm text-gray-600">Time</div>
       </div>
     </div>
-    {incorrectWords.length > 0 && (
-      <div className="mb-8 text-left">
-        <h3 className="font-semibold mb-2">Missed Words</h3>
-        <ul className="list-disc list-inside space-y-1">
-          {incorrectWords.map(card => (
-            <li key={card.id}>
-              <span className="font-medium">{card.word}</span> - {card.definition}
-            </li>
-          ))}
-        </ul>
+    {(correctWords.length > 0 || incorrectWords.length > 0 || missedWords.length > 0) && (
+      <div className="grid md:grid-cols-3 gap-4 mb-8 text-left">
+        {correctWords.length > 0 && (
+          <Card>
+            <CardHeader className="font-semibold">Correct Words</CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-1">
+                {correctWords.map((card, idx) => (
+                  <li key={`${card.id}-${idx}`}>
+                    <span className="font-medium">{card.word}</span> - {card.definition}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+        {incorrectWords.length > 0 && (
+          <Card>
+            <CardHeader className="font-semibold">Incorrect Words</CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-1">
+                {incorrectWords.map((card, idx) => (
+                  <li key={`${card.id}-${idx}`}> 
+                    <span className="font-medium">{card.word}</span> - {card.definition}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+        {missedWords.length > 0 && (
+          <Card>
+            <CardHeader className="font-semibold">Missed Words</CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-1">
+                {missedWords.map((card, idx) => (
+                  <li key={`${card.id}-${idx}`}> 
+                    <span className="font-medium">{card.word}</span> - {card.definition}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
       </div>
     )}
     <Button onClick={onPlayAgain} size="lg">
