@@ -4,48 +4,13 @@ import { Button } from "../../ui/button";
 import { Progress } from "../../ui/progress";
 import { Badge } from "../../ui/badge";
 import {
-  Play,
   RotateCcw,
   Trophy,
   Timer,
   ArrowLeft,
   ArrowRight,
-  Target,
-  Star,
 } from "lucide-react";
 
-const ChallengeHeader: React.FC<{
-  current: number;
-  total: number;
-  score: number;
-  timer?: number;
-}> = ({ current, total, score, timer }) => (
-  <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
-    <div className="flex items-center gap-3">
-      <span className="font-bold text-xl tracking-wide bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
-        Memory Challenge
-      </span>
-      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-900/50 border border-purple-700">
-        <Target className="w-4 h-4 text-purple-400" />
-        <span className="font-semibold text-purple-200">
-          Card: {current}/{total}
-        </span>
-      </span>
-      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-900/40 border border-yellow-600">
-        <Star className="w-4 h-4 text-yellow-300" />
-        <span className="font-semibold text-yellow-200">Score: {score}</span>
-      </span>
-      {typeof timer === "number" && (
-        <span className="flex items-center gap-1 px-4 py-1 rounded-full bg-blue-900/50 shadow-inner border border-blue-600">
-          <Timer className="w-5 h-5 text-blue-400" />
-          <span className="font-mono text-lg tracking-widest text-blue-200">
-            {timer}s
-          </span>
-        </span>
-      )}
-    </div>
-  </div>
-);
 
 interface FlashcardData {
   id: string;
@@ -61,13 +26,22 @@ interface FlashcardData {
 
 interface MemoryChallengeProps {
   flashcards?: FlashcardData[];
+  onHeaderUpdate?: (data: {
+    current: number;
+    total: number;
+    score: number;
+    timer?: number;
+  }) => void;
 }
 
 const CHALLENGE_LENGTH = 10;
 const FLASHCARD_INTERVAL = 2000;
 const QUIZ_TIME_LIMIT = 5;
 
-const MemoryChallenge: React.FC<MemoryChallengeProps> = ({ flashcards = [] }) => {
+const MemoryChallenge: React.FC<MemoryChallengeProps> = ({
+  flashcards = [],
+  onHeaderUpdate,
+}) => {
   const [phase, setPhase] = useState<"show" | "quiz" | "results">("show");
   const [showIndex, setShowIndex] = useState(0);
 
@@ -161,6 +135,19 @@ const MemoryChallenge: React.FC<MemoryChallengeProps> = ({ flashcards = [] }) =>
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [phase, quizIndex, quizQuestions.length]);
+
+  // Notify parent of header updates
+  useEffect(() => {
+    if (!onHeaderUpdate) return;
+    const current = phase === "show" ? showIndex + 1 : quizIndex + 1;
+    const total = phase === "show" ? CHALLENGE_LENGTH : quizQuestions.length;
+    onHeaderUpdate({
+      current,
+      total,
+      score,
+      timer: phase === "quiz" ? timer : undefined,
+    });
+  }, [onHeaderUpdate, phase, showIndex, quizIndex, quizQuestions.length, score, timer]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -282,7 +269,6 @@ if (!flashcards || flashcards.length < CHALLENGE_LENGTH) {
     const card = flashcards[showIndex];
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <ChallengeHeader current={showIndex + 1} total={CHALLENGE_LENGTH} score={score} />
         <Card className="w-full max-w-xl text-center border shadow-md">
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -340,12 +326,6 @@ if (!flashcards || flashcards.length < CHALLENGE_LENGTH) {
     const q = quizQuestions[quizIndex];
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <ChallengeHeader
-          current={quizIndex + 1}
-          total={quizQuestions.length}
-          score={score}
-          timer={timer}
-        />
         <Card className="w-full max-w-xl text-center border shadow-md">
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -417,7 +397,6 @@ if (!flashcards || flashcards.length < CHALLENGE_LENGTH) {
   if (phase === "results") {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <ChallengeHeader current={quizQuestions.length} total={quizQuestions.length} score={score} />
         <Card className="w-full max-w-md text-center border shadow-md">
           <CardHeader>
             <Trophy className="w-16 h-16 mx-auto text-yellow-400 mb-4" />
