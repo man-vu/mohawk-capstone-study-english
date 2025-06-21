@@ -66,6 +66,7 @@
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.34.1",
     "@vitejs/plugin-react": "^4.3.1",
+    "@vitest/coverage-v8": "^1.6.1",
     "autoprefixer": "^10.4.20",
     "chai": "^4.3.10",
     "eslint": "^9.9.0",
