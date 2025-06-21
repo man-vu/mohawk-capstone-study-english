@@ -63,14 +63,14 @@ const GameCompletion: React.FC<GameCompletionProps> = ({
       </div>
     </div>
     {(correctWords.length > 0 || incorrectWords.length > 0 || missedWords.length > 0) && (
-      <div className="grid md:grid-cols-3 gap-4 mb-8 text-left">
+      <div className="space-y-4 mb-8 text-left">
         {correctWords.length > 0 && (
-          <Accordion className="border rounded">
+          <Accordion className="border rounded w-full">
             <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
               Correct Words ({correctWords.length})
             </AccordionSummary>
             <AccordionDetails>
-              <ul className="list-disc list-inside space-y-1">
+              <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
                 {correctWords.map((card, idx) => (
                   <li key={`${card.id}-${idx}`}>
                     <span className="font-medium">{card.word}</span> - {card.definition}
@@ -81,12 +81,12 @@ const GameCompletion: React.FC<GameCompletionProps> = ({
           </Accordion>
         )}
         {incorrectWords.length > 0 && (
-          <Accordion className="border rounded">
+          <Accordion className="border rounded w-full">
             <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
               Incorrect Words ({incorrectWords.length})
             </AccordionSummary>
             <AccordionDetails>
-              <ul className="list-disc list-inside space-y-1">
+              <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
                 {incorrectWords.map((card, idx) => (
                   <li key={`${card.id}-${idx}`}>
                     <span className="font-medium">{card.word}</span> - {card.definition}
@@ -97,12 +97,12 @@ const GameCompletion: React.FC<GameCompletionProps> = ({
           </Accordion>
         )}
         {missedWords.length > 0 && (
-          <Accordion className="border rounded">
+          <Accordion className="border rounded w-full">
             <AccordionSummary expandIcon={<ChevronDown className="w-4 h-4" />} className="font-semibold">
               Missed Words ({missedWords.length})
             </AccordionSummary>
             <AccordionDetails>
-              <ul className="list-disc list-inside space-y-1">
+              <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
                 {missedWords.map((card, idx) => (
                   <li key={`${card.id}-${idx}`}>
                     <span className="font-medium">{card.word}</span> - {card.definition}
